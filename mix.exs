@@ -1,0 +1,55 @@
+defmodule Krug.MixProject do
+  use Mix.Project
+  
+  #@project_url "https://github.com/BinaryNoggin/bamboo_config_adapter"
+
+  def project do
+    [
+      app: :krug,
+      version: "0.1.0",
+      elixir: "~> 1.11",
+      #source_url: @project_url,
+      #homepage_url: @project_url,
+      name: "Krug",
+      description: "A Utilitary package functionalities modules for improve development, by Krug",
+      start_permanent: Mix.env() == :test,
+      #test_coverage: [tool: ExCoveralls],
+      aliases: aliases(),
+      package: package(),
+      docs: [main: "readme", extras: ["README.md"]],
+      deps: deps()
+    ]
+  end
+
+  def application do
+    [
+      extra_applications: [:logger]
+    ]
+  end
+
+
+  defp deps do
+    [
+      {:earmark, "~> 1.4.13", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
+      {:bcrypt_elixir, "~> 2.2.0"},
+      {:poison, "~> 4.0.1"},
+      {:httpoison, "~> 1.7"},
+      {:ex_aws, "~> 2.1.6"},
+	  {:ex_aws_s3, "~> 2.0"}
+    ]
+  end
+  
+  defp aliases do
+    [c: "compile", d: "docs"]
+  end
+  
+  defp package do
+    [
+      maintainers: ["Daniel Augusto Krug @daankrug <daniel-krug@hotmail.com>"],
+      licenses: ["MIT"],
+      #links: %{"GitHub" => @project_url}
+    ]
+  end
+  
+end
