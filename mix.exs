@@ -1,18 +1,18 @@
 defmodule Krug.MixProject do
   use Mix.Project
   
-  #@project_url "https://github.com/BinaryNoggin/bamboo_config_adapter"
+  @project_url "https://github.com/DaanKrug/elixir-krug"
 
   def project do
     [
       app: :krug,
       version: "0.1.0",
       elixir: "~> 1.11",
-      #source_url: @project_url,
-      #homepage_url: @project_url,
+      source_url: @project_url,
+      homepage_url: @project_url,
       name: "Krug",
-      description: "A Utilitary package functionalities modules for improve development, by Krug",
-      start_permanent: Mix.env() == :test,
+      description: "A Utilitary package functionalities modules for secure/improve development.",
+      start_permanent: Mix.env() == :prod,
       #test_coverage: [tool: ExCoveralls],
       aliases: aliases(),
       package: package(),
@@ -48,7 +48,7 @@ defmodule Krug.MixProject do
     [
       maintainers: ["Daniel Augusto Krug @daankrug <daniel-krug@hotmail.com>"],
       licenses: ["MIT"],
-      #links: %{"GitHub" => @project_url}
+      links: %{"GitHub" => @project_url}
     ]
   end
   
