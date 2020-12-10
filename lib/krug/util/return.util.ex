@@ -17,7 +17,7 @@ defmodule Krug.ReturnUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.ReturnUtil.getOperationError()
+  iex > Krug.ReturnUtil.get_operation_error()
   %{ 
     objectClass: "OperationError", 
     code: 500, 
@@ -25,20 +25,20 @@ defmodule Krug.ReturnUtil do
   }
   ```
   ```elixir 
-  iex > errorMsg = "Operation Failed: impossible to create new user whit email: jhon@jhon.com"
-  iex > Krug.ReturnUtil.getOperationError(errorMsg)
+  iex > error_msg = "Operation Failed: impossible to create new user with email: jhon@jhon.com"
+  iex > Krug.ReturnUtil.get_operation_error(error_msg)
   %{ 
     objectClass: "OperationError", 
     code: 500, 
-    msg: "Operation Failed: impossible to create new user whit email: jhon@jhon.com" 
+    msg: "Operation Failed: impossible to create new user with email: jhon@jhon.com" 
   }
   ```
   """
-  def getOperationError(msgError \\ "") do
+  def get_operation_error(error_msg \\ "") do
     %{
       objectClass: "OperationError",
       code: 500,
-      msg: msgError
+      msg: error_msg
     }
   end
   
@@ -53,8 +53,8 @@ defmodule Krug.ReturnUtil do
   ## Examples
 
   ```elixir 
-  iex > objectReturn = %{name: "Echo Ping", email: "echo@ping.com"}
-  iex > Krug.ReturnUtil.getOperationSuccess(200,"Sucess on Insert",objectReturn)
+  iex > return_object = %{name: "Echo Ping", email: "echo@ping.com"}
+  iex > Krug.ReturnUtil.get_operation_success(200,"Sucess on Insert",return_object)
   %{ 
     objectClass: "OperationSuccess", 
     code: 200, 
@@ -66,7 +66,7 @@ defmodule Krug.ReturnUtil do
   }
   ```
   ```elixir 
-  iex > Krug.ReturnUtil.getOperationSuccess(201,"Sucess on Update")
+  iex > Krug.ReturnUtil.get_operation_success(201,"Sucess on Update")
   %{ 
     objectClass: "OperationSuccess", 
     code: 201, 
@@ -75,8 +75,8 @@ defmodule Krug.ReturnUtil do
   }
   ```
   ```elixir 
-  iex > objectReturn = %{oldName: "Echo Ping", name: "Alpha Bravo"}
-  iex > Krug.ReturnUtil.getOperationSuccess(201,"Sucess on Update Name",objectReturn)
+  iex > return_object = %{oldName: "Echo Ping", name: "Alpha Bravo"}
+  iex > Krug.ReturnUtil.get_operation_success(201,"Sucess on Update Name",return_object)
   %{ 
     objectClass: "OperationSuccess", 
     code: 201, 
@@ -88,28 +88,28 @@ defmodule Krug.ReturnUtil do
   }
   ```
   """
-  def getOperationSuccess(codeReturn,msgSucess,objectReturn \\ nil) do
+  def get_operation_success(return_code,success_msg,return_object \\ nil) do
     %{
       objectClass: "OperationSuccess",
-      code: codeReturn,
-      msg: msgSucess,
-      object: objectReturn
+      code: return_code,
+      msg: success_msg,
+      object: return_object
     }
   end
   
   
   
   @doc """
-  Return a map object for cases on that the backend fail to execute 
+  Return a map object for cases on that the backend result false when execute 
   validations (one or more parameters contains invalid characters, the length
-  of value of parameter received is bigger than the dabase column field, and others.).
+  of value of parameter received is bigger than the dabase column field, and others).
   
   Useful to inform a friendly validation message to User Interface, customized as needed.
   
   ## Example
 
   ```elixir 
-  iex > Krug.ReturnUtil.getValidationResult(100100,"[100100] E-mail should be a valid email.")
+  iex > Krug.ReturnUtil.get_validation_result(100100,"[100100] E-mail should be a valid email.")
   %{
     objectClass: "ValidationResult",
     code: 100100,
@@ -117,11 +117,11 @@ defmodule Krug.ReturnUtil do
   }
   ```
   """
-  def getValidationResult(codeReturn,msgResult) do
+  def get_validation_result(return_code,result_msg) do
     %{
       objectClass: "ValidationResult",
-      code: codeReturn,
-      msg: msgResult
+      code: return_code,
+      msg: result_msg
     }
   end
   
@@ -140,7 +140,7 @@ defmodule Krug.ReturnUtil do
 
   ```elixir 
   iex > html = "<h1>This is the Report Header of Generated Report</h1>"
-  iex > Krug.ReturnUtil.getReport(html)
+  iex > Krug.ReturnUtil.get_report(html)
   [
     %{
       objectClass: "Report",
@@ -150,7 +150,7 @@ defmodule Krug.ReturnUtil do
   ]
   ```
   """
-  def getReport(html) do
+  def get_report(html) do
     [%{
       objectClass: "Report",
       code: 205,

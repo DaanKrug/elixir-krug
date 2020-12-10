@@ -5,7 +5,7 @@ defmodule Krug.StringUtilTest do
   
   alias Krug.StringUtil
   
-  test "[concat(stringA,stringB,joinString)]" do
+  test "[concat(string_a,string_b,join_string)]" do
     assert StringUtil.concat(nil,nil,nil) == ""
     assert StringUtil.concat(nil,nil,",") == ""
     assert StringUtil.concat("","",",") == ""
@@ -16,14 +16,14 @@ defmodule Krug.StringUtilTest do
     assert StringUtil.concat(nil,"B",",") == "B"
   end
   
-  test "[emptyIfNil(target)]" do
-    assert StringUtil.emptyIfNil(nil) == ""
-    assert StringUtil.emptyIfNil("") == ""
-    assert StringUtil.emptyIfNil(" ") == " "
-    assert StringUtil.emptyIfNil("A") == "A"
-    assert StringUtil.emptyIfNil(10) == "10"
-    assert StringUtil.emptyIfNil(10.05) == "10.05"
-    assert StringUtil.emptyIfNil(-10.05) == "-10.05"
+  test "[empty_if_nil(target)]" do
+    assert StringUtil.empty_if_nil(nil) == ""
+    assert StringUtil.empty_if_nil("") == ""
+    assert StringUtil.empty_if_nil(" ") == " "
+    assert StringUtil.empty_if_nil("A") == "A"
+    assert StringUtil.empty_if_nil(10) == "10"
+    assert StringUtil.empty_if_nil(10.05) == "10.05"
+    assert StringUtil.empty_if_nil(-10.05) == "-10.05"
   end
   
   test "[split(target,searched)]" do
@@ -49,7 +49,7 @@ defmodule Krug.StringUtilTest do
     assert StringUtil.capitalize(" this is a method that capitalize ") == " This Is A Method That Capitalize "
   end
   
-  test "[replace(target,searched,replaceTo)]" do
+  test "[replace(target,searched,replace_to)]" do
     phrase1 = "replace all e letters by C letter"
     phrase1Replaced = "rcplacc all c lcttcrs by C lcttcr"
     phrase2 = "replace non recursive because recursion throwble place"
@@ -60,7 +60,7 @@ defmodule Krug.StringUtilTest do
     assert StringUtil.replace(phrase2,"ce","[Ace Ventures]") == phrase2Replaced
   end
   
-  test "[replaceAll(target,searchedArray,replaceTo)]" do
+  test "[replace_all(target,searched_array,replace_to)]" do
     phrase1 = "replace all e letters by C letter"
     phrase1Replaced = "rcclccc cll c lccccrs by C lccccr"
     phrase2 = "replace non recursive because recursion throwble place"
@@ -70,13 +70,13 @@ defmodule Krug.StringUtilTest do
                       throwble pla[Ace Vent[Ace Ventures]es]
                       """
     phrase2Replaced = phrase2Replaced |> StringUtil.trim() |> StringUtil.replace("\n","") 
-    assert StringUtil.replaceAll("afbfc   bfb    cfdc",["  ","f","c"],"0") == "a0b000 b0b0000d0"
-    assert StringUtil.replaceAll("aa       bb               cc",["  ","f","c"],"0") == "aa000 bb0000000 00"
-    assert StringUtil.replaceAll(phrase1,["e","a","p","t"],"c") == phrase1Replaced
-    assert StringUtil.replaceAll(phrase2,["ce","ur"],"[Ace Ventures]") == phrase2Replaced
+    assert StringUtil.replace_all("afbfc   bfb    cfdc",["  ","f","c"],"0") == "a0b000 b0b0000d0"
+    assert StringUtil.replace_all("aa       bb               cc",["  ","f","c"],"0") == "aa000 bb0000000 00"
+    assert StringUtil.replace_all(phrase1,["e","a","p","t"],"c") == phrase1Replaced
+    assert StringUtil.replace_all(phrase2,["ce","ur"],"[Ace Ventures]") == phrase2Replaced
   end
   
-  test "[decodeUri(target)]" do
+  test "[decode_uri(target)]" do
     shortUri = "these ++ is ++ a ++ http://example.com/short+uri+example ++++"
     decodedShortUri = "these ++ is ++ a ++ http://example.com/short uri example +   "
     longUri = """
@@ -91,67 +91,67 @@ defmodule Krug.StringUtilTest do
                      flight of the second model of the third national factory
                      """
     decodedLongUri = decodedLongUri |> StringUtil.trim() |> StringUtil.replace("\n","")
-    assert StringUtil.decodeUri(shortUri) == decodedShortUri
-    assert StringUtil.decodeUri(longUri) == decodedLongUri
+    assert StringUtil.decode_uri(shortUri) == decodedShortUri
+    assert StringUtil.decode_uri(longUri) == decodedLongUri
   end
   
-  test "[getDecodedValueParam(arrayParams,param,separator)]" do
-    arrayParams = ["name=Johann Backend","age=54","address=404 street"]
-    assert StringUtil.getDecodedValueParam(arrayParams,"name","=") == "Johann Backend"
-    assert StringUtil.getDecodedValueParam(arrayParams,"age","=") == "54"
-    assert StringUtil.getDecodedValueParam(arrayParams,"address","=") == "404 street"
+  test "[get_decoded_value_param(array_params,param,separator)]" do
+    array_params = ["name=Johann Backend","age=54","address=404 street"]
+    assert StringUtil.get_decoded_value_param(array_params,"name","=") == "Johann Backend"
+    assert StringUtil.get_decoded_value_param(array_params,"age","=") == "54"
+    assert StringUtil.get_decoded_value_param(array_params,"address","=") == "404 street"
   end
   
-  test "[leftZeros(string,size)]" do
-    assert StringUtil.leftZeros(nil,5) == "00000"
-    assert StringUtil.leftZeros("",5) == "00000"
-    assert StringUtil.leftZeros(" ",5) == "0000 "
-    assert StringUtil.leftZeros("A",5) == "0000A"
-    assert StringUtil.leftZeros("AB",5) == "000AB"
-    assert StringUtil.leftZeros(33,5) == "00033"
-    assert StringUtil.leftZeros(33.4,5) == "033.4"
-    assert StringUtil.leftZeros(33.46,5) == "33.46"
-    assert StringUtil.leftZeros(33.467,5) == "33.46"
-    assert StringUtil.leftZeros(33.4678,5) == "33.46"
+  test "[left_zeros(string,size)]" do
+    assert StringUtil.left_zeros(nil,5) == "00000"
+    assert StringUtil.left_zeros("",5) == "00000"
+    assert StringUtil.left_zeros(" ",5) == "0000 "
+    assert StringUtil.left_zeros("A",5) == "0000A"
+    assert StringUtil.left_zeros("AB",5) == "000AB"
+    assert StringUtil.left_zeros(33,5) == "00033"
+    assert StringUtil.left_zeros(33.4,5) == "033.4"
+    assert StringUtil.left_zeros(33.46,5) == "33.46"
+    assert StringUtil.left_zeros(33.467,5) == "33.46"
+    assert StringUtil.left_zeros(33.4678,5) == "33.46"
   end
   
-  test "[rightZeros(string,size)]" do
-    assert StringUtil.rightZeros(nil,5) == "00000"
-    assert StringUtil.rightZeros("",5) == "00000"
-    assert StringUtil.rightZeros(" ",5) == " 0000"
-    assert StringUtil.rightZeros("A",5) == "A0000"
-    assert StringUtil.rightZeros("AB",5) == "AB000"
-    assert StringUtil.rightZeros(33,5) == "33000"
-    assert StringUtil.rightZeros(33.4,5) == "33.40"
-    assert StringUtil.rightZeros(33.46,5) == "33.46"
-    assert StringUtil.rightZeros(33.467,5) == "33.46"
-    assert StringUtil.rightZeros(33.4678,5) == "33.46"
+  test "[right_zeros(string,size)]" do
+    assert StringUtil.right_zeros(nil,5) == "00000"
+    assert StringUtil.right_zeros("",5) == "00000"
+    assert StringUtil.right_zeros(" ",5) == " 0000"
+    assert StringUtil.right_zeros("A",5) == "A0000"
+    assert StringUtil.right_zeros("AB",5) == "AB000"
+    assert StringUtil.right_zeros(33,5) == "33000"
+    assert StringUtil.right_zeros(33.4,5) == "33.40"
+    assert StringUtil.right_zeros(33.46,5) == "33.46"
+    assert StringUtil.right_zeros(33.467,5) == "33.46"
+    assert StringUtil.right_zeros(33.4678,5) == "33.46"
   end
   
-  test "[leftSpaces(string,size)]" do
-    assert StringUtil.leftSpaces(nil,5) == "     "
-    assert StringUtil.leftSpaces("",5) == "     "
-    assert StringUtil.leftSpaces(" ",5) == "     "
-    assert StringUtil.leftSpaces("A",5) == "    A"
-    assert StringUtil.leftSpaces("AB",5) == "   AB"
-    assert StringUtil.leftSpaces(33,5) == "   33"
-    assert StringUtil.leftSpaces(33.4,5) == " 33.4"
-    assert StringUtil.leftSpaces(33.46,5) == "33.46"
-    assert StringUtil.leftSpaces(33.467,5) == "33.46"
-    assert StringUtil.leftSpaces(33.4678,5) == "33.46"
+  test "[left_spaces(string,size)]" do
+    assert StringUtil.left_spaces(nil,5) == "     "
+    assert StringUtil.left_spaces("",5) == "     "
+    assert StringUtil.left_spaces(" ",5) == "     "
+    assert StringUtil.left_spaces("A",5) == "    A"
+    assert StringUtil.left_spaces("AB",5) == "   AB"
+    assert StringUtil.left_spaces(33,5) == "   33"
+    assert StringUtil.left_spaces(33.4,5) == " 33.4"
+    assert StringUtil.left_spaces(33.46,5) == "33.46"
+    assert StringUtil.left_spaces(33.467,5) == "33.46"
+    assert StringUtil.left_spaces(33.4678,5) == "33.46"
   end
   
-  test "[rightSpaces(string,size)]" do
-    assert StringUtil.rightSpaces(nil,5) == "     "
-    assert StringUtil.rightSpaces("",5) == "     "
-    assert StringUtil.rightSpaces(" ",5) == "     "
-    assert StringUtil.rightSpaces("A",5) == "A    "
-    assert StringUtil.rightSpaces("AB",5) == "AB   "
-    assert StringUtil.rightSpaces(33,5) == "33   "
-    assert StringUtil.rightSpaces(33.4,5) == "33.4 "
-    assert StringUtil.rightSpaces(33.46,5) == "33.46"
-    assert StringUtil.rightSpaces(33.467,5) == "33.46"
-    assert StringUtil.rightSpaces(33.4678,5) == "33.46"
+  test "[right_spaces(string,size)]" do
+    assert StringUtil.right_spaces(nil,5) == "     "
+    assert StringUtil.right_spaces("",5) == "     "
+    assert StringUtil.right_spaces(" ",5) == "     "
+    assert StringUtil.right_spaces("A",5) == "A    "
+    assert StringUtil.right_spaces("AB",5) == "AB   "
+    assert StringUtil.right_spaces(33,5) == "33   "
+    assert StringUtil.right_spaces(33.4,5) == "33.4 "
+    assert StringUtil.right_spaces(33.46,5) == "33.46"
+    assert StringUtil.right_spaces(33.467,5) == "33.46"
+    assert StringUtil.right_spaces(33.4678,5) == "33.46"
   end
   
   test "[trim(string)]" do
@@ -164,24 +164,24 @@ defmodule Krug.StringUtilTest do
     assert StringUtil.trim(" 10.5 ") == "10.5"
   end
   
-  test "[containsOneElementOfArray(target,array)]" do
-    assert StringUtil.containsOneElementOfArray(nil,nil) == false
-    assert StringUtil.containsOneElementOfArray("",nil) == false
-    assert StringUtil.containsOneElementOfArray(" ",nil) == false
-    assert StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[]]) == false
-    assert StringUtil.containsOneElementOfArray("abcdef5",[0,1,2,[5,7]]) == false
-    assert StringUtil.containsOneElementOfArray("abcdef57",[0,1,2,[5,7]]) == false
-    assert StringUtil.containsOneElementOfArray("abcdef5,7",[0,1,2,[5,7]]) == false
-    assert StringUtil.containsOneElementOfArray("abcdef[5,7]",[0,1,2,[5,7]]) == false
-    assert StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"["]) == true
-    assert StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"]"]) == true
-    assert StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"ab"]) == true
-    assert StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"bc"]) == true
-    assert StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"def["]) == true
-    assert StringUtil.containsOneElementOfArray("abcdef8[]",[0,1,2,[],8]) == true
+  test "[contains_one_element_of_array(target,array)]" do
+    assert StringUtil.contains_one_element_of_array(nil,nil) == false
+    assert StringUtil.contains_one_element_of_array("",nil) == false
+    assert StringUtil.contains_one_element_of_array(" ",nil) == false
+    assert StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[]]) == false
+    assert StringUtil.contains_one_element_of_array("abcdef5",[0,1,2,[5,7]]) == false
+    assert StringUtil.contains_one_element_of_array("abcdef57",[0,1,2,[5,7]]) == false
+    assert StringUtil.contains_one_element_of_array("abcdef5,7",[0,1,2,[5,7]]) == false
+    assert StringUtil.contains_one_element_of_array("abcdef[5,7]",[0,1,2,[5,7]]) == false
+    assert StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"["]) == true
+    assert StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"]"]) == true
+    assert StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"ab"]) == true
+    assert StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"bc"]) == true
+    assert StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"def["]) == true
+    assert StringUtil.contains_one_element_of_array("abcdef8[]",[0,1,2,[],8]) == true
   end
   
-  test "[coalesce(value,valueIfEmptyOrNull)]" do
+  test "[coalesce(value,value_if_empty_or_nil)]" do
     assert StringUtil.coalesce(nil,nil) == ""
     assert StringUtil.coalesce(nil,"") == ""
     assert StringUtil.coalesce("",nil) == ""
@@ -192,30 +192,30 @@ defmodule Krug.StringUtilTest do
     assert StringUtil.coalesce(" ","A") == "A"
   end
   
-  test "[toChar(charCodeString)]" do
-    assert StringUtil.toChar("") == ""
-    assert StringUtil.toChar(" ") == ""
-    assert StringUtil.toChar("A") == ""
-    assert StringUtil.toChar("B") == ""
-    assert StringUtil.toChar("AB") == ""
-    assert StringUtil.toChar(5) == "\x05"
-    assert StringUtil.toChar(65) == "A"
-    assert StringUtil.toChar(225) == "á"
-    assert StringUtil.toChar(16000) == "㺀"
+  test "[to_char(char_code_string)]" do
+    assert StringUtil.to_char("") == ""
+    assert StringUtil.to_char(" ") == ""
+    assert StringUtil.to_char("A") == ""
+    assert StringUtil.to_char("B") == ""
+    assert StringUtil.to_char("AB") == ""
+    assert StringUtil.to_char(5) == "\x05"
+    assert StringUtil.to_char(65) == "A"
+    assert StringUtil.to_char(225) == "á"
+    assert StringUtil.to_char(16000) == "㺀"
   end
   
-  test "[toCharCode(array,position)]" do
-    assert StringUtil.toCharCode(nil,0) == nil
-    assert StringUtil.toCharCode([],0) == nil
-    assert StringUtil.toCharCode([""],3) == nil
-    assert StringUtil.toCharCode([nil],0) == nil
-    assert StringUtil.toCharCode([""],0) == nil
-    assert StringUtil.toCharCode([" "],0) == 32
-    assert StringUtil.toCharCode(["\x05"],0) == 5
-    assert StringUtil.toCharCode(["A"],0) == 65
-    assert StringUtil.toCharCode(["á"],0) == 225
-    assert StringUtil.toCharCode(["㺀"],0) == 16000
-    assert StringUtil.toCharCode([nil,"",3,[],%{},"A"],5) == 65
+  test "[to_char_code(array,position)]" do
+    assert StringUtil.to_char_code(nil,0) == nil
+    assert StringUtil.to_char_code([],0) == nil
+    assert StringUtil.to_char_code([""],3) == nil
+    assert StringUtil.to_char_code([nil],0) == nil
+    assert StringUtil.to_char_code([""],0) == nil
+    assert StringUtil.to_char_code([" "],0) == 32
+    assert StringUtil.to_char_code(["\x05"],0) == 5
+    assert StringUtil.to_char_code(["A"],0) == 65
+    assert StringUtil.to_char_code(["á"],0) == 225
+    assert StringUtil.to_char_code(["㺀"],0) == 16000
+    assert StringUtil.to_char_code([nil,"",3,[],%{},"A"],5) == 65
   end
   
 end

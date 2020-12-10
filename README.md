@@ -1,16 +1,15 @@
 # Krug
 
-**A Utilitary package functionalities modules for secure/improve development.**
+**A Utilitary package functionalities modules for improve a secure performatic development.**
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `krug` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `krug` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:krug, "~> 0.1.0"}
+    {:krug, "~> 0.2.0"}
   ]
 end
 ```

@@ -4,6 +4,7 @@
 *.ppk
 *.sh
 *.txt
+*.tar
 **/_build/*
 **/deps/*
 **/doc/*

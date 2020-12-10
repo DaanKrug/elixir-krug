@@ -5,19 +5,19 @@ defmodule Krug.JsonUtilTest do
   
   alias Krug.JsonUtil
   
-  test "[encodeToLog(map,substitutionsArray \\ [])]" do
+  test "[encode_to_log(map,substitutions_array \\ [])]" do
     map = %{echo: "ping"}
     map2 = %{name: "Johannes Back", age: 57, address: "404 street", prefer_band: "Guns Roses"}
-    substitutionsArray = [
+    substitutions_array = [
     	["prefer_band","Prefered Musical Band"],
     	["name","Name"],
     	["age","Age"],
     	["address","Actual Address"]
     ]
-    assert JsonUtil.encodeToLog(map) == "echo: ping"
-    assert JsonUtil.encodeToLog(map2) 
+    assert JsonUtil.encode_to_log(map) == "echo: ping"
+    assert JsonUtil.encode_to_log(map2) 
       == "prefer_band: Guns Roses, name: Johannes Back, age: 57, address: 404 street"
-    assert JsonUtil.encodeToLog(map2,substitutionsArray) 
+    assert JsonUtil.encode_to_log(map2,substitutions_array) 
       == "Prefered Musical Band: Guns Roses, Name: Johannes Back, Age: 57, Actual Address: 404 street"
   end
   

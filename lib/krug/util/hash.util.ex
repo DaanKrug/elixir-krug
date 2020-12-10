@@ -16,11 +16,11 @@ defmodule Krug.HashUtil do
 
   ```elixir 
   iex > password = "123456"
-  iex > Krug.HashUtil.hashPassword(password)
+  iex > Krug.HashUtil.hash_password(password)
   $2b$10$y9nOBmx.kJV3juLBivaixuWMpIoB7ctGREqqrwvvgbqprY/BIRDX6
   ```
   """
-  def hashPassword(password) do
+  def hash_password(password) do
     cond do
       (nil == password or password == "") -> ""
       true -> Bcrypt.Base.hash_password(password,Bcrypt.gen_salt(15,false)) #12 .. 31
@@ -30,31 +30,31 @@ defmodule Krug.HashUtil do
 
 
   @doc """
-  Compares a clean text string ```password``` whit a string ```hashed password```
+  Compares a clean text string ```password``` with a string ```hashed password```
   and verify if one matches another.
   
-  If hashedPassword or password is nil/empty, return false. 
+  If hashed_password or password is nil/empty, return false. 
 
   ## Example
 
   ```elixir 
   iex > password = "123456"
-  iex > hashedPassword = "$2b$10$y9nOBmx.kJV3juLBivaixuWMpIoB7ctGREqqrwvvgbqprY/BIRDX6"
-  iex > Krug.HashUtil.passwordMatch(hashedPassword,password)
+  iex > hashed_password = "$2b$10$y9nOBmx.kJV3juLBivaixuWMpIoB7ctGREqqrwvvgbqprY/BIRDX6"
+  iex > Krug.HashUtil.password_match(hashed_password,password)
   true (or false if not matches)
   ```
   """  
-  def passwordMatch(hashedPassword,password) do
+  def password_match(hashed_password,password) do
     cond do
-      (nil == hashedPassword or hashedPassword == "" or nil == password or password == "") -> false
-      true -> handleVerify(Bcrypt.Base.checkpass_nif(:binary.bin_to_list(password),
-                                                     :binary.bin_to_list(hashedPassword)))
+      (nil == hashed_password or hashed_password == "" or nil == password or password == "") -> false
+      true -> handle_verify(Bcrypt.Base.checkpass_nif(:binary.bin_to_list(password),
+                                                     :binary.bin_to_list(hashed_password)))
     end
   end
   
   
   
-  defp handleVerify(value) do
+  defp handle_verify(value) do
     (value == 0)
   end
   

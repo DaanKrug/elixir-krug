@@ -18,31 +18,31 @@ defmodule Krug.StructUtil do
 
   ```elixir 
   iex > tuple = {:ok}
-  iex > Krug.StructUtil.getValueFromTuple(tuple)
+  iex > Krug.StructUtil.get_value_from_tuple(tuple)
   nil
   ```
   ```elixir 
   iex > tuple = {:ok,nil}
-  iex > Krug.StructUtil.getValueFromTuple(tuple)
+  iex > Krug.StructUtil.get_value_from_tuple(tuple)
   nil
   ```
   ```elixir 
   iex > tuple = {:ok,[1,2,3]}
-  iex > Krug.StructUtil.getValueFromTuple(tuple)
+  iex > Krug.StructUtil.get_value_from_tuple(tuple)
   [1,2,3]
   ```
   ```elixir 
   iex > tuple = {:ok,%{a: 1, b: 2, c: 3}}
-  iex > Krug.StructUtil.getValueFromTuple(tuple)
+  iex > Krug.StructUtil.get_value_from_tuple(tuple)
   %{a: 1, b: 2, c: 3}
   ```
   ```elixir 
   iex > tuple = {:error,"Operation Error"}
-  iex > Krug.StructUtil.getValueFromTuple(tuple)
+  iex > Krug.StructUtil.get_value_from_tuple(tuple)
   "Operation Error"
   ```
   """
-  def getValueFromTuple(tuple) do
+  def get_value_from_tuple(tuple) do
   	array = cond do
       (nil == tuple) -> nil
       true -> Tuple.to_list(tuple)
@@ -64,41 +64,41 @@ defmodule Krug.StructUtil do
 
   ```elixir 
   iex > list = []
-  iex > Krug.StructUtil.listContains(list,nil)
+  iex > Krug.StructUtil.list_contains(list,nil)
   false
   ```
   ```elixir 
   iex > list = nil
-  iex > Krug.StructUtil.listContains(list,nil)
+  iex > Krug.StructUtil.list_contains(list,nil)
   false
   ```
   ```elixir 
   iex > list = [nil]
-  iex > Krug.StructUtil.listContains(list,nil)
+  iex > Krug.StructUtil.list_contains(list,nil)
   true
   ```
   ```elixir 
   iex > list = [1,%{a: 1, b: 2},"",nil,[1,2,3],5]
-  iex > Krug.StructUtil.listContains(list,"")
+  iex > Krug.StructUtil.list_contains(list,"")
   true
   ```
   ```elixir 
   iex > list = [1,%{a: 1, b: 2},"",nil,[1,2,3],5]
-  iex > Krug.StructUtil.listContains(list," ")
+  iex > Krug.StructUtil.list_contains(list," ")
   false
   ```
   ```elixir 
   iex > list = [1,%{a: 1, b: 2},"",nil,[1,2,3],5]
-  iex > Krug.StructUtil.listContains(list,%{a: 1, b: 2})
+  iex > Krug.StructUtil.list_contains(list,%{a: 1, b: 2})
   true
   ```
   ```elixir 
   iex > list = [1,%{a: 1, b: 2},"",nil,[1,2,3],5]
-  iex > Krug.StructUtil.listContains(list,%{a: 1, b: 5})
+  iex > Krug.StructUtil.list_contains(list,%{a: 1, b: 5})
   false
   ```
   """
-  def listContains(list,value) do
+  def list_contains(list,value) do
     cond do
       (nil == list or length(list) == 0) -> false
       true -> (Enum.member?(list,value))
@@ -119,45 +119,45 @@ defmodule Krug.StructUtil do
   ```elixir 
   iex > list = []
   iex > values = []
-  iex > Krug.StructUtil.listContainsOne(list,values)
+  iex > Krug.StructUtil.list_contains_one_of(list,values)
   false
   ```
   ```elixir 
   iex > list = [1,2,4,6]
   iex > values = [5,7,8]
-  iex > Krug.StructUtil.listContainsOne(list,values)
+  iex > Krug.StructUtil.list_contains_one_of(list,values)
   false
   ```
   ```elixir 
   iex > list = [1,2,4,6]
   iex > values = [5,7,8,"A",%{a: 1, b: 3},9,6]
-  iex > Krug.StructUtil.listContainsOne(list,values)
+  iex > Krug.StructUtil.list_contains_one_of(list,values)
   true
   ```
   ```elixir 
   iex > list = [1,2,4,6]
   iex > values = [5,7,8,"A",%{a: 1, b: 3},9]
-  iex > Krug.StructUtil.listContainsOne(list,values)
+  iex > Krug.StructUtil.list_contains_one_of(list,values)
   false
   ```
   ```elixir 
   iex > list = [1,2,4,6,%{a: 1, b: 3}]
   iex > values = [5,7,8,"A",%{a: 1, b: 3},9]
-  iex > Krug.StructUtil.listContainsOne(list,values)
+  iex > Krug.StructUtil.list_contains_one_of(list,values)
   true
   ```
   ```elixir 
   iex > list = [1,2,4,6,%{a: 1, b: 3}]
   iex > values = [5,7,8,"A",%{a: 1, b: 5},9]
-  iex > Krug.StructUtil.listContainsOne(list,values)
+  iex > Krug.StructUtil.list_contains_one_of(list,values)
   false
   ```
   """
-  def listContainsOne(list,values) do
+  def list_contains_one_of(list,values) do
     cond do
       (nil == list or length(list) == 0 or nil == values or length(values) == 0) -> false
       (Enum.member?(list,hd(values))) -> true
-      true -> listContainsOne(list,tl(values))
+      true -> list_contains_one_of(list,tl(values))
     end
   end
   

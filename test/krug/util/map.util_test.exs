@@ -41,36 +41,36 @@ defmodule Krug.MapUtilTest do
   	assert MapUtil.delete(nil,nil) == nil
   end
   
-  test "[test deleteAll(map,keys)]" do
+  test "[test delete_all(map,keys)]" do
     map = %{a: 1, b: 3}
   	map2 = %{a: 1}
   	map3 = %{b: 3}
-  	assert MapUtil.deleteAll(map,[:a]) == map3
-  	assert MapUtil.deleteAll(map,[:b]) == map2
-  	assert MapUtil.deleteAll(map,[:c]) == map
-  	assert MapUtil.deleteAll(map,[1]) == map
-  	assert MapUtil.deleteAll(map,[nil]) == map
-  	assert MapUtil.deleteAll(map,[]) == map
-  	assert MapUtil.deleteAll(map,nil) == map
-  	assert MapUtil.deleteAll(map,[:c,nil]) == map
-  	assert MapUtil.deleteAll(nil,[:a]) == nil
-  	assert MapUtil.deleteAll(nil,[:b]) == nil
-  	assert MapUtil.deleteAll(nil,[:c]) == nil
-  	assert MapUtil.deleteAll(nil,[1]) == nil
-  	assert MapUtil.deleteAll(nil,[nil]) == nil
-  	assert MapUtil.deleteAll(nil,[]) == nil
-  	assert MapUtil.deleteAll(nil,nil) == nil
-  	assert MapUtil.deleteAll(nil,[:c,nil]) == nil
-  	assert MapUtil.deleteAll(map,[:a,:b]) == %{}
-  	assert MapUtil.deleteAll(map,[:a,:b,:c]) == %{}
-  	assert MapUtil.deleteAll(map,[:a,:b,1]) == %{}
-  	assert MapUtil.deleteAll(map,[:a,:b,:c,nil]) == %{}
-  	assert MapUtil.deleteAll(map,[:a,:b,nil]) == %{}
-  	assert MapUtil.deleteAll(nil,[:a,:b]) == nil
-  	assert MapUtil.deleteAll(nil,[:a,:b,:c]) == nil
-  	assert MapUtil.deleteAll(nil,[:a,:b,1]) == nil
-  	assert MapUtil.deleteAll(nil,[:a,:b,:c,nil]) == nil
-  	assert MapUtil.deleteAll(nil,[:a,:b,nil]) == nil
+  	assert MapUtil.delete_all(map,[:a]) == map3
+  	assert MapUtil.delete_all(map,[:b]) == map2
+  	assert MapUtil.delete_all(map,[:c]) == map
+  	assert MapUtil.delete_all(map,[1]) == map
+  	assert MapUtil.delete_all(map,[nil]) == map
+  	assert MapUtil.delete_all(map,[]) == map
+  	assert MapUtil.delete_all(map,nil) == map
+  	assert MapUtil.delete_all(map,[:c,nil]) == map
+  	assert MapUtil.delete_all(nil,[:a]) == nil
+  	assert MapUtil.delete_all(nil,[:b]) == nil
+  	assert MapUtil.delete_all(nil,[:c]) == nil
+  	assert MapUtil.delete_all(nil,[1]) == nil
+  	assert MapUtil.delete_all(nil,[nil]) == nil
+  	assert MapUtil.delete_all(nil,[]) == nil
+  	assert MapUtil.delete_all(nil,nil) == nil
+  	assert MapUtil.delete_all(nil,[:c,nil]) == nil
+  	assert MapUtil.delete_all(map,[:a,:b]) == %{}
+  	assert MapUtil.delete_all(map,[:a,:b,:c]) == %{}
+  	assert MapUtil.delete_all(map,[:a,:b,1]) == %{}
+  	assert MapUtil.delete_all(map,[:a,:b,:c,nil]) == %{}
+  	assert MapUtil.delete_all(map,[:a,:b,nil]) == %{}
+  	assert MapUtil.delete_all(nil,[:a,:b]) == nil
+  	assert MapUtil.delete_all(nil,[:a,:b,:c]) == nil
+  	assert MapUtil.delete_all(nil,[:a,:b,1]) == nil
+  	assert MapUtil.delete_all(nil,[:a,:b,:c,nil]) == nil
+  	assert MapUtil.delete_all(nil,[:a,:b,nil]) == nil
   end
   
   test "[test replace(map,key,newValue)]" do

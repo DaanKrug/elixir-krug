@@ -70,15 +70,15 @@ defmodule Krug.MapUtil do
 
   ```elixir 
   iex > map = %{a: 1, b: 3, c: 10}
-  iex > Krug.MapUtil.deleteAll(map,[:a,:c,:d])
+  iex > Krug.MapUtil.delete_all(map,[:a,:c,:d])
   %{b: 3}
   ```
   """
-  def deleteAll(map,keys) do
+  def delete_all(map,keys) do
     cond do
       (nil == map or nil == keys or length(keys) == 0) -> map
       (length(keys) == 1) -> delete(map,hd(keys))
-      true -> deleteAll(delete(map,hd(keys)),tl(keys))
+      true -> delete_all(delete(map,hd(keys)),tl(keys))
     end
   end
 

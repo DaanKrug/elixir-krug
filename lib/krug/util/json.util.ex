@@ -17,54 +17,54 @@ defmodule Krug.JsonUtil do
 
   ```elixir 
   iex > map = %{echo: "ping"}
-  iex > Krug.JsonUtil.encodeToLog(map)
+  iex > Krug.JsonUtil.encode_to_log(map)
   "echo: ping"
   ```
   ```elixir 
   iex > map = %{name: "Johannes Backend", age: 57, address: "404 street", prefer_band: "Guns Roses"}
-  iex > Krug.JsonUtil.encodeToLog(map)
+  iex > Krug.JsonUtil.encode_to_log(map)
   "prefer_band: Guns Roses, name: Johannes Backend, age: 57, address: 404 street"
   ```
   ```elixir 
   iex > map = %{name: "Johannes Backend", age: 57, address: "404 street", prefer_band: "Guns Roses"}
-  iex > substitutionsArray = [["prefer_band","Prefered Musical Band"],["name","Name"],["age","Age"],
+  iex > substitutions_array = [["prefer_band","Prefered Musical Band"],["name","Name"],["age","Age"],
                               ["address","Actual Address"]]
-  iex > Krug.JsonUtil.encodeToLog(map,substitutionsArray)
+  iex > Krug.JsonUtil.encode_to_log(map,substitutions_array)
   "Prefered Musical Band: Guns Roses, Name: Johannes Backend, Age: 57, Actual Address: 404 street"
   ```
   """
-  def encodeToLog(map,substitutionsArray \\[]) do
+  def encode_to_log(map,substitutions_array \\[]) do
     cond do
       (nil == map) -> ""
-      true -> encodeMapToLog(map,substitutionsArray)
+      true -> encodeMap_to_log(map,substitutions_array)
     end
   end
 
 
   
-  defp encodeMapToLog(map,substitutionsArray) do
+  defp encodeMap_to_log(map,substitutions_array) do
     Poison.encode!(map)
       |> StringUtil.replace(":",": ")
       |> StringUtil.replace(",",", ") 
       |> StringUtil.replace("\"","")
       |> StringUtil.replace("{","")
       |> StringUtil.replace("}","")
-      |> makeSubstitutions(substitutionsArray)
+      |> make_substitutions(substitutions_array)
   end
   
   
   
-  defp makeSubstitutions(json,array) do
+  defp make_substitutions(json,array) do
     cond do
       (nil == array or length(array) == 0) -> json
-      true -> makeSubstitutions(makeSubstitution(json,hd(array)),tl(array))
+      true -> make_substitutions(make_substitution(json,hd(array)),tl(array))
     end
   end
 
 
 
-  defp makeSubstitution(json,arrayElement) do
-    json |> StringUtil.replace(arrayElement |> Enum.at(0),arrayElement |> Enum.at(1))
+  defp make_substitution(json,array_element) do
+    json |> StringUtil.replace(array_element |> Enum.at(0),array_element |> Enum.at(1))
   end
 
 

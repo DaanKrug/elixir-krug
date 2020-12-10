@@ -7,11 +7,11 @@ defmodule Krug.HashUtilTest do
   
   test "[cipher and compare]" do
     password = "123456"
-    hash = HashUtil.hashPassword(password)
-    hash2 = HashUtil.hashPassword(password)
+    hash = HashUtil.hash_password(password)
+    hash2 = HashUtil.hash_password(password)
     refute hash == hash2
-    assert HashUtil.passwordMatch(hash,password)
-    assert HashUtil.passwordMatch(hash2,password)
+    assert HashUtil.password_match(hash,password)
+    assert HashUtil.password_match(hash2,password)
   end
   
   

@@ -6,19 +6,19 @@ defmodule Krug.ReturnUtilTest do
   alias Krug.ReturnUtil
   alias Krug.MapUtil
   
-  test "[getOperationError(msgError \\\\ \"\")]" do
-    map = ReturnUtil.getOperationError()
-    map2 = ReturnUtil.getOperationError("One Stupid Error")
+  test "[get_operation_error(error_msg \\\\ \"\")]" do
+    map = ReturnUtil.get_operation_error()
+    map2 = ReturnUtil.get_operation_error("One Stupid Error")
     assert map |> MapUtil.get(:objectClass) == "OperationError" 
     assert map |> MapUtil.get(:code) == 500 
     assert map |> MapUtil.get(:msg) == "" 
     assert map2 |> MapUtil.get(:msg) == "One Stupid Error" 
   end
   
-  test "[getOperationSuccess(codeReturn,msgSucess,objectReturn \\\\ nil)]" do
-    objectReturn = %{echo: "ping"}
-    map = ReturnUtil.getOperationSuccess(200,"Sucess Message 200")
-    map2 = ReturnUtil.getOperationSuccess(201,"Sucess Message 201",objectReturn)
+  test "[get_operation_success(return_code,success_msg,return_object \\\\ nil)]" do
+    return_object = %{echo: "ping"}
+    map = ReturnUtil.get_operation_success(200,"Sucess Message 200")
+    map2 = ReturnUtil.get_operation_success(201,"Sucess Message 201",return_object)
     assert map |> MapUtil.get(:objectClass) == "OperationSuccess" 
     assert map |> MapUtil.get(:code) == 200 
     assert map |> MapUtil.get(:msg) == "Sucess Message 200" 
@@ -29,16 +29,16 @@ defmodule Krug.ReturnUtilTest do
     assert map2 |> MapUtil.get(:object) |> MapUtil.get(:echo) == "ping" 
   end
   
-  test "[getValidationResult(codeReturn,msgResult)]" do
-    map = ReturnUtil.getValidationResult(100200,"[100200] ValidationMessage")
+  test "[get_validation_result(return_code,result_msg)]" do
+    map = ReturnUtil.get_validation_result(100200,"[100200] ValidationMessage")
     assert map |> MapUtil.get(:objectClass) == "ValidationResult" 
     assert map |> MapUtil.get(:code) == 100200 
     assert map |> MapUtil.get(:msg) == "[100200] ValidationMessage" 
   end
   
-  test "[getReport(html)]" do
+  test "[get_report(html)]" do
     html = "<div><h1>Echo Ping</h1></div>"
-    map = ReturnUtil.getReport(html) |> Enum.at(0)
+    map = ReturnUtil.get_report(html) |> Enum.at(0)
     assert map |> MapUtil.get(:objectClass) == "Report" 
     assert map |> MapUtil.get(:code) == 205 
     assert map |> MapUtil.get(:msg) == html 

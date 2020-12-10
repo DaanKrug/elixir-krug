@@ -3,7 +3,7 @@ defmodule Krug.HttpUtil do
   @moduledoc """
   Utilitary module to handle HTTPoison requests and respectives fail/responses.
   
-  Useful to access external services whit CORS restrictions in browser,
+  Useful to access external services with CORS restrictions in browser,
   or services that involves use of credentials that don't should be send/stored
   in browser/UI.
   """
@@ -23,22 +23,22 @@ defmodule Krug.HttpUtil do
 
   ```elixir 
   iex > url = "www.google.com"
-  iex > Krug.HttpUtil.makeGetRequest(url)
+  iex > Krug.HttpUtil.make_get_request(url)
   "<!doctype html><html ..."
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makeGetRequest(fakeUrl)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_get_request(fake_url)
   nil
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makeGetRequest(fakeUrl,[],[],true)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_get_request(fake_url,[],[],true)
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def makeGetRequest(url,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.get(url,headers,options) |> handleResponse(debug)
+  def make_get_request(url,headers \\ [], options \\ [],debug \\ false) do
+    HTTPoison.get(url,headers,options) |> handle_response(debug)
   end
   
   
@@ -56,23 +56,23 @@ defmodule Krug.HttpUtil do
 
   ```elixir 
   iex > url = "www.google.com"
-  iex > jsonbody = "{search: \"ping\"}"
-  iex > Krug.HttpUtil.makePostRequest(url,jsonbody)
+  iex > json_body = "{search: \"ping\"}"
+  iex > Krug.HttpUtil.make_post_request(url,json_body)
   "<!doctype html><html ... Error 405 (Method Not Allowed) ..."
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makePostRequest(fakeUrl,jsonbody)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_post_request(fake_url,json_body)
   nil
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makePostRequest(fakeUrl,jsonbody,[],[],true)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_post_request(fake_url,json_body,[],[],true)
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def makePostRequest(url,jsonbody,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.post(url,jsonbody,headers,options) |> handleResponse(debug)
+  def make_post_request(url,json_body,headers \\ [], options \\ [],debug \\ false) do
+    HTTPoison.post(url,json_body,headers,options) |> handle_response(debug)
   end
   
   
@@ -90,23 +90,23 @@ defmodule Krug.HttpUtil do
 
   ```elixir 
   iex > url = "www.google.com"
-  iex > jsonbody = "{search: \"ping\"}"
-  iex > Krug.HttpUtil.makePutRequest(url,jsonbody)
+  iex > json_body = "{search: \"ping\"}"
+  iex > Krug.HttpUtil.make_put_request(url,json_body)
   "<!doctype html><html ... Error 405 (Method Not Allowed) ..."
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makePutRequest(fakeUrl,jsonbody)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_put_request(fake_url,json_body)
   nil
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makePutRequest(fakeUrl,jsonbody,[],[],true)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_put_request(fake_url,json_body,[],[],true)
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def makePutRequest(url,jsonbody,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.put(url,jsonbody,headers,options) |> handleResponse(debug)
+  def make_put_request(url,json_body,headers \\ [], options \\ [],debug \\ false) do
+    HTTPoison.put(url,json_body,headers,options) |> handle_response(debug)
   end
   
   
@@ -124,23 +124,23 @@ defmodule Krug.HttpUtil do
 
   ```elixir 
   iex > url = "www.google.com"
-  iex > jsonbody = "{search: \"ping\"}"
-  iex > Krug.HttpUtil.makePatchRequest(url,jsonbody)
+  iex > json_body = "{search: \"ping\"}"
+  iex > Krug.HttpUtil.make_patch_request(url,json_body)
   "<!doctype html><html ... Error 405 (Method Not Allowed) ..."
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makePatchRequest(fakeUrl,jsonbody)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_patch_request(fake_url,json_body)
   nil
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makePatchRequest(fakeUrl,jsonbody,[],[],true)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_patch_request(fake_url,json_body,[],[],true)
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def makePatchRequest(url,jsonbody,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.patch(url,jsonbody,headers,options) |> handleResponse(debug)
+  def make_patch_request(url,json_body,headers \\ [], options \\ [],debug \\ false) do
+    HTTPoison.patch(url,json_body,headers,options) |> handle_response(debug)
   end
   
   
@@ -158,33 +158,33 @@ defmodule Krug.HttpUtil do
 
   ```elixir 
   iex > url = "www.google.com"
-  iex > Krug.HttpUtil.makeDeleteRequest(url)
+  iex > Krug.HttpUtil.make_delete_request(url)
   "<!doctype html><html ... Error 405 (Method Not Allowed) ..."
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makeDeleteRequest(fakeUrl)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_delete_request(fake_url)
   nil
   ```
   ```elixir 
-  iex > fakeUrl = "www.fakeurl.xxx"
-  iex > Krug.HttpUtil.makeDeleteRequest(fakeUrl,[],[],true)
+  iex > fake_url = "www.fake_url.xxx"
+  iex > Krug.HttpUtil.make_delete_request(fake_url,[],[],true)
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def makeDeleteRequest(url,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.delete(url,headers,options) |> handleResponse(debug)
+  def make_delete_request(url,headers \\ [], options \\ [],debug \\ false) do
+    HTTPoison.delete(url,headers,options) |> handle_response(debug)
   end
   
   
   
-  defp handleResponse({:ok,response},_debug) do
+  defp handle_response({:ok,response},_debug) do
   	response.body
   end
   
   
   
-  defp handleResponse({:error,reason},debug) do
+  defp handle_response({:error,reason},debug) do
     cond do
       (debug) -> reason
       true -> nil

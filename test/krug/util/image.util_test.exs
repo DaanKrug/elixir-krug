@@ -5,7 +5,7 @@ defmodule Krug.ImageUtilTest do
   
   alias Krug.ImageUtil
   
-  test "[validateUrl(path)]" do
+  test "[validate_url(path)]" do
     path = "http://xyz.com"
     path2 = "https://xyz.com"
     path3 = "https://xyz.com.br"
@@ -16,16 +16,16 @@ defmodule Krug.ImageUtilTest do
     path8 = "https://xyz.jpg"
     path9 = "https://xyz.gif"
     path10 = "https://xyz.svg"
-    assert ImageUtil.validateUrl(path) == false
-    assert ImageUtil.validateUrl(path2) == false
-    assert ImageUtil.validateUrl(path3) == false
-    assert ImageUtil.validateUrl(path4) == false
-    assert ImageUtil.validateUrl(path5) == true
-    assert ImageUtil.validateUrl(path6) == true
-    assert ImageUtil.validateUrl(path7) == true
-    assert ImageUtil.validateUrl(path8) == true
-    assert ImageUtil.validateUrl(path9) == true
-    assert ImageUtil.validateUrl(path10) == false
+    assert ImageUtil.validate_url(path) == false
+    assert ImageUtil.validate_url(path2) == false
+    assert ImageUtil.validate_url(path3) == false
+    assert ImageUtil.validate_url(path4) == false
+    assert ImageUtil.validate_url(path5) == true
+    assert ImageUtil.validate_url(path6) == true
+    assert ImageUtil.validate_url(path7) == true
+    assert ImageUtil.validate_url(path8) == true
+    assert ImageUtil.validate_url(path9) == true
+    assert ImageUtil.validate_url(path10) == false
   end
   
   

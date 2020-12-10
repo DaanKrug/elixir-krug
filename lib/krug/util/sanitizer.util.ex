@@ -2,7 +2,7 @@ defmodule Krug.SanitizerUtil do
 
   @moduledoc """
   Utilitary secure module to provide methods that help
-  whit data sanitization for validation, and some methods
+  with data sanitization for validation, and some methods
   that result sanitized values.
   """
 
@@ -26,42 +26,42 @@ defmodule Krug.SanitizerUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail(nil)
+  iex > Krug.SanitizerUtil.validate_email(nil)
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail("")
+  iex > Krug.SanitizerUtil.validate_email("")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail([])
+  iex > Krug.SanitizerUtil.validate_email([])
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail([""])
+  iex > Krug.SanitizerUtil.validate_email([""])
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail("echo@ping%com")
+  iex > Krug.SanitizerUtil.validate_email("echo@ping%com")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail("echo@ping$com")
+  iex > Krug.SanitizerUtil.validate_email("echo@ping$com")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail("echo@ping.com")
+  iex > Krug.SanitizerUtil.validate_email("echo@ping.com")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateEmail("echo@ping_com")
+  iex > Krug.SanitizerUtil.validate_email("echo@ping_com")
   true
   ```
   """
-  def validateEmail(email) do 
+  def validate_email(email) do 
     email = String.downcase("#{email}")
-    emailSanitized = sanitizeAll(email,false,true,100,"email")
-    emailSanitized != "" and emailSanitized == email
+    sanitized_email = sanitize_all(email,false,true,100,"email")
+    sanitized_email != "" and sanitized_email == email
   end
   
   
@@ -80,47 +80,47 @@ defmodule Krug.SanitizerUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl(nil)
+  iex > Krug.SanitizerUtil.validate_url(nil)
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl("")
+  iex > Krug.SanitizerUtil.validate_url("")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl(" ")
+  iex > Krug.SanitizerUtil.validate_url(" ")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl([])
+  iex > Krug.SanitizerUtil.validate_url([])
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl([""])
+  iex > Krug.SanitizerUtil.validate_url([""])
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl("www.google.com")
+  iex > Krug.SanitizerUtil.validate_url("www.google.com")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl("http://www.google.com")
+  iex > Krug.SanitizerUtil.validate_url("http://www.google.com")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl("https://www.google.com")
+  iex > Krug.SanitizerUtil.validate_url("https://www.google.com")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.validateUrl("https://www.echo|")
+  iex > Krug.SanitizerUtil.validate_url("https://www.echo|")
   false
   ```
   """
-  def validateUrl(url) do
-    urlSanitized = sanitizeAll(url,false,true,0,"url")
+  def validate_url(url) do
+    sanitized_url = sanitize_all(url,false,true,0,"url")
     cond do
-      (urlSanitized == "") -> false 
-      (urlSanitized != url) -> false
+      (sanitized_url == "") -> false 
+      (sanitized_url != url) -> false
       (url |> String.slice(0..6) == "http://") -> true
       (url |> String.slice(0..7) == "https://") -> true
       true -> false
@@ -130,116 +130,115 @@ defmodule Krug.SanitizerUtil do
   
   
   @doc """
-  Verify if an element of ```arrayValues``` is one of [nil,""," "].
+  Verify if an element of ```array_values``` is one of [nil,""," "].
   
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.hasEmpty(nil)
+  iex > Krug.SanitizerUtil.has_empty(nil)
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasEmpty([])
+  iex > Krug.SanitizerUtil.has_empty([])
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasEmpty([nil,1,2])
+  iex > Krug.SanitizerUtil.has_empty([nil,1,2])
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasEmpty([3,4,""])
+  iex > Krug.SanitizerUtil.has_empty([3,4,""])
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasEmpty([8,7,9," "])
+  iex > Krug.SanitizerUtil.has_empty([8,7,9," "])
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasEmpty([[],%{},9,34,"$A"])
+  iex > Krug.SanitizerUtil.has_empty([[],%{},9,34,"$A"])
   false
   ```
   """
-  def hasEmpty(arrayValues) do
-    StructUtil.listContainsOne(arrayValues,[nil,""," "])
+  def has_empty(array_values) do
+    StructUtil.list_contains_one_of(array_values,[nil,""," "])
   end
   
   
   
   @doc """
-  Verify if an element of ```arrayValues``` is < ```value```.
+  Verify if an element of ```array_values``` is < ```value```.
   
-  If ```arrayValues``` is nil/empty return true.
+  If ```array_values``` is nil/empty return true.
   
   If ```value``` is not a number return false.
   
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan(nil,1)
+  iex > Krug.SanitizerUtil.array_has_one_less_than(nil,1)
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([""],1)
+  iex > Krug.SanitizerUtil.array_has_one_less_than([""],1)
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([nil],1)
+  iex > Krug.SanitizerUtil.array_has_one_less_than([nil],1)
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1],nil)
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1],nil)
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1],"")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1],"")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1],"-1-1")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1],"-1-1")
   false
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1],"10")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1],"10")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1,0],1)
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1,0],1)
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1,0,-1],"-0.5")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1,0,-1],"-0.5")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1,0,-1],"-0,5.5")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1,0,-1],"-0,5.5")
   false - * "-0,5.5" convert to -5.5
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1,0,-1],"-0,0.5")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1,0,-1],"-0,0.5")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1,0,-1,[],nil,%{}],"-0,0.5")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1,0,-1,[],nil,%{}],"-0,0.5")
   true
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.hasLessThan([1,0,2,[],nil,%{}],"-0,0.5")
+  iex > Krug.SanitizerUtil.array_has_one_less_than([1,0,2,[],nil,%{}],"-0,0.5")
   false
   ```
   """
-  def hasLessThan(arrayValues,value) do
+  def array_has_one_less_than(array_values,value) do
     cond do
-      (nil == arrayValues or length(arrayValues) == 0) -> true
-      (NumberUtil.isNan(value)) -> false
-      true -> Enum.min(arrayValues) < NumberUtil.toFloat(value)
+      (nil == array_values or length(array_values) == 0) -> true
+      (NumberUtil.is_nan(value)) -> false
+      true -> Enum.min(array_values) < NumberUtil.to_float(value)
     end
   end
   
   
   
   @doc """
-  Generates a random string whit length ```size``` containing
-  "A-z0-9" chars.
+  Generates a random string with length ```size``` containing "A-z0-9" chars.
   ```elixir
   ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
    "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
@@ -252,42 +251,42 @@ defmodule Krug.SanitizerUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandom(nil)
-  "V@/)B*$fXG" - random
+  iex > Krug.SanitizerUtil.generate_random(nil)
+  "V@/)B*$fXG"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandom("")
-  "NXd6oBJJK$" - random
+  iex > Krug.SanitizerUtil.generate_random("")
+  "NXd6oBJJK$"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandom(" ")
-  "WñQcVCX1m(" - random
+  iex > Krug.SanitizerUtil.generate_random(" ")
+  "WñQcVCX1m("
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandom("10")
-  "Y,nEWnty/t" - random
+  iex > Krug.SanitizerUtil.generate_random("10")
+  "Y,nEWnty/t"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandom(20)
-  "28ñHH5I2:$jcPCñ6kNk8" - random
+  iex > Krug.SanitizerUtil.generate_random(20)
+  "28ñHH5I2:$jcPCñ6kNk8"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandom("30")
-  "7@sX$M%7gyy,58$_p@48_rRN%VjtVO" - random
+  iex > Krug.SanitizerUtil.generate_random("30")
+  "7@sX$M%7gyy,58$_p@48_rRN%VjtVO"
   ```
   """
-  def generateRandom(size) do
+  def generate_random(size) do
     size = cond do
-      (NumberUtil.isNan(size)) -> 10
-      true -> NumberUtil.toInteger(size)
+      (NumberUtil.is_nan(size)) -> 10
+      true -> NumberUtil.to_integer(size)
     end
-    generateRandomSeq(size,alphaNums(),"")
+    generate_random_seq(size,alpha_nums(),"")
   end
   
   
   
   @doc """
-  Generates a random string whit length ```size``` containing
+  Generates a random string with length ```size``` containing
   only numeric 0-9 chars.
   
   If ```size``` is not a number, set ```size``` to 10.
@@ -295,42 +294,42 @@ defmodule Krug.SanitizerUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomOnlyNum(nil)
-  "8842631571" - random
+  iex > Krug.SanitizerUtil.generate_random_only_num(nil)
+  "8842631571"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomOnlyNum("")
-  "3983415257" - random
+  iex > Krug.SanitizerUtil.generate_random_only_num("")
+  "3983415257"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomOnlyNum(" ")
-  "5367142216" - random
+  iex > Krug.SanitizerUtil.generate_random_only_num(" ")
+  "5367142216"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomOnlyNum(10)
-  "1519486235" - random
+  iex > Krug.SanitizerUtil.generate_random_only_num(10)
+  "1519486235"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomOnlyNum("20")
-  "45396319754971833184" - random
+  iex > Krug.SanitizerUtil.generate_random_only_num("20")
+  "45396319754971833184"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomOnlyNum(30)
-  "845951826982685147272442547731" - random
+  iex > Krug.SanitizerUtil.generate_random_only_num(30)
+  "845951826982685147272442547731"
   ```
   """
-  def generateRandomOnlyNum(size) do
+  def generate_random_only_num(size) do
     size = cond do
-      (NumberUtil.isNan(size)) -> 10
-      true -> NumberUtil.toInteger(size)
+      (NumberUtil.is_nan(size)) -> 10
+      true -> NumberUtil.to_integer(size)
     end
-    generateRandomSeq(size,onlyNums(),"")
+    generate_random_seq(size,only_nums(),"")
   end
   
   
   
   @doc """
-  Generates a random string whit length ```size``` containing
+  Generates a random string with length ```size``` containing
   only allowed chars to be used in file names.
   
   If ```size``` is not a number, set ```size``` to 10.
@@ -338,36 +337,36 @@ defmodule Krug.SanitizerUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomFileName(nil)
-  "2mi1k281XY" - random
+  iex > Krug.SanitizerUtil.generate_random_filename(nil)
+  "2mi1k281XY"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomFileName("")
-  "1xdsohbWBs" - random
+  iex > Krug.SanitizerUtil.generate_random_filename("")
+  "1xdsohbWBs"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomFileName(" ")
-  "3orpWPvnfg" - random
+  iex > Krug.SanitizerUtil.generate_random_filename(" ")
+  "3orpWPvnfg"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomFileName(10)
-  "T29p17Gbqi" - random
+  iex > Krug.SanitizerUtil.generate_random_filename(10)
+  "T29p17Gbqi"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomFileName("20")
-  "Ry7JFypiFVl2z8jDhsg1" - random
+  iex > Krug.SanitizerUtil.generate_random_filename("20")
+  "Ry7JFypiFVl2z8jDhsg1"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.generateRandomFileName(30)
-  "OxC5DTSmih3BG5uj7KmK1XgWDvMBe3" - random
+  iex > Krug.SanitizerUtil.generate_random_filename(30)
+  "OxC5DTSmih3BG5uj7KmK1XgWDvMBe3"
   ```
   """
-  def generateRandomFileName(size) do
+  def generate_random_filename(size) do
     size = cond do
-      (NumberUtil.isNan(size)) -> 10
-      true -> NumberUtil.toInteger(size)
+      (NumberUtil.is_nan(size)) -> 10
+      true -> NumberUtil.to_integer(size)
     end
-    generateRandomSeq(size,fileNameChars(),"")
+    generate_random_seq(size,filename_chars(),"")
   end
   
   
@@ -415,7 +414,7 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def translate(input) do
-    translateFromArrayChars(input,strangeChars(),translatedChars(),0)
+    translate_from_array_chars(input,strange_chars(),translated_chars(),0)
   end
   
   
@@ -466,10 +465,9 @@ defmodule Krug.SanitizerUtil do
     input = StringUtil.replace(input,"despint","distinct")
     input = StringUtil.replace(input,"xstrike ","like ")
     input = StringUtil.replace(input,"quaspa","'")
-    input = StringUtil.replace(input,"description","dessccrriippttion")
     cond do
-      (StringUtil.containsOneElementOfArray(input,forbidden())) -> nil
-      true -> StringUtil.replace(input,"dessccrriippttion","description")
+      (StringUtil.contains_one_element_of_array(input,forbidden())) -> nil
+      true -> input
     end
   end
   
@@ -480,16 +478,16 @@ defmodule Krug.SanitizerUtil do
   If forbidden content or not allowed chars are finded, return empty string for 
   not numeric input values and "0" for numeric values.
   
-  If ```sanitizeInput``` received as true, then call additionally methods 
+  If ```sanitize_input``` received as true, then call additionally methods 
   to sanitize the value as comming from a html input field 
   (type: text,number and all others except textarea).
   
-  ```validChars``` should be a string whit the valid chars aceppted, separated
-  by comma (ex.: "a,b,c,d,4") or a string that matches whit a predefined values name.
-  If ```validChars``` is nil/empty default value "A-z0-9" is used if
-  ```isNumber``` = false otherwise if is a number the "0-9" value used by default.
+  ```valid_chars``` should be a string with the valid chars aceppted, separated
+  by comma (ex.: "a,b,c,d,4") or a string that matches with a predefined values name.
+  If ```valid_chars``` is nil/empty default value "A-z0-9" is used if
+  ```is_numeric``` = false otherwise if is a number the "0-9" value used by default.
   
-  Named ```validChars``` predefined values and respective chars:
+  Named ```valid_chars``` predefined values and respective chars:
   
   - "A-z0-9"
   ```elixir  
@@ -583,41 +581,41 @@ defmodule Krug.SanitizerUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("09 8778 987",false,true,250,"0-9")
+  iex > Krug.SanitizerUtil.sanitize_all("09 8778 987",false,true,250,"0-9")
   ""
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("098778987",false,true,250,"0-9")
+  iex > Krug.SanitizerUtil.sanitize_all("098778987",false,true,250,"0-9")
   "098778987"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("09 8778 987",true,true,250,"0-9")
+  iex > Krug.SanitizerUtil.sanitize_all("09 8778 987",true,true,250,"0-9")
   "0"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("098778987",true,true,250,"0-9")
+  iex > Krug.SanitizerUtil.sanitize_all("098778987",true,true,250,"0-9")
   "098778987"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("09 8778 987 ABCDEF ",false,true,250,"A-z")
+  iex > Krug.SanitizerUtil.sanitize_all("09 8778 987 ABCDEF ",false,true,250,"A-z")
   ""
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("09 8778 987 ABCDEF ",false,true,250,"0-9")
+  iex > Krug.SanitizerUtil.sanitize_all("09 8778 987 ABCDEF ",false,true,250,"0-9")
   ""
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeAll("09 8778 987 ABCDEF ",false,true,250,"A-z0-9")
+  iex > Krug.SanitizerUtil.sanitize_all("09 8778 987 ABCDEF ",false,true,250,"A-z0-9")
   "09 8778 987 ABCDEF"
   ```
   """
-  def sanitizeAll(input,isNumber,sanitizeInput,maxSize,validChars) do
+  def sanitize_all(input,is_numeric,sanitize_input,max_size,valid_chars) do
     input = "#{input}"
-    forbidden = StringUtil.containsOneElementOfArray(input,forbidden())
+    forbidden = StringUtil.contains_one_element_of_array(input,forbidden())
     cond do
-      (isNumber and forbidden) -> "0"
+      (is_numeric and forbidden) -> "0"
       (forbidden) -> ""
-      (sanitizeInput) -> sanitizeInput(input,isNumber,maxSize,validChars)
+      (sanitize_input) -> sanitize_input(input,is_numeric,max_size,valid_chars)
       true -> StringUtil.trim(input)
     end
   end
@@ -626,13 +624,13 @@ defmodule Krug.SanitizerUtil do
   
   @doc """
   Sanitizes a file name to escape not allowed chars
-  and force the use of file name whit length <= maxSize. 
+  and force the use of file name with length <= max_size. 
   
-  If any not allowed char is found, or the file name length > maxSize,
+  If any not allowed char is found, or the file name length > max_size,
   the value received is ignored and a new random name is generated 
-  whit the valid chars whit size = maxSize and return.
+  with the valid chars with size = max_size and return.
   
-  If maxSize is nil or maxSize <= 0, maxSize for generate a ramdom string
+  If max_size is nil or max_size <= 0, max_size for generate a ramdom string
   name receive 10. (Then the file name has no limit of chars, if contains only
   valid chars).
   
@@ -647,54 +645,54 @@ defmodule Krug.SanitizerUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName(nil,10)
+  iex > Krug.SanitizerUtil.sanitize_filename(nil,10)
   "rOufHwKL7a" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName("",10)
+  iex > Krug.SanitizerUtil.sanitize_filename("",10)
   "WQskDae0ZP" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName(" ",10)
+  iex > Krug.SanitizerUtil.sanitize_filename(" ",10)
   "htlp9cKxHC" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName(" ",10)
+  iex > Krug.SanitizerUtil.sanitize_filename(" ",10)
   "rOufHwKL7a" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName(" afdd#%%{}8989nfdfdd@",10)
+  iex > Krug.SanitizerUtil.sanitize_filename(" afdd#%%{}8989nfdfdd@",10)
   "ts44e22BuP" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName("afdd#%%{}8989nfdfdd@",100)
+  iex > Krug.SanitizerUtil.sanitize_filename("afdd#%%{}8989nfdfdd@",100)
   "Jnn7nZICOwuuOXou4q7EBqNVtPHcYgvjh7dORJczzIlPMI7Yr5N96miqHv8gV88KTc2QOaW1yG9FJRsqeRMCKtVTbjepPKQE3whd" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName("Aabcde_fg.6712.89_as",10)
+  iex > Krug.SanitizerUtil.sanitize_filename("Aabcde_fg.6712.89_as",10)
   "ts44e22BuP" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName("Aabcde_fg.6712.89_as",19)
+  iex > Krug.SanitizerUtil.sanitize_filename("Aabcde_fg.6712.89_as",19)
   "ts44e22BuP" - random
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName("Aabcde_fg.6712.89_as",20)
+  iex > Krug.SanitizerUtil.sanitize_filename("Aabcde_fg.6712.89_as",20)
   "Aabcde_fg.6712.89_as"
   ```
   ```elixir 
-  iex > Krug.SanitizerUtil.sanitizeFileName("Aabcde_fg.6712.89_as",50)
+  iex > Krug.SanitizerUtil.sanitize_filename("Aabcde_fg.6712.89_as",50)
   "Aabcde_fg.6712.89_as"
   ```
   """
-  def sanitizeFileName(name,maxSize) do
-    maxSize2 = cond do
-      (nil == maxSize or !(maxSize > 0)) -> 10
-      true -> maxSize
+  def sanitize_filename(name,max_size) do
+    max_size2 = cond do
+      (nil == max_size or !(max_size > 0)) -> 10
+      true -> max_size
     end
-    name = sanitizeInput(name,false,maxSize,"filename")
+    name = sanitize_input(name,false,max_size,"filename")
     cond do
-      (String.length(name) == 0) -> generateRandomFileName(maxSize2)
+      (String.length(name) == 0) -> generate_random_filename(max_size2)
       true -> name
     end
   end
@@ -723,11 +721,11 @@ defmodule Krug.SanitizerUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.SanitizerUtil.onlyNums()
+  iex > Krug.SanitizerUtil.only_nums()
   ["0","1","2","3","4","5","6","7","8","9"]
   ```
   """
-  def onlyNums() do
+  def only_nums() do
     ["0","1","2","3","4","5","6","7","8","9"]
   end
   
@@ -739,11 +737,11 @@ defmodule Krug.SanitizerUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.SanitizerUtil.moneyChars()
+  iex > Krug.SanitizerUtil.money_chars()
   [",","0","1","2","3","4","5","6","7","8","9"]
   ```
   """
-  def moneyChars() do
+  def money_chars() do
     [",","0","1","2","3","4","5","6","7","8","9"]
   end
   
@@ -755,13 +753,13 @@ defmodule Krug.SanitizerUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.SanitizerUtil.emailChars()
+  iex > Krug.SanitizerUtil.email_chars()
   ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
    "0","1","2","3","4","5","6","7","8","9",
    "-","+","@","_","."]
   ```
   """
-  def emailChars() do
+  def email_chars() do
   	["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
      "-","+","@","_","."]
@@ -769,80 +767,81 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp sanitizeInput(input,isNumber,maxSize,validChars) do
-    originalInput = StringUtil.trim(input)
-    translated = translate(originalInput)
+  defp sanitize_input(input,is_numeric,max_size,valid_chars) do
+    original_input = StringUtil.trim(input)
+    translated = translate(original_input)
     size = length(String.graphemes(translated))
     cond do
-      (isNumber and originalInput == "") -> "0"
-      (originalInput == "") -> ""
-      (isNumber and maxSize > 0 and (size > maxSize or size == 0)) -> "0"
-      (maxSize > 0 and (size > maxSize or size == 0)) -> ""
-      true -> sanitizeByValiChars(originalInput,translated,validChars,isNumber)
+      (is_numeric and original_input == "") -> "0"
+      (original_input == "") -> ""
+      (is_numeric and max_size > 0 and (size > max_size or size == 0)) -> "0"
+      (max_size > 0 and (size > max_size or size == 0)) -> ""
+      true -> sanitize_by_valid_chars(original_input,translated,valid_chars,is_numeric)
     end
   end
   
   
   
-  defp sanitizeByValiChars(input,translated,validChars,isNumber) do
-    enabledChars = getValidCharsForSanitizeInput(validChars,isNumber)
+  defp sanitize_by_valid_chars(input,translated,valid_chars,is_numeric) do
+    enabled_chars = get_valid_chars_for_sanitize_input(valid_chars,is_numeric)
     cond do
-      (allCharsValidsForPosition(enabledChars,String.graphemes(translated),isNumber,0)) -> input
-      isNumber -> "0"
+      (all_chars_validated_for_position(enabled_chars,String.graphemes(translated),is_numeric,0)) -> input
+      is_numeric -> "0"
       true -> ""
     end
   end
   
   
   
-  defp allCharsValidsForPosition(enabledChars,translatedArr,isNumber,position) do
+  defp all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position) do
     cond do
-      (length(translatedArr) <= position) -> true
-      (isNumber and position > 0 and Enum.at(translatedArr,position) == "-") -> false
-      (!StructUtil.listContains(enabledChars,Enum.at(translatedArr,position))) -> false
-      true -> allCharsValidsForPosition(enabledChars,translatedArr,isNumber,position + 1)
+      (length(translated_array) <= position) -> true
+      (is_numeric and position > 0 and Enum.at(translated_array,position) == "-") -> false
+      (!StructUtil.list_contains(enabled_chars,Enum.at(translated_array,position))) -> false
+      true -> all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position + 1)
     end
   end
   
   
   
-  defp getValidCharsForSanitizeInput(validChars,isNumber) do
+  defp get_valid_chars_for_sanitize_input(valid_chars,is_numeric) do
     cond do
-      (nil == validChars and isNumber) -> nums()
-      (nil == validChars or validChars == "A-z0-9") -> alphaNums()
-      (validChars == "A-z0-9Name") -> alphaNumsName()
-      (validChars == "A-z0-9|") -> alphaNumsPipe()
-      (validChars == "0-9") -> nums()
-      (validChars == "A-z") -> alphas()
-      (validChars == "a-z") -> alphaLowers()
-      (validChars == "A-Z") -> alphaUppers()
-      (validChars == "DATE_SLASH") -> dateSlash()
-      (validChars == "DATE_SQL") -> dateSql()
-      (validChars == "email") -> emailChars()
-      (validChars == "password") -> passwordChars()
-      (validChars == "url") -> urlChars()
-      (validChars == "hex") -> hexChars()
-      (validChars == "filename") -> fileChars()
-      true -> splitToArrayAndClearEmpty(validChars,[],[],0)
+      (nil == valid_chars and is_numeric) -> nums()
+      (nil == valid_chars or valid_chars == "A-z0-9") -> alpha_nums()
+      (valid_chars == "A-z0-9Name") -> alpha_nums_name()
+      (valid_chars == "A-z0-9|") -> alpha_nums_pipe()
+      (valid_chars == "0-9") -> nums()
+      (valid_chars == "A-z") -> alphas()
+      (valid_chars == "a-z") -> alpha_lowers()
+      (valid_chars == "A-Z") -> alpha_uppers()
+      (valid_chars == "DATE_SLASH") -> date_slash()
+      (valid_chars == "DATE_SQL") -> date_sql()
+      (valid_chars == "email") -> email_chars()
+      (valid_chars == "password") -> password_chars()
+      (valid_chars == "url") -> url_chars()
+      (valid_chars == "hex") -> hex_chars()
+      (valid_chars == "filename") -> filename_chars()
+      true -> split_to_array_and_clear_empty(valid_chars,[],[],0)
     end
   end
   
   
   
-  defp splitToArrayAndClearEmpty(validChars,arr,clearArr,position) do
+  defp split_to_array_and_clear_empty(valid_chars,arr,cleaned_array,position) do
     cond do
-      (StringUtil.trim(validChars) == "") -> alphaNums()
+      (StringUtil.trim(valid_chars) == "") -> alpha_nums()
       (length(arr) == 0) 
-        -> splitToArrayAndClearEmpty(validChars,StringUtil.split(arr,","),clearArr,position)
-      (length(arr) <= position) -> clearArr
-      true -> splitToArrayAndClearEmpty(validChars,arr,addToArrIfNotEmpty(clearArr,Enum.at(arr,position)),
-                                        position + 1)
+        -> split_to_array_and_clear_empty(valid_chars,StringUtil.split(arr,","),cleaned_array,position)
+      (length(arr) <= position) -> cleaned_array
+      true -> split_to_array_and_clear_empty(valid_chars,arr,
+                                             add_to_array_if_not_empty(cleaned_array,Enum.at(arr,position)),
+                                             position + 1)
     end
   end
   
   
   
-  defp addToArrIfNotEmpty(arr,value) do
+  defp add_to_array_if_not_empty(arr,value) do
     cond do
       (nil == value or StringUtil.trim(value) == "") -> arr
       true -> [value | arr]
@@ -851,22 +850,22 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp translateFromArrayChars(input,arr1,arr2,position) do
+  defp translate_from_array_chars(input,arr1,arr2,position) do
     cond do
       (length(arr1) <= position) -> input
-      true -> translateFromArrayChars(StringUtil.replace(input,Enum.at(arr1,position),
-                                      Enum.at(arr2,position)),arr1,arr2,position + 1)
+      true -> translate_from_array_chars(StringUtil.replace(input,Enum.at(arr1,position),
+                                         Enum.at(arr2,position)),arr1,arr2,position + 1)
     end
   end
   
   
   
-  defp generateRandomSeq(size,arr,seq) do
+  defp generate_random_seq(size,arr,seq) do
     position = arr |> length() |> :rand.uniform()
     char = arr |> Enum.at(position) |> StringUtil.trim()
     cond do
       (String.length(seq) == size) -> seq
-      true -> generateRandomSeq(size,arr,"#{seq}#{char}")
+      true -> generate_random_seq(size,arr,"#{seq}#{char}")
     end
   end
   
@@ -878,7 +877,7 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp strangeChars() do
+  defp strange_chars() do
     ["ã","á","à","â","ä","å","æ",
      "é","è","ê","ë",
      "í","ì","î","ï",
@@ -895,7 +894,7 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp translatedChars() do
+  defp translated_chars() do
     ["a","a","a","a","a","a","a",
      "e","e","e","e",
      "i","i","i","i",
@@ -920,21 +919,21 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp alphaLowers() do
+  defp alpha_lowers() do
   	["a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
      "(",")","*","-","+","%","@","_",".",",","$",":"," ","/"]
   end
   
   
   
-  defp alphaUppers() do
+  defp alpha_uppers() do
     ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "(",")","*","-","+","%","@","_",".",",","$",":"," ","/"]
   end
   
   
   
-  defp alphaNums() do
+  defp alpha_nums() do
   	["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
@@ -943,7 +942,7 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp alphaNumsName() do
+  defp alpha_nums_name() do
   	["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
@@ -952,7 +951,7 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp urlChars() do
+  defp url_chars() do
   	["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
@@ -961,7 +960,7 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp passwordChars() do
+  defp password_chars() do
     ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
@@ -970,19 +969,19 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp alphaNumsPipe() do
-    [ "|" | alphaNums()]
+  defp alpha_nums_pipe() do
+    [ "|" | alpha_nums()]
   end
   
   
   
-  defp hexChars() do
+  defp hex_chars() do
     ["A","B","C","D","E","F","a","b","c","d","e","f","0","1","2","3","4","5","6","7","8","9"]
   end
   
   
   
-  defp fileChars() do
+  defp filename_chars() do
     ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
@@ -991,21 +990,13 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp fileNameChars() do
-    ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-     "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
-     "0","1","2","3","4","5","6","7","8","9"]
-  end
-  
-  
-  
-  defp dateSlash() do
+  defp date_slash() do
     [":","/"," ","0","1","2","3","4","5","6","7","8","9"]
   end
   
   
   
-  defp dateSql() do
+  defp date_sql() do
     [":","-"," ","0","1","2","3","4","5","6","7","8","9"]
   end
   

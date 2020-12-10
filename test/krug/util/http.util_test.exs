@@ -7,61 +7,61 @@ defmodule Krug.HttpUtilTest do
   
   test "[get request]" do
     url = "www.google.com"
-    fakeUrl = "www.fakeurl.xxx"
-    assert HttpUtil.makeGetRequest(url) |> String.contains?("<!doctype html><html") == true
-    assert HttpUtil.makeGetRequest(url,[],[],true) |> String.contains?("<!doctype html><html") == true
-    assert HttpUtil.makeGetRequest(fakeUrl) == nil
-    assert HttpUtil.makeGetRequest(fakeUrl,[],[],true) == %HTTPoison.Error{id: nil, reason: :nxdomain}
+    fake_url = "www.fake_url.xxx"
+    assert HttpUtil.make_get_request(url) |> String.contains?("<!doctype html><html") == true
+    assert HttpUtil.make_get_request(url,[],[],true) |> String.contains?("<!doctype html><html") == true
+    assert HttpUtil.make_get_request(fake_url) == nil
+    assert HttpUtil.make_get_request(fake_url,[],[],true) == %HTTPoison.Error{id: nil, reason: :nxdomain}
   end
   
   test "[post request]" do
     url = "www.google.com"
-    fakeUrl = "www.fakeurl.xxx"
-    jsonbody = "{search: \"ping\"}"
-    assert HttpUtil.makePostRequest(url,jsonbody) 
+    fake_url = "www.fake_url.xxx"
+    json_body = "{search: \"ping\"}"
+    assert HttpUtil.make_post_request(url,json_body) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makePostRequest(url,jsonbody,[],[],true) 
+    assert HttpUtil.make_post_request(url,json_body,[],[],true) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makePostRequest(fakeUrl,jsonbody) == nil
-    assert HttpUtil.makePostRequest(fakeUrl,jsonbody,[],[],true) 
+    assert HttpUtil.make_post_request(fake_url,json_body) == nil
+    assert HttpUtil.make_post_request(fake_url,json_body,[],[],true) 
              == %HTTPoison.Error{id: nil, reason: :nxdomain}
   end
   
   test "[put request]" do
     url = "www.google.com"
-    fakeUrl = "www.fakeurl.xxx"
-    jsonbody = "{search: \"ping\"}"
-    assert HttpUtil.makePutRequest(url,jsonbody) 
+    fake_url = "www.fake_url.xxx"
+    json_body = "{search: \"ping\"}"
+    assert HttpUtil.make_put_request(url,json_body) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makePutRequest(url,jsonbody,[],[],true) 
+    assert HttpUtil.make_put_request(url,json_body,[],[],true) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makePutRequest(fakeUrl,jsonbody) == nil
-    assert HttpUtil.makePutRequest(fakeUrl,jsonbody,[],[],true) 
+    assert HttpUtil.make_put_request(fake_url,json_body) == nil
+    assert HttpUtil.make_put_request(fake_url,json_body,[],[],true) 
              == %HTTPoison.Error{id: nil, reason: :nxdomain}
   end
   
   test "[patch request]" do
     url = "www.google.com"
-    fakeUrl = "www.fakeurl.xxx"
-    jsonbody = "{search: \"ping\"}"
-    assert HttpUtil.makePatchRequest(url,jsonbody) 
+    fake_url = "www.fake_url.xxx"
+    json_body = "{search: \"ping\"}"
+    assert HttpUtil.make_patch_request(url,json_body) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makePatchRequest(url,jsonbody,[],[],true) 
+    assert HttpUtil.make_patch_request(url,json_body,[],[],true) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makePatchRequest(fakeUrl,jsonbody) == nil
-    assert HttpUtil.makePatchRequest(fakeUrl,jsonbody,[],[],true) 
+    assert HttpUtil.make_patch_request(fake_url,json_body) == nil
+    assert HttpUtil.make_patch_request(fake_url,json_body,[],[],true) 
              == %HTTPoison.Error{id: nil, reason: :nxdomain}
   end
   
   test "[delete request]" do
     url = "www.google.com"
-    fakeUrl = "www.fakeurl.xxx"
-    assert HttpUtil.makeDeleteRequest(url) 
+    fake_url = "www.fake_url.xxx"
+    assert HttpUtil.make_delete_request(url) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makeDeleteRequest(url,[],[],true) 
+    assert HttpUtil.make_delete_request(url,[],[],true) 
              |> String.contains?("Error 405 (Method Not Allowed)") == true
-    assert HttpUtil.makeDeleteRequest(fakeUrl) == nil
-    assert HttpUtil.makeDeleteRequest(fakeUrl,[],[],true) 
+    assert HttpUtil.make_delete_request(fake_url) == nil
+    assert HttpUtil.make_delete_request(fake_url,[],[],true) 
              == %HTTPoison.Error{id: nil, reason: :nxdomain}
   end
   

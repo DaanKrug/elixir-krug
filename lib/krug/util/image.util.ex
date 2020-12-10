@@ -1,7 +1,7 @@
 defmodule Krug.ImageUtil do
 
   @moduledoc """
-  Utilitary module to work whit images.
+  Utilitary module to work with images.
   """
 
   alias Krug.StringUtil
@@ -20,43 +20,43 @@ defmodule Krug.ImageUtil do
 
   ```elixir 
   iex > url = "www.google.com"
-  iex > Krug.ImageUtil.validateUrl(url)
+  iex > Krug.ImageUtil.validate_url(url)
   false
   ```
   ```elixir 
   iex > url = "http://www.google.com"
-  iex > Krug.ImageUtil.validateUrl(url)
+  iex > Krug.ImageUtil.validate_url(url)
   false
   ```
   ```elixir 
   iex > url = "https://www.google.com.br"
-  iex > Krug.ImageUtil.validateUrl(url)
+  iex > Krug.ImageUtil.validate_url(url)
   false
   ```
   ```elixir 
   iex > url = "https://www.google.com.png"
-  iex > Krug.ImageUtil.validateUrl(url)
+  iex > Krug.ImageUtil.validate_url(url)
   true
   ```
   ```elixir 
   iex > url = "https://www.google.com.gif"
-  iex > Krug.ImageUtil.validateUrl(url)
+  iex > Krug.ImageUtil.validate_url(url)
   true
   ```
   """
-  def validateUrl(url) do
+  def validate_url(url) do
     url = url |> StringUtil.trim()
     cond do
       (!(String.contains?(url,"https://")) or !(String.contains?(url,"."))) -> false
       (String.length(url) < 13) -> false
       (url |> StringUtil.split(":") |> Enum.at(0) != "https") -> false
-      true -> url |> StringUtil.split(".") |> validateUrlExtension()
+      true -> url |> StringUtil.split(".") |> validate_url_extension()
     end
   end
 
 
   
-  defp validateUrlExtension(arr) do
+  defp validate_url_extension(arr) do
     ext = Enum.at(arr,length(arr) - 1) |> StringUtil.trim() |> String.downcase()
     Enum.member?(["png","bmp","jpg","jpeg","gif"],ext)
   end

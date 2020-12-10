@@ -11,9 +11,9 @@ defmodule Krug.FileUtil do
   @doc """
   Creates a new directory with name specified. 
   
-  If already exists a directory whit this name, only preserve these directory. 
+  If already exists a directory with this name, only preserve these directory. 
   
-  If exists a file whit this name try delete the file before create a new directory.
+  If exists a file with this name try delete the file before create a new directory.
   Return false if this file cannot be deleted.
   
   Finally change permissions of these dir to 777 (chmod), in success case.
@@ -21,11 +21,11 @@ defmodule Krug.FileUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.FileUtil.createDir(path)
+  iex > Krug.FileUtil.create_dir(path)
   true (or false if fail)
   ```
   """
-  def createDir(path) do
+  def create_dir(path) do
   	cond do
       (File.exists?(path) and File.dir?(path)) -> chmod(path,0o777)
       (File.exists?(path) and !(File.dir?(path)) and !(drop(path))) -> false
@@ -44,45 +44,45 @@ defmodule Krug.FileUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.FileUtil.copyDir(fromDir,toDir)
+  iex > Krug.FileUtil.copy_dir(from_dir,to_dir)
   true (or false if fail)
   ```
   """
-  def copyDir(fromDir,toDir) do
+  def copy_dir(from_dir,to_dir) do
     result = cond do
-      (!(File.exists?(fromDir)) or !(File.dir?(fromDir))) -> {:error, :enotdir}
-      (!(File.exists?(toDir)) or !(File.dir?(toDir))) -> {:error, :enotdir}
-      true -> File.cp_r(fromDir,toDir)
+      (!(File.exists?(from_dir)) or !(File.dir?(from_dir))) -> {:error, :enotdir}
+      (!(File.exists?(to_dir)) or !(File.dir?(to_dir))) -> {:error, :enotdir}
+      true -> File.cp_r(from_dir,to_dir)
     end
     cond do
       (:ok != result |> Tuple.to_list() |> Enum.at(0)) -> false
-      true -> chmod(toDir,0o777)
+      true -> chmod(to_dir,0o777)
     end
   end
   
   
   
   @doc """
-  Delete a directory whit specified name. 
+  Delete a directory with specified name. 
   
-  Return false if the directory don't exists and parameter ignoreIfDontExists is false/don't received.
+  Return false if the directory don't exists and parameter ignore_if_dont_exists is false/don't received.
   
   If the name is a file and not a diectory, return false.
   
   ## Examples
 
   ```elixir 
-  iex > Krug.FileUtil.dropDir(path)
+  iex > Krug.FileUtil.drop_dir(path)
   true (or false if fail)
   ```
   ```elixir 
-  iex > Krug.FileUtil.dropDir(path,true)
+  iex > Krug.FileUtil.drop_dir(path,true)
   true (or false if fail)
   ```
   """
-  def dropDir(path,ignoreIfDontExists \\ false) do
+  def drop_dir(path,ignore_if_dont_exists \\ false) do
     result = cond do
-      (ignoreIfDontExists and !(File.exists?(path))) -> {:ok, "OK"}
+      (ignore_if_dont_exists and !(File.exists?(path))) -> {:ok, "OK"}
       (!(File.exists?(path)) or !(File.dir?(path))) -> {:error, :enotdir}
       true -> File.rm_rf(path)
     end
@@ -95,30 +95,30 @@ defmodule Krug.FileUtil do
   Copy a file to another file. 
   
   Return false if a destination file
-  already exists and the parameter ignoreIfExists don't was received as true.
+  already exists and the parameter ignore_if_exists don't was received as true.
   
   Finally change permissions of the destination file to 777 (chmod), in success case.
 
   ## Examples
 
   ```elixir 
-  iex > Krug.FileUtil.copyFile(fromFile,toFile)
+  iex > Krug.FileUtil.copy_file(from_file,to_file)
   true (or false if fail)
   ```
   ```elixir 
-  iex > Krug.FileUtil.copyFile(fromFile,toFile,true)
+  iex > Krug.FileUtil.copy_file(from_file,to_file,true)
   true (or false if fail)
   ```
   """
-  def copyFile(fromFile,toFile,ignoreIfExists \\ true) do
+  def copy_file(from_file,to_file,ignore_if_exists \\ true) do
     result = cond do
-      (!(File.exists?(fromFile))) -> {:error, :enoent}
-      (!ignoreIfExists and File.exists?(toFile)) -> {:error, :eexist}
-      true -> File.copy(fromFile,toFile)
+      (!(File.exists?(from_file))) -> {:error, :enoent}
+      (!ignore_if_exists and File.exists?(to_file)) -> {:error, :eexist}
+      true -> File.copy(from_file,to_file)
     end
     cond do
       (:ok != result |> Tuple.to_list() |> Enum.at(0)) -> false
-      true -> chmod(toFile,0o777)
+      true -> chmod(to_file,0o777)
     end
   end
   
@@ -128,24 +128,24 @@ defmodule Krug.FileUtil do
   Delete a file. 
   
   Return false if the file don't exists and
-  the parameter ignoreIfDontExists don't was received as true.
+  the parameter ignore_if_dont_exists don't was received as true.
   
   If file is a directory, return false.
   
   ## Examples
 
   ```elixir 
-  iex > Krug.FileUtil.dropFile(path)
+  iex > Krug.FileUtil.drop_file(path)
   true (or false if fail)
   ```
   ```elixir 
-  iex > Krug.FileUtil.dropFile(path,true)
+  iex > Krug.FileUtil.drop_file(path,true)
   true (or false if fail)
   ```
   """
-  def dropFile(path,ignoreIfDontExists \\ false) do
+  def drop_file(path,ignore_if_dont_exists \\ false) do
     cond do
-      (ignoreIfDontExists and !(File.exists?(path))) -> true
+      (ignore_if_dont_exists and !(File.exists?(path))) -> true
       (!(File.exists?(path)) or File.dir?(path)) -> false
       true -> drop(path)
     end
@@ -162,14 +162,14 @@ defmodule Krug.FileUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.FileUtil.readFile(path)
+  iex > Krug.FileUtil.read_file(path)
   file content (or nil)
   ```
   """
-  def readFile(path) do
+  def read_file(path) do
     cond do
       (!(File.exists?(path)) or File.dir?(path)) -> nil
-      true -> File.read(path) |> readContent()
+      true -> File.read(path) |> read_content()
     end
   end
   
@@ -181,7 +181,7 @@ defmodule Krug.FileUtil do
   Return true if the file/directory exists
   and the permissions are correctly changed.
   
-  Permission should be initiate whit ```0o``` chars 
+  Permission should be initiate with ```0o``` chars 
   (for example ```0o777```, ```0o755```, ```0o744```, ```0o600```).
   
   ## Example
@@ -200,12 +200,12 @@ defmodule Krug.FileUtil do
   @doc """
   Write a content in a file, if the file exists and is a file (not directory).
   
-  If the parameter insertionPoints and parameter insertionPointTag are received,
+  If the parameter insertion_points and parameter insertion_point_tag are received,
   the content original is preserved and content received is inserted
-  before of insertionPointTag and beetwen insertionPoints[0] and insertionPoints[1].
-  (insertionPoints are write in this moment, and could be used to remove this content later).
+  before of insertion_point_tag and beetwen insertion_points[0] and insertion_points[1].
+  (insertion_points are write in this moment, and could be used to remove this content later).
   
-  If insertionPointTag is received and don't exists in file, return false.
+  If insertion_point_tag is received and don't exists in file, return false.
   
   Accept only file extensions: ```["sql","txt","html","ts","js","ex","exs","sh","json"]```
   will fail for other file extensions.
@@ -221,7 +221,7 @@ defmodule Krug.FileUtil do
   true (or false if fail)
   ```
   """
-  def write(path,content,insertionPoints \\ [],insertionPointTag \\ nil) do
+  def write(path,content,insertion_points \\ [],insertion_point_tag \\ nil) do
     arr = cond do
       (!(String.contains?(path,"."))) -> []
       true -> StringUtil.split(path,".")
@@ -233,22 +233,22 @@ defmodule Krug.FileUtil do
     cond do
       (File.exists?(path) and File.dir?(path)) -> false
       (!(length(arr) > 1)) -> false
-      (!(Enum.member?(validExtensions(),ext))) -> false
-      (nil != insertionPoints and length(insertionPoints) == 2 
-        and nil != insertionPointTag and StringUtil.trim(insertionPointTag) != "") 
-          -> insertInFile(path,content,insertionPoints,insertionPointTag) 
-      true -> writeToFile(path,content)
+      (!(Enum.member?(valid_extensions(),ext))) -> false
+      (nil != insertion_points and length(insertion_points) == 2 
+        and nil != insertion_point_tag and StringUtil.trim(insertion_point_tag) != "") 
+          -> insert_in_file(path,content,insertion_points,insertion_point_tag) 
+      true -> write_to_file(path,content)
     end
   end
   
   
   
   @doc """
-  Remove the content of a file if that is located between insertionPoints[0] and insertionPoints[1].
-  The insertionPoints are removed too.
+  Remove the content of a file if that is located between insertion_points[0] and insertion_points[1].
+  The insertion_points are removed too.
   
   Fail if the file don't exists, is a directory, operation fail, or the 
-  insertionPoints[0] or insertionPoints[1] don't exists in file.
+  insertion_points[0] or insertion_points[1] don't exists in file.
   
   Accept only file extensions: ```["sql","txt","html","ts","js","ex","exs","sh","json"]```
   will fail for other file extensions.
@@ -260,7 +260,7 @@ defmodule Krug.FileUtil do
   true (or false if fail)
   ```
   """
-  def remove(path,insertionPoints) do
+  def remove(path,insertion_points) do
     arr = cond do
       (!(String.contains?(path,"."))) -> []
       true -> StringUtil.split(path,".")
@@ -272,8 +272,8 @@ defmodule Krug.FileUtil do
     cond do
       (File.exists?(path) and File.dir?(path)) -> false
       (!(length(arr) > 1)) -> false
-      (!(Enum.member?(validExtensions(),ext))) -> false
-      (nil != insertionPoints and length(insertionPoints) == 2) -> removeFromFile(path,insertionPoints) 
+      (!(Enum.member?(valid_extensions(),ext))) -> false
+      (nil != insertion_points and length(insertion_points) == 2) -> remove_from_file(path,insertion_points) 
       true -> false
     end
   end
@@ -281,8 +281,8 @@ defmodule Krug.FileUtil do
   
   
   @doc """
-  Replaces all ocurrences of a ```searchBy``` parameter value 
-  by ```replaceTo``` parameter value in the file.
+  Replaces all ocurrences of a ```search_by``` parameter value 
+  by ```replace_to``` parameter value in the file.
   
   Fail if the file is directory or don't exists.
   
@@ -292,11 +292,11 @@ defmodule Krug.FileUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.FileUtil.replaceInFile(path,"AA","BB")
+  iex > Krug.FileUtil.replace_in_file(path,"AA","BB")
   true (or false if fail)
   ```
   """
-  def replaceInFile(path,searchBy,replaceTo) do
+  def replace_in_file(path,search_by,replace_to) do
     arr = cond do
       (!(String.contains?(path,"."))) -> []
       true -> StringUtil.split(path,".")
@@ -307,14 +307,14 @@ defmodule Krug.FileUtil do
     end
     cond do
       (!File.exists?(path) or File.dir?(path)) -> false
-      (!(Enum.member?(validExtensions(),ext))) -> false
-      true -> replaceInFile(File.read(path),path,searchBy,replaceTo)
+      (!(Enum.member?(valid_extensions(),ext))) -> false
+      true -> replace_in_file(File.read(path),path,search_by,replace_to)
     end
   end
   
   
   
-  defp readContent({:ok, binary}) do
+  defp read_content({:ok, binary}) do
     cond do
       (nil == binary) -> nil
       true -> "#{binary}" |> StringUtil.trim()
@@ -323,25 +323,25 @@ defmodule Krug.FileUtil do
   
   
   
-  defp readContent({:error, _reason}) do
-    #IO.puts(":error in readContent:")
+  defp read_content({:error, _reason}) do
+    #IO.puts(":error in read_content:")
     #IO.inspect(reason)
     nil
   end
   
   
   
-  defp writeToFile(path,content) do  
+  defp write_to_file(path,content) do  
     cond do
       (!(drop(path))) -> false
-      (!(openAndWrite(File.open(path,[:write]),path,content))) -> false
+      (!(open_and_write(File.open(path,[:write]),path,content))) -> false
       true -> true
     end
   end
   
   
   
-  defp openAndWrite({:ok, file},path,content) do
+  defp open_and_write({:ok, file},path,content) do
     IO.write(file,content)
     File.close(file)
     chmod(path,0o777)
@@ -350,8 +350,8 @@ defmodule Krug.FileUtil do
   
   
   
-  defp openAndWrite({:error,_reason},_path,_content) do
-    #IO.puts(":error in openAndWrite:")
+  defp open_and_write({:error,_reason},_path,_content) do
+    #IO.puts(":error in open_and_write:")
     #IO.inspect(reason)
     false
   end
@@ -368,117 +368,117 @@ defmodule Krug.FileUtil do
   
   
   
-  defp validExtensions() do
+  defp valid_extensions() do
     ["sql","txt","html","ts","js","ex","exs","sh","json"]
   end
   
   
   
-  defp replaceInFile({:ok,content},path,searchBy,replaceTo) do
-    contentNew = cond do
-      (searchBy |> StringUtil.trim() == "") -> nil
-      (replaceTo |> StringUtil.trim() == "") -> nil
-      true -> content |> StringUtil.replace(searchBy,replaceTo)
+  defp replace_in_file({:ok,content},path,search_by,replace_to) do
+    content_new = cond do
+      (search_by |> StringUtil.trim() == "") -> nil
+      (replace_to |> StringUtil.trim() == "") -> nil
+      true -> content |> StringUtil.replace(search_by,replace_to)
     end
     cond do
-      (contentNew == nil) -> false
-      true -> writeToFile(path,contentNew)
+      (content_new == nil) -> false
+      true -> write_to_file(path,content_new)
     end
   end
   
   
   
-  defp replaceInFile({:error,_reason},_path,_searchBy,_replaceTo) do
-    #IO.puts(":error in replaceInFile:")
+  defp replace_in_file({:error,_reason},_path,_search_by,_replace_to) do
+    #IO.puts(":error in replace_in_file:")
     #IO.inspect(reason)
     false
   end
   
   
   
-  defp insertInFile(path,contentInsert,insertionPoints,insertionPointTag) do
-    insertInFile(File.read(path),path,contentInsert,insertionPoints,insertionPointTag)
+  defp insert_in_file(path,content_insert,insertion_points,insertion_point_tag) do
+    insert_in_file(File.read(path),path,content_insert,insertion_points,insertion_point_tag)
   end
   
   
   
-  defp insertInFile({:ok,content},path,insertionContent,insertionPoints,insertionPointTag) do
-    ip0 = Enum.at(insertionPoints,0)
-    ip1 = Enum.at(insertionPoints,1)
+  defp insert_in_file({:ok,content},path,insertion_content,insertion_points,insertion_point_tag) do
+    ip0 = Enum.at(insertion_points,0)
+    ip1 = Enum.at(insertion_points,1)
     cond do
       (StringUtil.trim(ip0) == "" or StringUtil.trim(ip1) == "") -> false
-      (StringUtil.trim(insertionPointTag) == "") -> false
+      (StringUtil.trim(insertion_point_tag) == "") -> false
       (String.contains?(content,ip0) and String.contains?(content,ip1)) 
-        -> makeReplacementInFile(path,content,insertionContent,ip0,ip1)
-      (String.contains?(content,insertionPointTag)) 
-        -> makeInsertionInFile(path,content,insertionContent,ip0,ip1,insertionPointTag)
+        -> make_replacement_in_file(path,content,insertion_content,ip0,ip1)
+      (String.contains?(content,insertion_point_tag)) 
+        -> make_insertion_in_file(path,content,insertion_content,ip0,ip1,insertion_point_tag)
       true -> false
     end
   end
   
   
   
-  defp insertInFile({:error,_reason},_path,_contentInsert,_insertionPoints,_insertionPointTag) do
-    #IO.puts(":error in insertInFile:")
+  defp insert_in_file({:error,_reason},_path,_content_insert,_insertion_points,_insertion_point_tag) do
+    #IO.puts(":error in insert_in_file:")
     #IO.inspect(reason)
     false
   end
   
   
   
-  defp removeFromFile(path,insertionPoints) do
-    removeFromFile(File.read(path),path,insertionPoints)
+  defp remove_from_file(path,insertion_points) do
+    remove_from_file(File.read(path),path,insertion_points)
   end
   
   
   
-  defp removeFromFile({:ok,content},path,insertionPoints) do
-    ip0 = Enum.at(insertionPoints,0)
-    ip1 = Enum.at(insertionPoints,1)
+  defp remove_from_file({:ok,content},path,insertion_points) do
+    ip0 = Enum.at(insertion_points,0)
+    ip1 = Enum.at(insertion_points,1)
     cond do
       (StringUtil.trim(ip0) == "" or StringUtil.trim(ip1) == "") -> false
       (!String.contains?(content,ip0) or !String.contains?(content,ip1)) -> true
-      true -> makeRemoveFromFile(path,content,ip0,ip1)
+      true -> make_remove_from_file(path,content,ip0,ip1)
     end
   end
   
   
   
-  defp removeFromFile({:error,_reason},_path,_insertionPoints) do
-    #IO.puts(":error in removeFromFile:")
+  defp remove_from_file({:error,_reason},_path,_insertion_points) do
+    #IO.puts(":error in remove_from_file:")
     #IO.inspect(reason)
     false
   end
   
   
   
-  defp makeReplacementInFile(path,content,insertionContent,ip0,ip1) do
-    beforePart = content |> StringUtil.split("#{ip0}") |> Enum.at(0)
-    afterPart = content |> StringUtil.split("#{ip1}") |> Enum.at(1)
-    contentNew = "#{beforePart}#{ip0}\n#{insertionContent}\n#{ip1}#{afterPart}"
-    writeToFile(path,contentNew)
+  defp make_replacement_in_file(path,content,insertion_content,ip0,ip1) do
+    before_part = content |> StringUtil.split("#{ip0}") |> Enum.at(0)
+    after_part = content |> StringUtil.split("#{ip1}") |> Enum.at(1)
+    content_new = "#{before_part}#{ip0}\n#{insertion_content}\n#{ip1}#{after_part}"
+    write_to_file(path,content_new)
   end
   
   
   
-  defp makeInsertionInFile(path,content,insertionContent,ip0,ip1,insertionPointTag) do
-    replacement = "#{ip0}\n#{insertionContent}\n#{ip1}\n#{insertionPointTag}"
-    contentNew = StringUtil.replace(content,insertionPointTag,replacement)
-    writeToFile(path,contentNew)
+  defp make_insertion_in_file(path,content,insertion_content,ip0,ip1,insertion_point_tag) do
+    replacement = "#{ip0}\n#{insertion_content}\n#{ip1}\n#{insertion_point_tag}"
+    content_new = StringUtil.replace(content,insertion_point_tag,replacement)
+    write_to_file(path,content_new)
   end
   
   
   
-  defp makeRemoveFromFile(path,content,ip0,ip1) do
-    beforeParts = content |> StringUtil.split("#{ip0}")
-    afterParts = cond do
+  defp make_remove_from_file(path,content,ip0,ip1) do
+    before_parts = content |> StringUtil.split("#{ip0}")
+    after_parts = cond do
       (String.contains?(content,"#{ip1}\n")) -> content |> StringUtil.split("#{ip1}\n")
       true -> content |> StringUtil.split("#{ip1}")
     end
     cond do
-      (!(length(beforeParts) == 2)) -> false
-      (!(length(afterParts) == 2)) -> false
-      true -> writeToFile(path,"#{beforeParts |> Enum.at(0)}#{afterParts |> Enum.at(1)}")
+      (!(length(before_parts) == 2)) -> false
+      (!(length(after_parts) == 2)) -> false
+      true -> write_to_file(path,"#{before_parts |> Enum.at(0)}#{after_parts |> Enum.at(1)}")
     end
   end
   

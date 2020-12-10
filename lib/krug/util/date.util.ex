@@ -18,11 +18,11 @@ defmodule Krug.DateUtil do
 
   ```elixir 
   iex > timestamp = 2709876599456
-  iex > Krug.DateUtil.timeToSqlDate(timestamp)
+  iex > Krug.DateUtil.time_to_sql_date(timestamp)
   2055-11-15 07:29:59
   ```
   """
-  def timeToSqlDate(timestamp) do
+  def time_to_sql_date(timestamp) do
     cond do
       (nil == timestamp or !(timestamp > 0)) -> nil
       true -> DateTime.from_unix(timestamp, :millisecond) 
@@ -43,11 +43,11 @@ defmodule Krug.DateUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.DateUtil.getNow()
+  iex > Krug.DateUtil.get_now()
   ~D[2020-12-05]
   ```
   """
-  def getNow() do
+  def get_now() do
     Date.utc_today()
   end
   
@@ -59,15 +59,15 @@ defmodule Krug.DateUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.DateUtil.getDateNowString()
+  iex > Krug.DateUtil.get_date_now_string()
   05/12/2020
   ```
   """  
-  def getDateNowString() do
-    now = getNow()
-    Enum.join([StringUtil.leftZeros(now.day,2),
-               StringUtil.leftZeros(now.month,2),
-               StringUtil.leftZeros(now.year,4)],"/")
+  def get_date_now_string() do
+    now = get_now()
+    Enum.join([StringUtil.left_zeros(now.day,2),
+               StringUtil.left_zeros(now.month,2),
+               StringUtil.left_zeros(now.year,4)],"/")
   end
   
   
@@ -78,15 +78,15 @@ defmodule Krug.DateUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.DateUtil.getTimeNowString()
+  iex > Krug.DateUtil.get_time_now_string()
   17:35:58
   ```
   """  
-  def getTimeNowString() do
+  def get_time_now_string() do
   	time = Time.utc_now()
-  	Enum.join([StringUtil.leftZeros(time.hour,2),
-  	           StringUtil.leftZeros(time.minute,2),
-  	           StringUtil.leftZeros(time.second,2)],":")
+  	Enum.join([StringUtil.left_zeros(time.hour,2),
+  	           StringUtil.left_zeros(time.minute,2),
+  	           StringUtil.left_zeros(time.second,2)],":")
   end
   
   
@@ -97,11 +97,11 @@ defmodule Krug.DateUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.DateUtil.getDateTimeNowMillis()
+  iex > Krug.DateUtil.get_date_time_now_millis()
   1607193124063
   ```
   """  
-  def getDateTimeNowMillis() do
+  def get_date_time_now_millis() do
     :os.system_time(:millisecond)
   end
   
@@ -113,12 +113,12 @@ defmodule Krug.DateUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.DateUtil.getDateAndTimeNowString()
+  iex > Krug.DateUtil.get_date_and_time_now_string()
   05/12/2020 17:35:58
   ```
   """  
-  def getDateAndTimeNowString() do
-    Enum.join([getDateNowString(),getTimeNowString()]," ")
+  def get_date_and_time_now_string() do
+    Enum.join([get_date_now_string(),get_time_now_string()]," ")
   end
 
 
@@ -127,45 +127,46 @@ defmodule Krug.DateUtil do
   Obtain the actual date and time as string in format yyyy-mm-dd H:i:s, making
   some operations according received parameters.
   
-  If diffDays > 0, add this number of days in date (date + diffDays).
+  If diff_days > 0, add this number of days in date (date + diff_days).
   
-  If diffDays < 0, subtract this number in date (date - diffDays).
+  If diff_days < 0, subtract this number in date (date - diff_days).
   
-  If beginDay == true, set time to 00:00:00, otherwise if endDay == true
+  If begin_day == true, set time to 00:00:00, otherwise if end_day == true
   set time to 23:59:59.
   
   ## Examples
 
   ```elixir 
-  iex > Krug.DateUtil.getNowToSql(0,false,false)
+  iex > Krug.DateUtil.get_now_to_sql(0,false,false)
   2020-12-05 17:35:58
   ```
   ```elixir 
-  iex > Krug.DateUtil.getNowToSql(1,false,false)
+  iex > Krug.DateUtil.get_now_to_sql(1,false,false)
   2020-12-06 17:35:58
   ```
   ```elixir 
-  iex > Krug.DateUtil.getNowToSql(-1,false,false)
+  iex > Krug.DateUtil.get_now_to_sql(-1,false,false)
   2020-12-04 17:35:58
   ```
   ```elixir 
-  iex > Krug.DateUtil.getNowToSql(0,true,false)
+  iex > Krug.DateUtil.get_now_to_sql(0,true,false)
   2020-12-05 00:00:00
   ```
   ```elixir 
-  iex > Krug.DateUtil.getNowToSql(0,false,true)
+  iex > Krug.DateUtil.get_now_to_sql(0,false,true)
   2020-12-05 23:59:59
   ```
   ```elixir 
-  iex > Krug.DateUtil.getNowToSql(3,true,false)
+  iex > Krug.DateUtil.get_now_to_sql(3,true,false)
   2020-12-08 00:00:00
   ```
   """  
-  def getNowToSql(diffDays,beginDay,endDay) do
-    date = getNow()
+  def get_now_to_sql(diff_days,begin_day,end_day) do
+    date = get_now()
     cond do
-      (nil != diffDays && diffDays != 0) -> getNowToSqlInternal(Date.add(date,diffDays),beginDay,endDay)
-      true -> getNowToSqlInternal(date,beginDay,endDay)
+      (nil != diff_days && diff_days != 0) 
+        -> Date.add(date,diff_days) |> get_now_to_sql_internal(begin_day,end_day)
+      true -> get_now_to_sql_internal(date,begin_day,end_day)
     end
   end
   
@@ -181,24 +182,24 @@ defmodule Krug.DateUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.DateUtil.sqlDateToTime("2020-12-05 17:35:58")
+  iex > Krug.DateUtil.sql_date_to_time("2020-12-05 17:35:58")
   05/12/2020 17:35:58
   ```
   ```elixir 
-  iex > Krug.DateUtil.sqlDateToTime("2020-12-05 17:35:58",false)
+  iex > Krug.DateUtil.sql_date_to_time("2020-12-05 17:35:58",false)
   05/12/2020
   ```
   ```elixir 
-  iex > Krug.DateUtil.sqlDateToTime("2020-12-05")
+  iex > Krug.DateUtil.sql_date_to_time("2020-12-05")
   05/12/2020
   ```
   """  
-  def sqlDateToTime(sqlDate,whitTime \\ true) do
-    arr = sqlDate |> StringUtil.split(" ")
+  def sql_date_to_time(sql_date,with_time \\ true) do
+    arr = sql_date |> StringUtil.split(" ")
     arr2 = arr |> Enum.at(0) |> StringUtil.split("-")
     cond do
-      (!(Enum.member?([10,19],String.length(sqlDate)))) -> nil
-      (whitTime == true and length(arr) > 1) 
+      (!(Enum.member?([10,19],String.length(sql_date)))) -> nil
+      (with_time == true and length(arr) > 1) 
         -> "#{Enum.at(arr2,2)}/#{Enum.at(arr2,1)}/#{Enum.at(arr2,0)} #{Enum.at(arr,1) |> String.slice(0,8)}"
       true -> "#{Enum.at(arr2,2)}/#{Enum.at(arr2,1)}/#{Enum.at(arr2,0)}"
     end
@@ -207,23 +208,23 @@ defmodule Krug.DateUtil do
   
   
   @doc """
-  Calculates the diff in seconds between 2 date and time as string in format yyyy-mm-dd H:i:s.
+  Calculates the diff in seconds between 2 date and time objects as string in format yyyy-mm-dd H:i:s.
   
   ## Examples
 
   ```elixir 
-  iex > Krug.DateUtil.diffSqlDatesInSeconds("2020-12-05 17:35:58","2020-12-05 16:35:58")
+  iex > Krug.DateUtil.diff_sql_dates_in_seconds("2020-12-05 17:35:58","2020-12-05 16:35:58")
   -3600
   ```
   ```elixir 
-  iex > Krug.DateUtil.diffSqlDatesInSeconds("2020-12-05 17:35:58","2020-12-05 18:35:58")
+  iex > Krug.DateUtil.diff_sql_dates_in_seconds("2020-12-05 17:35:58","2020-12-05 18:35:58")
   3600
   ```
   """  
-  def diffSqlDatesInSeconds(sqlDateStart,sqlDateFinish) do
-    dateStart = sqlDateToDateTime(sqlDateStart)
-    dateFinish = sqlDateToDateTime(sqlDateFinish)
-    DateTime.diff(dateFinish,dateStart)
+  def diff_sql_dates_in_seconds(sql_date_start,sql_date_finish) do
+    date_start = sql_date_to_date_time(sql_date_start)
+    date_finish = sql_date_to_date_time(sql_date_finish)
+    DateTime.diff(date_finish,date_start)
   end
   
   
@@ -240,13 +241,13 @@ defmodule Krug.DateUtil do
   Imagine that actual date is 2020-12-05 00:00:35.
   
   ```elixir 
-  iex > Krug.DateUtil.minusMinutesSql(1)
+  iex > Krug.DateUtil.minus_minutes_sql(1)
   2020-12-04 23:59:35
   ```
   """  
-  def minusMinutesSql(minutes) do
-    now = getDateTimeNowMillis()
-    (now - (minutes * 60 * 1000)) |> timeToSqlDate()
+  def minus_minutes_sql(minutes) do
+    now = get_date_time_now_millis()
+    (now - (minutes * 60 * 1000)) |> time_to_sql_date()
   end
   
   
@@ -257,8 +258,8 @@ defmodule Krug.DateUtil do
   
   Useful if you want controll use of resources by time interval. 
   """  
-  def sameYear(nanoseconds1,nanoseconds2) do
-    toYears(nanoseconds1) == toYears(nanoseconds2)
+  def same_year(nanoseconds1,nanoseconds2) do
+    to_years(nanoseconds1) == to_years(nanoseconds2)
   end
   
   
@@ -269,8 +270,8 @@ defmodule Krug.DateUtil do
   
   Useful if you want controll use of resources by time interval. 
   """  
-  def sameMonth(nanoseconds1,nanoseconds2) do
-    toMonths(nanoseconds1) == toMonths(nanoseconds2)
+  def same_month(nanoseconds1,nanoseconds2) do
+    to_months(nanoseconds1) == to_months(nanoseconds2)
   end
   
   
@@ -281,8 +282,8 @@ defmodule Krug.DateUtil do
   
   Useful if you want controll use of resources by time interval. 
   """  
-  def sameDay(nanoseconds1,nanoseconds2) do
-    toDays(nanoseconds1) == toDays(nanoseconds2)
+  def same_day(nanoseconds1,nanoseconds2) do
+    to_days(nanoseconds1) == to_days(nanoseconds2)
   end
   
   
@@ -293,8 +294,8 @@ defmodule Krug.DateUtil do
   
   Useful if you want controll use of resources by time interval. 
   """  
-  def sameHour(nanoseconds1,nanoseconds2) do
-    toHours(nanoseconds1) == toHours(nanoseconds2)
+  def same_hour(nanoseconds1,nanoseconds2) do
+    to_hours(nanoseconds1) == to_hours(nanoseconds2)
   end
   
   
@@ -305,8 +306,8 @@ defmodule Krug.DateUtil do
   
   Useful if you want controll use of resources by time interval. 
   """  
-  def sameMinute(nanoseconds1,nanoseconds2) do
-    toMinutes(nanoseconds1) == toMinutes(nanoseconds2)
+  def same_minute(nanoseconds1,nanoseconds2) do
+    to_minutes(nanoseconds1) == to_minutes(nanoseconds2)
   end
   
   
@@ -317,74 +318,74 @@ defmodule Krug.DateUtil do
    
   Useful if you want controll use of resources by time interval. 
   """  
-  def sameSecond(nanoseconds1,nanoseconds2) do
-    toSeconds(nanoseconds1) == toSeconds(nanoseconds2)
+  def same_second(nanoseconds1,nanoseconds2) do
+    to_seconds(nanoseconds1) == to_seconds(nanoseconds2)
   end
   
   
   
-  defp sqlDateToDateTime(sqlDate) do
-    sqlDate = sqlDate |> String.slice(0..18)
-    dateArr = sqlDate |> StringUtil.trim() |> StringUtil.split(" ")
-    dateArr1 = dateArr |> Enum.at(0) |> StringUtil.split("-")
-    dateArr2 = dateArr |> Enum.at(1) |> StringUtil.split(":")
-    year = dateArr1 |> Enum.at(0) |> NumberUtil.toInteger()
-    month = dateArr1 |> Enum.at(1) |> NumberUtil.toInteger()
-    day = dateArr1 |> Enum.at(2) |> NumberUtil.toInteger()
-    hour = dateArr2 |> Enum.at(0) |> NumberUtil.toInteger()
-    minute = dateArr2 |> Enum.at(1) |> NumberUtil.toInteger()
-    second = dateArr1 |> Enum.at(2) |> NumberUtil.toInteger()
+  defp sql_date_to_date_time(sql_date) do
+    sql_date = sql_date |> String.slice(0..18)
+    date_arr = sql_date |> StringUtil.trim() |> StringUtil.split(" ")
+    date_arr1 = date_arr |> Enum.at(0) |> StringUtil.split("-")
+    date_arr2 = date_arr |> Enum.at(1) |> StringUtil.split(":")
+    year = date_arr1 |> Enum.at(0) |> NumberUtil.to_integer()
+    month = date_arr1 |> Enum.at(1) |> NumberUtil.to_integer()
+    day = date_arr1 |> Enum.at(2) |> NumberUtil.to_integer()
+    hour = date_arr2 |> Enum.at(0) |> NumberUtil.to_integer()
+    minute = date_arr2 |> Enum.at(1) |> NumberUtil.to_integer()
+    second = date_arr1 |> Enum.at(2) |> NumberUtil.to_integer()
     %DateTime{year: year, month: month, day: day,hour: hour, minute: minute, second: second,
               zone_abbr: "GMT", utc_offset: -10800, std_offset: 0, time_zone: "America/Sao Paulo"}
   end
   
   
   
-  defp getNowToSqlInternal(date,beginDay,endDay) do
+  defp get_now_to_sql_internal(date,begin_day,end_day) do
     year = date.year
-    month = StringUtil.leftZeros(date.month,2)
-    day = StringUtil.leftZeros(date.day,2)
-    stringDate = Enum.join([year,month,day],"-")
+    month = StringUtil.left_zeros(date.month,2)
+    day = StringUtil.left_zeros(date.day,2)
+    string_date = Enum.join([year,month,day],"-")
     cond do
-      beginDay ->  Enum.join([stringDate,"00:00:00"]," ")
-      endDay ->  Enum.join([stringDate,"23:59:59"]," ")
-      true -> Enum.join([stringDate,getTimeNowString()]," ")
+      begin_day ->  Enum.join([string_date,"00:00:00"]," ")
+      end_day ->  Enum.join([string_date,"23:59:59"]," ")
+      true -> Enum.join([string_date,get_time_now_string()]," ")
     end
   end
   
   
   
-  defp toYears(nanoseconds) do
-    div(toMonths(nanoseconds),365)
+  defp to_years(nanoseconds) do
+    div(to_months(nanoseconds),365)
   end
   
   
   
-  defp toMonths(nanoseconds) do
-    div(toDays(nanoseconds),30)
+  defp to_months(nanoseconds) do
+    div(to_days(nanoseconds),30)
   end
   
   
   
-  defp toDays(nanoseconds) do
-    div(toHours(nanoseconds),24)
+  defp to_days(nanoseconds) do
+    div(to_hours(nanoseconds),24)
   end
   
   
   
-  defp toHours(nanoseconds) do
-    div(toMinutes(nanoseconds),60)
+  defp to_hours(nanoseconds) do
+    div(to_minutes(nanoseconds),60)
   end
   
   
   
-  defp toMinutes(nanoseconds) do
-    div(toSeconds(nanoseconds),60)
+  defp to_minutes(nanoseconds) do
+    div(to_seconds(nanoseconds),60)
   end
   
   
   
-  defp toSeconds(nanoseconds) do
+  defp to_seconds(nanoseconds) do
     div(nanoseconds,1000000000)
   end
   

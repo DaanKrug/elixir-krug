@@ -10,9 +10,9 @@ defmodule Krug.StringUtil do
 
   
   @doc """
-  Merge 2 strings, A and B using a ```joinString``` as a join connector.
+  Merge 2 strings, A and B using a ```join_string``` as a join connector.
   If A is nil a receive a empty string value, making the same process
-  to B and to ```joinString```.
+  to B and to ```join_string```.
   
   If A and B are empty then return empty string.
 
@@ -43,13 +43,13 @@ defmodule Krug.StringUtil do
   " -B"
   ```
   """
-  def concat(stringA,stringB,joinString) do
-    stringA = emptyIfNil(stringA)
-    stringB = emptyIfNil(stringB)
+  def concat(string_a,string_b,join_string) do
+    string_a = empty_if_nil(string_a)
+    string_b = empty_if_nil(string_b)
     cond do
-      (stringA == "") -> stringB
-      (stringB == "") -> stringA
-      true -> Enum.join([stringA,stringB],emptyIfNil(joinString))
+      (string_a == "") -> string_b
+      (string_b == "") -> string_a
+      true -> Enum.join([string_a,string_b],empty_if_nil(join_string))
     end
   end
 
@@ -61,35 +61,35 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil(nil)
+  iex > Krug.StringUtil.empty_if_nil(nil)
   ""
   ```
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil("")
+  iex > Krug.StringUtil.empty_if_nil("")
   ""
   ```
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil(" ")
+  iex > Krug.StringUtil.empty_if_nil(" ")
   " "
   ```
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil("A")
+  iex > Krug.StringUtil.empty_if_nil("A")
   "A"
   ```
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil(10)
+  iex > Krug.StringUtil.empty_if_nil(10)
   "10"
   ```
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil(10.05)
+  iex > Krug.StringUtil.empty_if_nil(10.05)
   "10.05"
   ```
   ```elixir 
-  iex > Krug.StringUtil.emptyIfNil(-10.05)
+  iex > Krug.StringUtil.empty_if_nil(-10.05)
   "-10.05"
   ```
   """
-  def emptyIfNil(target) do
+  def empty_if_nil(target) do
     cond do
       (nil==target) -> ""
       true -> "#{target}"
@@ -103,10 +103,10 @@ defmodule Krug.StringUtil do
   
   If ```target``` is nil return empty array. 
   
-  If ```target``` is empty string return an array whit empty string.
+  If ```target``` is empty string return an array with empty string.
   
   If ```searched``` is nil/empty string or ```target``` don't contains ```searched```, 
-  return an array whit ```target``` string.
+  return an array with ```target``` string.
   
   ## Examples
 
@@ -168,7 +168,7 @@ defmodule Krug.StringUtil do
 
   
   @doc """
-  Convert a value to string whit all words capitalized.
+  Convert a value to string with all words capitalized.
   
   ## Examples
 
@@ -203,15 +203,15 @@ defmodule Krug.StringUtil do
 
 
   @doc """
-  Replace ```searched``` string value by ```replaceTo``` string value, into 
+  Replace ```searched``` string value by ```replace_to``` string value, into 
   ```target``` string. Replaces recursively all occurences if is not present the
-  recursion throwble. Otherwise replace one single time all occurencies whitout recursive calls 
+  recursion throwble. Otherwise replace one single time all occurencies without recursive calls 
   when recursion throwble is detected.
   
-  Recursion throwble occur when ```searched``` is contained in ```replaceTo```.
-  Example: [searched = "123" and replaceTo = "a x 123"] 
-           or [searched = "123" and replaceTo = " 123 "]
-           or [searched = "123" and replaceTo = "123"].
+  Recursion throwble occur when ```searched``` is contained in ```replace_to```.
+  Example: [searched = "123" and replace_to = "a x 123"] 
+           or [searched = "123" and replace_to = " 123 "]
+           or [searched = "123" and replace_to = "123"].
   
   ## Examples
 
@@ -234,16 +234,16 @@ defmodule Krug.StringUtil do
   "repla[Ace Ventures] non recursive because recursion throwble pla[Ace Ventures]"
   ```
   """
-  def replace(target,searched,replaceTo) do 
-    replaceTo = emptyIfNil(replaceTo)
-    recursionThrowble = String.contains?(replaceTo,"#{searched}")
+  def replace(target,searched,replace_to) do 
+    replace_to = empty_if_nil(replace_to)
+    recursion_throwble = String.contains?(replace_to,"#{searched}")
     cond do
       (nil == target) -> nil
       (nil == searched or searched == "") -> "#{target}"
-      (recursionThrowble and String.contains?("#{target}","#{searched}")) 
-        -> String.replace("#{target}","#{searched}",replaceTo)
+      (recursion_throwble and String.contains?("#{target}","#{searched}")) 
+        -> String.replace("#{target}","#{searched}",replace_to)
       (String.contains?("#{target}","#{searched}")) 
-        -> String.replace("#{target}","#{searched}",replaceTo) |> replace(searched,replaceTo)
+        -> String.replace("#{target}","#{searched}",replace_to) |> replace(searched,replace_to)
       true -> "#{target}"
     end
   end
@@ -251,44 +251,44 @@ defmodule Krug.StringUtil do
   
   
   @doc """
-  Replaces all occurrences of each one element in ```searchedArray```
-  into ```target```, by ```replaceTo``` string value.
+  Replaces all occurrences of each one element in ```searched_array```
+  into ```target```, by ```replace_to``` string value.
   
-  Uses recursively the ```replace(target,searched,replaceTo)``` function,
-  because this the rules for replacement are the same.
+  Uses recursively the ```replace(target,searched,replace_to)``` function,
+  and because of this the rules for replacement are the same.
   
   If ```target``` is nil return nil.
   
-  If ```target``` is empty string, or ```searchedArray``` is nil/empty array return empty string.
+  If ```target``` is empty string, or ```searched_array``` is nil/empty array return empty string.
   
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.replaceAll("afbfc   bfb    cfdc",["  ","f","c"],"0")
+  iex > Krug.StringUtil.replace_all("afbfc   bfb    cfdc",["  ","f","c"],"0")
   "a0b000 b0b0000d0"
   ```
   ```elixir 
-  iex > Krug.StringUtil.replaceAll("aa       bb               cc",["  ","f","c"],"0")
+  iex > Krug.StringUtil.replace_all("aa       bb               cc",["  ","f","c"],"0")
   "aa000 bb0000000 00"
   ```
   ```elixir
   iex > phrase = "replace all e letters by C letter"
-  iex > Krug.StringUtil.replaceAll(phrase1,["e","a","p","t"],"c")
+  iex > Krug.StringUtil.replace_all(phrase1,["e","a","p","t"],"c")
   "rcclccc cll c lccccrs by C lccccr"
   ```
   ```elixir
   iex > phrase = "replace non recursive because recursion throwble place"
-  iex > Krug.StringUtil.replaceAll(phrase,["ce","ur"],"[Ace Ventures]")
+  iex > Krug.StringUtil.replace_all(phrase,["ce","ur"],"[Ace Ventures]")
   "repla[Ace Vent[Ace Ventures]es] non rec[Ace Ventures]sive because rec[Ace Ventures]sion 
   throwble pla[Ace Vent[Ace Ventures]es]"
   ```
   """
-  def replaceAll(target,searchedArray,replaceTo) do 
+  def replace_all(target,searched_array,replace_to) do 
     cond do
       (nil == target) -> nil
-      (target == "" or nil == searchedArray or length(searchedArray) == 0) -> target
-      true -> replace(target,hd(searchedArray),replaceTo) 
-                |> replaceAll(tl(searchedArray),replaceTo)
+      (target == "" or nil == searched_array or length(searched_array) == 0) -> target
+      true -> replace(target,hd(searched_array),replace_to) 
+                |> replace_all(tl(searched_array),replace_to)
     end
   end
   
@@ -301,25 +301,25 @@ defmodule Krug.StringUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.StringUtil.decodeUri("these ++ is ++ a ++ http://example.com/short+uri+example ++++")
+  iex > Krug.StringUtil.decode_uri("these ++ is ++ a ++ http://example.com/short+uri+example ++++")
   "these ++ is ++ a ++ http://example.com/short uri example +   "
   ```
   """
-  def decodeUri(target) do
+  def decode_uri(target) do
     mantain1 = " + "
     mantain2 = " +"
     mantain3 = "+ "
-    mantain1Temp = "(((mantain1Temp)))"
-    mantain2Temp = "(((mantain2Temp)))"
-    mantain3Temp = "(((mantain3Temp)))"
+    mantain1_temp = "(((mantain1_temp)))"
+    mantain2_temp = "(((mantain2_temp)))"
+    mantain3_temp = "(((mantain3_temp)))"
   	target = URI.decode(target)
-  	target = replace(target,mantain1,mantain1Temp)
-  	target = replace(target,mantain2,mantain2Temp)
-  	target = replace(target,mantain3,mantain3Temp)
+  	target = replace(target,mantain1,mantain1_temp)
+  	target = replace(target,mantain2,mantain2_temp)
+  	target = replace(target,mantain3,mantain3_temp)
   	target = replace(target,"+"," ")
-  	target = replace(target,mantain1Temp,mantain1)
-  	target = replace(target,mantain2Temp,mantain2)
-  	replace(target,mantain3Temp,mantain3)
+  	target = replace(target,mantain1_temp,mantain1)
+  	target = replace(target,mantain2_temp,mantain2)
+  	replace(target,mantain3_temp,mantain3)
   end
   
   
@@ -333,22 +333,22 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > arrayParams = ["name=Johann Backend","age=54","address=404 street"]
-  iex > Krug.StringUtil.getDecodedValueParam(arrayParams,"name","=")
+  iex > array_params = ["name=Johann Backend","age=54","address=404 street"]
+  iex > Krug.StringUtil.get_decoded_value_param(array_params,"name","=")
   "Johann Backend"
   ```
   ```elixir 
-  iex > arrayParams = ["name=Johann Backend","age=54","address=404 street"]
-  iex > Krug.StringUtil.getDecodedValueParam(arrayParams,"address","=")
+  iex > array_params = ["name=Johann Backend","age=54","address=404 street"]
+  iex > Krug.StringUtil.get_decoded_value_param(array_params,"address","=")
   "404 street"
   ```
   """
-  def getDecodedValueParam(arrayParams,param,separator) do
+  def get_decoded_value_param(array_params,param,separator) do
     cond do
-      (nil == arrayParams or length(arrayParams) == 0) -> ""
-      (String.contains?(hd(arrayParams),"#{param}#{separator}")) 
-        -> decodeUri(replace(hd(arrayParams),param <> separator,""))
-      true -> getDecodedValueParam(tl(arrayParams),param,separator)
+      (nil == array_params or length(array_params) == 0) -> ""
+      (String.contains?(hd(array_params),"#{param}#{separator}")) 
+        -> decode_uri(replace(hd(array_params),param <> separator,""))
+      true -> get_decoded_value_param(tl(array_params),param,separator)
     end
   end
   
@@ -356,7 +356,7 @@ defmodule Krug.StringUtil do
   
   @doc """
   Receives a value, force to string and completes the value 
-  whit left zeros until the ```value``` size == ```size``` parameter value
+  with left zeros until the ```value``` size == ```size``` parameter value
   received.
   
   Useful for visual formatting and bank services for example.
@@ -369,56 +369,56 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(nil,5)
+  iex > Krug.StringUtil.left_zeros(nil,5)
   "00000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros("",5)
+  iex > Krug.StringUtil.left_zeros("",5)
   "00000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(" ",5)
+  iex > Krug.StringUtil.left_zeros(" ",5)
   "0000 "
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros("A",5)
+  iex > Krug.StringUtil.left_zeros("A",5)
   "0000A"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros("AB",5)
+  iex > Krug.StringUtil.left_zeros("AB",5)
   "000AB"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(33,5)
+  iex > Krug.StringUtil.left_zeros(33,5)
   "00033"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(33.4,5)
+  iex > Krug.StringUtil.left_zeros(33.4,5)
   "033.4"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(33.45,5)
+  iex > Krug.StringUtil.left_zeros(33.45,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(33.456,5)
+  iex > Krug.StringUtil.left_zeros(33.456,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(33.4567,5)
+  iex > Krug.StringUtil.left_zeros(33.4567,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftZeros(33.45678,5)
+  iex > Krug.StringUtil.left_zeros(33.45678,5)
   "33.45"
   ```
   """
-  def leftZeros(string,size) do
-    string = emptyIfNil(string)
+  def left_zeros(string,size) do
+    string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
       (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> leftZeros(concat("0",string,""),size)
+      true -> concat("0",string,"") |> left_zeros(size)
     end
   end
   
@@ -426,7 +426,7 @@ defmodule Krug.StringUtil do
   
   @doc """
   Receives a value, force to string and completes the value 
-  whit right zeros until the ```value``` size == ```size``` parameter value
+  with right zeros until the ```value``` size == ```size``` parameter value
   received.
   
   Useful for visual formatting and bank services for example.
@@ -439,56 +439,56 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(nil,5)
+  iex > Krug.StringUtil.right_zeros(nil,5)
   "00000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros("",5)
+  iex > Krug.StringUtil.right_zeros("",5)
   "00000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(" ",5)
+  iex > Krug.StringUtil.right_zeros(" ",5)
   " 0000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros("A",5)
+  iex > Krug.StringUtil.right_zeros("A",5)
   "A0000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros("AB",5)
+  iex > Krug.StringUtil.right_zeros("AB",5)
   "AB000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(33,5)
+  iex > Krug.StringUtil.right_zeros(33,5)
   "33000"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(33.4,5)
+  iex > Krug.StringUtil.right_zeros(33.4,5)
   "33.40"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(33.45,5)
+  iex > Krug.StringUtil.right_zeros(33.45,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(33.456,5)
+  iex > Krug.StringUtil.right_zeros(33.456,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(33.4567,5)
+  iex > Krug.StringUtil.right_zeros(33.4567,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros(33.45678,5)
+  iex > Krug.StringUtil.right_zeros(33.45678,5)
   "33.45"
   ```
   """
-  def rightZeros(string,size) do
-    string = emptyIfNil(string)
+  def right_zeros(string,size) do
+    string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
       (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> rightZeros(concat(string,"0",""),size)
+      true -> concat(string,"0","") |> right_zeros(size)
     end
   end
   
@@ -496,7 +496,7 @@ defmodule Krug.StringUtil do
   
   @doc """
   Receives a value, force to string and completes the value 
-  whit left spaces until the ```value``` size == ```size``` parameter value
+  with left spaces until the ```value``` size == ```size``` parameter value
   received.
   
   Useful for visual formatting and bank services for example.
@@ -509,56 +509,56 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(nil,5)
+  iex > Krug.StringUtil.left_spaces(nil,5)
   "     "
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces("",5)
+  iex > Krug.StringUtil.left_spaces("",5)
   "     "
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(" ",5)
+  iex > Krug.StringUtil.left_spaces(" ",5)
   "     "
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces("A",5)
+  iex > Krug.StringUtil.left_spaces("A",5)
   "    A"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces("AB",5)
+  iex > Krug.StringUtil.left_spaces("AB",5)
   "   AB"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(33,5)
+  iex > Krug.StringUtil.left_spaces(33,5)
   "   33"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(33.4,5)
+  iex > Krug.StringUtil.left_spaces(33.4,5)
   " 33.4"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(33.45,5)
+  iex > Krug.StringUtil.left_spaces(33.45,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(33.456,5)
+  iex > Krug.StringUtil.left_spaces(33.456,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(33.4567,5)
+  iex > Krug.StringUtil.left_spaces(33.4567,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.leftSpaces(33.45678,5)
+  iex > Krug.StringUtil.left_spaces(33.45678,5)
   "33.45"
   ```
   """
-  def leftSpaces(string,size) do
-    string = emptyIfNil(string)
+  def left_spaces(string,size) do
+    string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
       (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> leftSpaces(concat(" ",string,""),size)
+      true -> concat(" ",string,"") |> left_spaces(size)
     end
   end
   
@@ -566,7 +566,7 @@ defmodule Krug.StringUtil do
   
   @doc """
   Receives a value, force to string and completes the value 
-  whit right spaces until the ```value``` size == ```size``` parameter value
+  with right spaces until the ```value``` size == ```size``` parameter value
   received.
   
   Useful for visual formatting and bank services for example.
@@ -579,63 +579,63 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(nil,5)
+  iex > Krug.StringUtil.right_spaces(nil,5)
   "     "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightZeros("",5)
+  iex > Krug.StringUtil.right_zeros("",5)
   "     "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(" ",5)
+  iex > Krug.StringUtil.right_spaces(" ",5)
   "     "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces("A",5)
+  iex > Krug.StringUtil.right_spaces("A",5)
   "A    "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces("AB",5)
+  iex > Krug.StringUtil.right_spaces("AB",5)
   "AB   "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(33,5)
+  iex > Krug.StringUtil.right_spaces(33,5)
   "33   "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(33.4,5)
+  iex > Krug.StringUtil.right_spaces(33.4,5)
   "33.4 "
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(33.45,5)
+  iex > Krug.StringUtil.right_spaces(33.45,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(33.456,5)
+  iex > Krug.StringUtil.right_spaces(33.456,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(33.4567,5)
+  iex > Krug.StringUtil.right_spaces(33.4567,5)
   "33.45"
   ```
   ```elixir 
-  iex > Krug.StringUtil.rightSpaces(33.45678,5)
+  iex > Krug.StringUtil.right_spaces(33.45678,5)
   "33.45"
   ```
   """
-  def rightSpaces(string,size) do
-    string = emptyIfNil(string)
+  def right_spaces(string,size) do
+    string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
       (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> rightSpaces(concat(string," ",""),size)
+      true -> right_spaces(concat(string," ",""),size)
     end
   end
   
   
   
   @doc """
-  Convert a value to string, returning the value whitout left and right spaces.
+  Convert a value to string, returning the value without left and right spaces.
   
   ## Examples
 
@@ -665,7 +665,7 @@ defmodule Krug.StringUtil do
   ```
   """
   def trim(string) do
-    emptyIfNil(string) |> String.trim()
+    empty_if_nil(string) |> String.trim()
   end
   
   
@@ -680,56 +680,56 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray(nil,nil)
+  iex > Krug.StringUtil.contains_one_element_of_array(nil,nil)
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("",nil)
+  iex > Krug.StringUtil.contains_one_element_of_array("",nil)
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray(" ",nil)
+  iex > Krug.StringUtil.contains_one_element_of_array(" ",nil)
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[]])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[]])
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef5",[0,1,2,[5,7]])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef5",[0,1,2,[5,7]])
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef5,7",[0,1,2,[5,7]])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef5,7",[0,1,2,[5,7]])
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef[5,7]",[0,1,2,[5,7]])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef[5,7]",[0,1,2,[5,7]])
   false
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"]"])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"]"])
   true
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"bc"])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"bc"])
   true
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef[]",[0,1,2,[],"def["])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef[]",[0,1,2,[],"def["])
   true
   ```
   ```elixir 
-  iex > Krug.StringUtil.containsOneElementOfArray("abcdef8[]",[0,1,2,[],8])
+  iex > Krug.StringUtil.contains_one_element_of_array("abcdef8[]",[0,1,2,[],8])
   true
   ```
   """
-  def containsOneElementOfArray(target,array) do
+  def contains_one_element_of_array(target,array) do
     cond do
       (nil == array or length(array) == 0) -> false
-      ("#{hd(array)}" == "") -> containsOneElementOfArray(target,tl(array))
+      ("#{hd(array)}" == "") -> contains_one_element_of_array(target,tl(array))
       (String.contains?("#{target}","#{hd(array)}")) -> true
-      true -> containsOneElementOfArray(target,tl(array))
+      true -> contains_one_element_of_array(target,tl(array))
     end
   end
   
@@ -737,9 +737,9 @@ defmodule Krug.StringUtil do
   
   @doc """
   Convert a received value to a string. If this string is not empty return these value.
-  Otherwise return the ```valueIfEmptyOrNull``` parameter value.
+  Otherwise return the ```value_if_empty_or_nil``` parameter value.
   
-  If ```valueIfEmptyOrNull``` is nil return the received value or a empty string
+  If ```value_if_empty_or_nil``` is nil return the received value or a empty string
   case the received value is nil.
   
   Useful to forces a default value, to validations for example. 
@@ -779,10 +779,10 @@ defmodule Krug.StringUtil do
   "A"
   ```
   """
-  def coalesce(value,valueIfEmptyOrNull) do
+  def coalesce(value,value_if_empty_or_nil) do
     cond do
-      (nil == valueIfEmptyOrNull) -> emptyIfNil(value)
-      (trim(value) == "") -> valueIfEmptyOrNull
+      (nil == value_if_empty_or_nil) -> empty_if_nil(value)
+      (trim(value) == "") -> value_if_empty_or_nil
       true -> value
     end
   end
@@ -790,7 +790,7 @@ defmodule Krug.StringUtil do
   
   
   @doc """
-  Convert a numeric value ```charCodeString``` received to the
+  Convert a numeric value ```char_code_string``` received to the
   correspondent character alfanumeric of any alphabet of
   any language.
   
@@ -799,40 +799,40 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar("")
+  iex > Krug.StringUtil.StringUtil.to_char("")
   ""
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar(" ")
+  iex > Krug.StringUtil.StringUtil.to_char(" ")
   ""
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar("A")
+  iex > Krug.StringUtil.StringUtil.to_char("A")
   ""
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar("AB")
+  iex > Krug.StringUtil.StringUtil.to_char("AB")
   ""
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar(5)
+  iex > Krug.StringUtil.StringUtil.to_char(5)
   "\x05"
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar(65)
+  iex > Krug.StringUtil.StringUtil.to_char(65)
   "A"
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar(225)
+  iex > Krug.StringUtil.StringUtil.to_char(225)
   "á"
   ```
   ```elixir 
-  iex > Krug.StringUtil.StringUtil.toChar(16000)
+  iex > Krug.StringUtil.StringUtil.to_char(16000)
   "㺀"
   ```
   """
-  def toChar(charCodeString) do
-    number = NumberUtil.toInteger(charCodeString)
+  def to_char(char_code_string) do
+    number = NumberUtil.to_integer(char_code_string)
     cond do
       (!(number > 0)) -> ""
       true -> List.to_string([number])
@@ -856,63 +856,63 @@ defmodule Krug.StringUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.StringUtil.toCharCode(nil,0) 
+  iex > Krug.StringUtil.to_char_code(nil,0) 
   nil
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode([],0) 
+  iex > Krug.StringUtil.to_char_code([],0) 
   nil
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode([nil],0) 
+  iex > Krug.StringUtil.to_char_code([nil],0) 
   nil
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode([""],0) 
+  iex > Krug.StringUtil.to_char_code([""],0) 
   nil
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode([""],3) 
+  iex > Krug.StringUtil.to_char_code([""],3) 
   nil
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode([" "],0)
+  iex > Krug.StringUtil.to_char_code([" "],0)
   32
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode(["\x05"],0)
+  iex > Krug.StringUtil.to_char_code(["\x05"],0)
   5
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode(["A"],0)
+  iex > Krug.StringUtil.to_char_code(["A"],0)
   65
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode(["á"],0)
+  iex > Krug.StringUtil.to_char_code(["á"],0)
   225
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode(["㺀"],0)
+  iex > Krug.StringUtil.to_char_code(["㺀"],0)
   16000
   ```
   ```elixir 
-  iex > Krug.StringUtil.toCharCode([nil,"",3,[],%{},"A"],5)
+  iex > Krug.StringUtil.to_char_code([nil,"",3,[],%{},"A"],5)
   65
   ```
   """
-  def toCharCode(array,position) do
+  def to_char_code(array,position) do
     cond do
       (nil == array or position >= length(array)) -> nil
       (Enum.member?(["",nil],array |> Enum.at(position))) -> nil
-      true -> array |> Enum.at(position) |> toCharCode()
+      true -> array |> Enum.at(position) |> to_char_code()
     end
   end
   
   
   
-  defp toCharCode(stringChar) do
-    stringChar 
-      |> emptyIfNil() 
+  defp to_char_code(string_char) do
+    string_char 
+      |> empty_if_nil() 
       |> String.to_charlist() 
       |> hd()
   end

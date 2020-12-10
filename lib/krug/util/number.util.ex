@@ -16,11 +16,11 @@ defmodule Krug.NumberUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.NumberUtil.maxInteger()
+  iex > Krug.NumberUtil.max_integer()
   4294967295
   ```
   """
-  def maxInteger() do
+  def max_integer() do
     4294967295
   end
   
@@ -32,51 +32,51 @@ defmodule Krug.NumberUtil do
   ## Example
 
   ```elixir 
-  iex > Krug.NumberUtil.isNan(10)
+  iex > Krug.NumberUtil.is_nan(10)
   false
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("10")
+  iex > Krug.NumberUtil.is_nan("10")
   false
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("-1.0")
+  iex > Krug.NumberUtil.is_nan("-1.0")
   false
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("-1,0")
+  iex > Krug.NumberUtil.is_nan("-1,0")
   false
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("10A")
+  iex > Krug.NumberUtil.is_nan("10A")
   true
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("-1-1")
+  iex > Krug.NumberUtil.is_nan("-1-1")
   true
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("1-1")
+  iex > Krug.NumberUtil.is_nan("1-1")
   true
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan(".5")
+  iex > Krug.NumberUtil.is_nan(".5")
   true
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("-.5")
+  iex > Krug.NumberUtil.is_nan("-.5")
   true
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan(",5")
+  iex > Krug.NumberUtil.is_nan(",5")
   true
   ```
   ```elixir 
-  iex > Krug.NumberUtil.isNan("-,5")
+  iex > Krug.NumberUtil.is_nan("-,5")
   true
   ```
   """
-  def isNan(number) do
+  def is_nan(number) do
     number = number |> StringUtil.trim() 
     number2 = number
     size = String.length(number2)
@@ -84,14 +84,14 @@ defmodule Krug.NumberUtil do
       (size > 1) -> number2 |> String.slice(1..size)
       true -> number2
     end
-    invalidCombinations = ["-.","-,",".-",",-","--","..",".,",",.",",,"]
+    invalid_combinations = ["-.","-,",".-",",-","--","..",".,",",.",",,"]
     cond do
       (number == "" || number2 == "") -> true 
       (Enum.member?([".",","],number |> String.slice(0..0))) -> true
-      (StringUtil.replaceAll(number,["-",".",","],"") == "") -> true
-      (StringUtil.containsOneElementOfArray(number,invalidCombinations)) -> true
-      (StringUtil.replaceAll(number,numberChars(false),"") != "") -> true
-      (StringUtil.replaceAll(number2,numberChars(true),"") != "") -> true 
+      (StringUtil.replace_all(number,["-",".",","],"") == "") -> true
+      (StringUtil.contains_one_element_of_array(number,invalid_combinations)) -> true
+      (StringUtil.replace_all(number,number_chars(false),"") != "") -> true
+      (StringUtil.replace_all(number2,number_chars(true),"") != "") -> true 
       true -> false
     end
   end
@@ -108,52 +108,52 @@ defmodule Krug.NumberUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.NumberUtil.toPositive(-10)
+  iex > Krug.NumberUtil.to_positive(-10)
   10
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("-10,5")
+  iex > Krug.NumberUtil.to_positive("-10,5")
   10.5
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("-10.5")
+  iex > Krug.NumberUtil.to_positive("-10.5")
   10.5
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("-10,5A")
+  iex > Krug.NumberUtil.to_positive("-10,5A")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("-1-0,5")
+  iex > Krug.NumberUtil.to_positive("-1-0,5")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("1-0,5")
+  iex > Krug.NumberUtil.to_positive("1-0,5")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("1.0.5")
+  iex > Krug.NumberUtil.to_positive("1.0.5")
   10.5
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("1,0,5")
+  iex > Krug.NumberUtil.to_positive("1,0,5")
   10.5
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("1.0,5")
+  iex > Krug.NumberUtil.to_positive("1.0,5")
   10.5
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("1,0.5")
+  iex > Krug.NumberUtil.to_positive("1,0.5")
   10.5
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toPositive("-1,0,5")
+  iex > Krug.NumberUtil.to_positive("-1,0,5")
   10.5
   ```
   """
-  def toPositive(number) do
-    number = toFloat(number)
+  def to_positive(number) do
+    number = to_float(number)
     cond do
       (number < 0) -> (number * -1)
       true -> number
@@ -169,53 +169,53 @@ defmodule Krug.NumberUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.NumberUtil.toInteger(nil)
+  iex > Krug.NumberUtil.to_integer(nil)
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("")
+  iex > Krug.NumberUtil.to_integer("")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("1,,2")
+  iex > Krug.NumberUtil.to_integer("1,,2")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("1-2")
+  iex > Krug.NumberUtil.to_integer("1-2")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("-1..2")
+  iex > Krug.NumberUtil.to_integer("-1..2")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("1A")
+  iex > Krug.NumberUtil.to_integer("1A")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger(-1.2)
+  iex > Krug.NumberUtil.to_integer(-1.2)
   -1
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("-1.2")
+  iex > Krug.NumberUtil.to_integer("-1.2")
   -1
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("-1,2")
+  iex > Krug.NumberUtil.to_integer("-1,2")
   -1
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("1.2")
+  iex > Krug.NumberUtil.to_integer("1.2")
   1
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toInteger("1,2")
+  iex > Krug.NumberUtil.to_integer("1,2")
   1
   ```
   """
-  def toInteger(number) do
+  def to_integer(number) do
     cond do
-      (isNan(number)) -> 0
+      (is_nan(number)) -> 0
       true -> "#{number}" |> StringUtil.replace(",",".") 
                           |> StringUtil.split(".")
                           |> Enum.at(0) 
@@ -232,121 +232,121 @@ defmodule Krug.NumberUtil do
   ## Examples
 
   ```elixir 
-  iex > Krug.NumberUtil.toFloat(nil)
+  iex > Krug.NumberUtil.to_float(nil)
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("")
+  iex > Krug.NumberUtil.to_float("")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1,,2")
+  iex > Krug.NumberUtil.to_float("1,,2")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1-2")
+  iex > Krug.NumberUtil.to_float("1-2")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("-1..2")
+  iex > Krug.NumberUtil.to_float("-1..2")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1A")
+  iex > Krug.NumberUtil.to_float("1A")
   0.0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat(-1.2)
+  iex > Krug.NumberUtil.to_float(-1.2)
   -1.2
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("-1.2")
+  iex > Krug.NumberUtil.to_float("-1.2")
   -1.2
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("-1,2")
+  iex > Krug.NumberUtil.to_float("-1,2")
   -1.2
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1.2")
+  iex > Krug.NumberUtil.to_float("1.2")
   1.2
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1,2")
+  iex > Krug.NumberUtil.to_float("1,2")
   1.2
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1.2,4")
+  iex > Krug.NumberUtil.to_float("1.2,4")
   12.4
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("1,2,4")
+  iex > Krug.NumberUtil.to_float("1,2,4")
   12.4
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloat("-1,2.4")
+  iex > Krug.NumberUtil.to_float("-1,2.4")
   -12.4
   ```
   """
-  def toFloat(number) do
+  def to_float(number) do
     cond do
-      (isNan(number)) -> 0.0
-      true -> converToFloat(number)
+      (is_nan(number)) -> 0.0
+      true -> convert_to_float(number)
     end
   end
   
   
   
   @doc """
-  Applies ```toFloat()``` to a received value, then format whit
+  Applies ```to_float()``` to a received value, then format with
   ```decimals``` decimal digits, using ```,``` (default) or ```.```.
 
   ## Examples
   
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat(nil,2)
+  iex > Krug.NumberUtil.to_float_format(nil,2)
   0,00
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat("1A",2)
+  iex > Krug.NumberUtil.to_float_format("1A",2)
   0,00
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat("1,2",2)
+  iex > Krug.NumberUtil.to_float_format("1,2",2)
   1,20
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat("1,2",5)
+  iex > Krug.NumberUtil.to_float_format("1,2",5)
   1,20000
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat(nil,2,false)
+  iex > Krug.NumberUtil.to_float_format(nil,2,false)
   0.00
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat("1A",2,false)
+  iex > Krug.NumberUtil.to_float_format("1A",2,false)
   0.00
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat("1,2",2,false)
+  iex > Krug.NumberUtil.to_float_format("1,2",2,false)
   1.20
   ```
   ```elixir 
-  iex > Krug.NumberUtil.toFloatFormat("1,2",5,false)
+  iex > Krug.NumberUtil.to_float_format("1,2",5,false)
   1.20000
   ```
   """
-  def toFloatFormat(number,decimals,commaAsDecimalSeparator \\ true) do
-    number = number |> toFloat()
+  def to_float_format(number,decimals,comma_as_decimal_separator \\ true) do
+    number = number |> to_float()
     arr = :io_lib.format("~.#{decimals}f",[number]) |> StringUtil.split(".")
     dec = cond do
       (nil == decimals or !(decimals > 0)) -> ""
-      (length(arr) > 1) -> Enum.at(arr,1) |> StringUtil.rightZeros(decimals)
-      true -> "" |> StringUtil.rightZeros(decimals)
+      (length(arr) > 1) -> Enum.at(arr,1) |> StringUtil.right_zeros(decimals)
+      true -> "" |> StringUtil.right_zeros(decimals)
     end
     cond do
       (nil == decimals or !(decimals > 0)) -> "#{Enum.at(arr,0)}"
-      (!commaAsDecimalSeparator) -> "#{Enum.at(arr,0)}.#{dec}"
+      (!comma_as_decimal_separator) -> "#{Enum.at(arr,0)}.#{dec}"
       true -> "#{Enum.at(arr,0)},#{dec}"
     end
   end
@@ -355,8 +355,8 @@ defmodule Krug.NumberUtil do
   
   @doc """
   Verify if a value received is a valid number. If is valid return the
-  value received passing by ```toInteger()``` or ```toFloat```. 
-  Otherwise return the ```valueIfEmptyOrNull``` parameter value.
+  value received passing by ```to_integer()``` or ```toFloat```. 
+  Otherwise return the ```value_if_empty_or_nil``` parameter value.
   
   Useful to forces a default value, to validations for example. 
   
@@ -415,22 +415,22 @@ defmodule Krug.NumberUtil do
   -12.4
   ```
   """
-  def coalesce(value,valueIfEmptyOrNull,zeroAsEmpty \\ false) do
+  def coalesce(value,value_if_empty_or_nil,zero_as_empty \\ false) do
     value = value |> StringUtil.replace(",",".")
-    valueIfEmptyOrNull = valueIfEmptyOrNull |> StringUtil.replace(",",".")
+    value_if_empty_or_nil = value_if_empty_or_nil |> StringUtil.replace(",",".")
     cond do
-      (zeroAsEmpty and String.contains?(value,".") and toFloat(value) == 0.0) 
-        -> toFloat(valueIfEmptyOrNull)
-      (zeroAsEmpty and !String.contains?(value,".") and toInteger(value) == 0) 
-        -> toInteger(valueIfEmptyOrNull)
-      (!isNan(value) and String.contains?(value,".")) 
-        -> toFloat(value)
-      (!isNan(value)) 
-        -> toInteger(value)
-      (!isNan(valueIfEmptyOrNull) and String.contains?(valueIfEmptyOrNull,".")) 
-        -> toFloat(valueIfEmptyOrNull)
-      (!isNan(valueIfEmptyOrNull)) 
-        -> toInteger(valueIfEmptyOrNull)
+      (zero_as_empty and String.contains?(value,".") and to_float(value) == 0.0) 
+        -> to_float(value_if_empty_or_nil)
+      (zero_as_empty and !String.contains?(value,".") and to_integer(value) == 0) 
+        -> to_integer(value_if_empty_or_nil)
+      (!is_nan(value) and String.contains?(value,".")) 
+        -> to_float(value)
+      (!is_nan(value)) 
+        -> to_integer(value)
+      (!is_nan(value_if_empty_or_nil) and String.contains?(value_if_empty_or_nil,".")) 
+        -> to_float(value_if_empty_or_nil)
+      (!is_nan(value_if_empty_or_nil)) 
+        -> to_integer(value_if_empty_or_nil)
       true -> 0
     end
   end
@@ -452,49 +452,49 @@ defmodule Krug.NumberUtil do
   ## Examples
   
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval(nil,"10","20")
+  iex > Krug.NumberUtil.coalesce_interval(nil,"10","20")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("",10,"20")
+  iex > Krug.NumberUtil.coalesce_interval("",10,"20")
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("1-1",10,20)
+  iex > Krug.NumberUtil.coalesce_interval("1-1",10,20)
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("1A",10,20)
+  iex > Krug.NumberUtil.coalesce_interval("1A",10,20)
   0
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("101","10",nil)
+  iex > Krug.NumberUtil.coalesce_interval("101","10",nil)
   101
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("101","1A",20)
+  iex > Krug.NumberUtil.coalesce_interval("101","1A",20)
   101
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval(101,10,20)
+  iex > Krug.NumberUtil.coalesce_interval(101,10,20)
   20
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("5.5","10",20)
+  iex > Krug.NumberUtil.coalesce_interval("5.5","10",20)
   10
   ```
   ```elixir 
-  iex > Krug.NumberUtil.coalesceInterval("15.5",10,20)
+  iex > Krug.NumberUtil.coalesce_interval("15.5",10,20)
   15.5
   ```
   """
-  def coalesceInterval(value,min,max) do
+  def coalesce_interval(value,min,max) do
     value2 = numberize(value)
     min2 = numberize(min)
     max2 = numberize(max)
     cond do
-      (isNan(value)) -> 0
-      (isNan(min) or isNan(max)) -> value2
+      (is_nan(value)) -> 0
+      (is_nan(min) or is_nan(max)) -> value2
       (value2 < min2) -> min2
       (value2 > max2) -> max2
       true -> value2
@@ -506,38 +506,38 @@ defmodule Krug.NumberUtil do
   defp numberize(value) do
     value2 = value |> StringUtil.replace(",",".")
     cond do
-      (isNan(value)) -> 0 
-      (String.contains?(value2,".")) -> toFloat(value2)
-      true -> toInteger(value2)
+      (is_nan(value)) -> 0 
+      (String.contains?(value2,".")) -> to_float(value2)
+      true -> to_integer(value2)
     end
   end
   
   
   
-  defp numberChars(onlyPositive) do
+  defp number_chars(only_positive) do
     cond do
-      (onlyPositive) -> [",",".","0","1","2","3","4","5","6","7","8","9"]
+      (only_positive) -> [",",".","0","1","2","3","4","5","6","7","8","9"]
       true -> ["-",",",".","0","1","2","3","4","5","6","7","8","9"]
     end
   end
   
   
   
-  defp converToFloat(number) do
+  defp convert_to_float(number) do
     number = StringUtil.replace(number," ","") |> StringUtil.replace(",",".")
     cond do
       (!(String.contains?(number,"."))) -> number |> String.to_integer()
-      true -> handleExtraFloatDots(number) |> String.to_float()
+      true -> handle_extra_float_dots(number) |> String.to_float()
     end
   end
   
   
   
-  defp handleExtraFloatDots(number) do
-    reverseArray = StringUtil.split(number,".") |> Enum.reverse()
-    doublePart = hd(reverseArray)
-    integerPart = tl(reverseArray) |> Enum.reverse() |> Enum.join("")
-    [integerPart,doublePart] |> Enum.join(".")
+  defp handle_extra_float_dots(number) do
+    reversed_array = StringUtil.split(number,".") |> Enum.reverse()
+    double_part = hd(reversed_array)
+    integer_part = tl(reversed_array) |> Enum.reverse() |> Enum.join("")
+    [integer_part,double_part] |> Enum.join(".")
   end
   
   
