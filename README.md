@@ -1,6 +1,7 @@
 # Krug
 
-**A Utilitary package functionalities modules for improve a secure performatic development.**
+**A Utilitary package functionalities (Sanitizer|Ecto|Bamboo SMTP mail) 
+modules for improve a secure performatic development.**
 
 ## Installation
 
@@ -9,7 +10,7 @@ The package can be installed by adding `krug` to your list of dependencies in `m
 ```elixir
 def deps do
   [
-    {:krug, "~> 0.2.0"}
+    {:krug, "~> 0.3.0"}
   ]
 end
 ```

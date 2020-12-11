@@ -6,12 +6,12 @@ defmodule Krug.MixProject do
   def project do
     [
       app: :krug,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.11",
       source_url: @project_url,
       homepage_url: @project_url,
       name: "Krug",
-      description: "A Utilitary package functionalities modules for secure/improve development.",
+      description: "A Utilitary package functionalities modules for improve a secure performatic development.",
       start_permanent: Mix.env() == :prod,
       #test_coverage: [tool: ExCoveralls],
       aliases: aliases(),
@@ -36,7 +36,10 @@ defmodule Krug.MixProject do
       {:poison, "~> 4.0.1"},
       {:httpoison, "~> 1.7"},
       {:ex_aws, "~> 2.1.6"},
-	  {:ex_aws_s3, "~> 2.0"}
+	  {:ex_aws_s3, "~> 2.0"},
+	  {:bamboo, "~> 1.6.0"},
+      {:bamboo_smtp, "~> 3.0.0"},
+      {:bamboo_config_adapter, "~> 1.0.0"}
     ]
   end
   

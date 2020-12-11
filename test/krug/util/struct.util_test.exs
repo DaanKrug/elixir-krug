@@ -36,4 +36,33 @@ defmodule Krug.StructUtilTest do
     assert StructUtil.list_contains_one_of([1,2,4,6,%{a: 1, b: 3}],[5,7,8,"A",%{a: 1, b: 5},9]) == false
   end
   
+  test "[get_key_par_value_from_list(key,list)]" do
+    list = ["name=Johannes Backend","email=johannes@has.not.email"]
+    list2 = [" name=Johannes Backend","email =johannes@has.not.email"]
+    list3 = [" name = Johannes Backend "," email = johannes@has.not.email "]
+    assert StructUtil.get_key_par_value_from_list(nil,nil) == nil
+    assert StructUtil.get_key_par_value_from_list(nil,[]) == nil
+    assert StructUtil.get_key_par_value_from_list(nil,[nil]) == nil
+    assert StructUtil.get_key_par_value_from_list(nil,[""]) == nil
+    assert StructUtil.get_key_par_value_from_list("",nil) == nil
+    assert StructUtil.get_key_par_value_from_list("",[]) == nil
+    assert StructUtil.get_key_par_value_from_list("",[nil]) == nil
+    assert StructUtil.get_key_par_value_from_list("",[""]) == nil
+    assert StructUtil.get_key_par_value_from_list(" ",nil) == nil
+    assert StructUtil.get_key_par_value_from_list(" ",[]) == nil
+    assert StructUtil.get_key_par_value_from_list(" ",[nil]) == nil
+    assert StructUtil.get_key_par_value_from_list(" ",[""]) == nil
+    assert StructUtil.get_key_par_value_from_list("name",nil) == nil
+    assert StructUtil.get_key_par_value_from_list("name",[]) == nil
+    assert StructUtil.get_key_par_value_from_list("name",[nil]) == nil
+    assert StructUtil.get_key_par_value_from_list("name",[""]) == nil
+    assert StructUtil.get_key_par_value_from_list("keyThatNotExists",list) == nil
+    assert StructUtil.get_key_par_value_from_list("name",list) == "Johannes Backend"
+    assert StructUtil.get_key_par_value_from_list("email",list) == "johannes@has.not.email"
+    assert StructUtil.get_key_par_value_from_list("name",list2) == "Johannes Backend"
+    assert StructUtil.get_key_par_value_from_list("email",list2) == "johannes@has.not.email"
+    assert StructUtil.get_key_par_value_from_list("name",list3) == "Johannes Backend"
+    assert StructUtil.get_key_par_value_from_list("email",list3) == "johannes@has.not.email"
+  end
+  
 end
