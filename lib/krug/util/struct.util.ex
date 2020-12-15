@@ -166,7 +166,7 @@ defmodule Krug.StructUtil do
   
   
   @doc """
-  Return a key par value from a list of keypar strings in format ["key=value","key=value"].
+  Return a key par value from a list of key_par strings in format ["key=value","key=value"].
   
   If the key or the list is nil/empty return nil.
 

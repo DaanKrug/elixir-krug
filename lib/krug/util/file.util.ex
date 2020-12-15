@@ -207,7 +207,8 @@ defmodule Krug.FileUtil do
   
   If insertion_point_tag is received and don't exists in file, return false.
   
-  Accept only file extensions: ```["sql","txt","html","ts","js","ex","exs","sh","json"]```
+  Accept only file extensions: 
+  ```["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json"]```
   will fail for other file extensions.
 
   ## Examples
@@ -250,7 +251,8 @@ defmodule Krug.FileUtil do
   Fail if the file don't exists, is a directory, operation fail, or the 
   insertion_points[0] or insertion_points[1] don't exists in file.
   
-  Accept only file extensions: ```["sql","txt","html","ts","js","ex","exs","sh","json"]```
+  Accept only file extensions: 
+  ```["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json"]```
   will fail for other file extensions.
 
   ## Example
@@ -286,7 +288,8 @@ defmodule Krug.FileUtil do
   
   Fail if the file is directory or don't exists.
   
-  Accept only file extensions: ```["sql","txt","html","ts","js","ex","exs","sh","json"]```
+  Accept only file extensions: 
+  ```["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json"]```
   will fail for other file extensions.
 
   ## Example
@@ -369,7 +372,7 @@ defmodule Krug.FileUtil do
   
   
   defp valid_extensions() do
-    ["sql","txt","html","ts","js","ex","exs","sh","json"]
+    ["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json"]
   end
   
   
