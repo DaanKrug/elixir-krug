@@ -6,7 +6,7 @@ defmodule Krug.MixProject do
   def project do
     [
       app: :krug,
-      version: "0.3.1",
+      version: "0.3.3",
       elixir: "~> 1.11",
       source_url: @project_url,
       homepage_url: @project_url,
