@@ -59,7 +59,7 @@ defmodule Krug.EtsUtil do
       (ets_table_exists(session_key)) -> session_key
       (visibility == "public") -> :ets.new(session_key, [:set, :public, :named_table])
       (visibility == "private") -> :ets.new(session_key, [:set, :private, :named_table])
-      true -> :ets.new(session_key, [:set, :protected, :named_table])
+      true -> :ets.new(session_key,get_ets_options())
     end
   end
   
@@ -131,7 +131,7 @@ defmodule Krug.EtsUtil do
   def store_in_cache(session_key,key,value) do
     cond do
       (!ets_table_exists(session_key)) -> false
-      (!(remove_from_cache(session_key,key))) -> false
+      (!remove_from_cache(session_key,key)) -> false
       true -> :ets.insert(session_key,{key,value})
     end
   end
@@ -213,7 +213,6 @@ defmodule Krug.EtsUtil do
   def remove_from_cache(session_key,key) do
     cond do
       (!ets_table_exists(session_key)) -> true
-      (nil == read_from_cache(session_key,key)) -> true
       true -> :ets.delete(session_key,key)
     end
   end
@@ -222,6 +221,18 @@ defmodule Krug.EtsUtil do
   
   defp ets_table_exists(session_key) do
     :ets.whereis(session_key) != :undefined
+  end
+
+
+
+  defp get_ets_options() do
+    [
+      :set, 
+      :protected, 
+      :named_table,
+      write_concurrency: true,
+      read_concurrency: true
+    ]
   end
 
 

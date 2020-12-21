@@ -30,6 +30,8 @@ defmodule Krug.EtsUtilTest do
     assert EtsUtil.remove_from_cache(:keyThatDontExists,"ping") == true
     assert EtsUtil.remove_from_cache(:echo,"ping") == true
     assert EtsUtil.remove_from_cache(:echo,"foo") == true
+    assert EtsUtil.remove_from_cache(:echo,"batatas") == true
+    assert :ets.delete(:echo, "batatas") == true
     assert EtsUtil.delete(:echo) == true
     assert :ets.whereis(:echo) == :undefined
   end

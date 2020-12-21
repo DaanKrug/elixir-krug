@@ -14,6 +14,22 @@ defmodule Krug.BaseEctoDAO do
 
   end
   ```
+  
+  This mechanism also includes by default a in-memory query cache
+  of last 10 select results of each database table.
+  This cache (for respective table) is empty each time that a entry 
+  is inserted/updated/deleted from the respective table.
+  You can disable this mechanism for expensive tables (large text data or many columns), 
+  or tables that are very intensible/frequently writed/updated.
+  For this use the ```nocache_tables``` atribute.
+  
+  ```elixir
+  defmodule MyApp.App.DAOService do
+
+    use Krug.BaseEctoDAO, repo: MyApp.App.Repo, nocache_tables: ["my_table_no_cache1","my_table_no_cache2"]
+
+  end
+  ```
   """
   @moduledoc since: "0.2.0"
   
@@ -145,28 +161,58 @@ defmodule Krug.BaseEctoDAO do
   
     quote bind_quoted: [opts: opts] do
     
+      alias Krug.BaseEctoDAOSqlCache
+    
       @behaviour Krug.BaseEctoDAO
      
       @repo Keyword.get(opts,:repo)
+      @nocache_tables Keyword.get(opts,:nocache_tables)
     
       @impl Krug.BaseEctoDAO
       def load(sql,params \\[]) do
-	    execute_sql(sql,params,false)
+	    cond do
+	      (use_cache(sql)) -> load_with_cache(sql,params)
+	      true -> load_without_cache(sql,params)
+	    end
 	  end
 	  
 	  @impl Krug.BaseEctoDAO
 	  def insert(sql,params) do
-	  	execute_sql(sql,params,true)
+	  	ok = execute_sql(sql,params,true)
+	  	cond do
+	  	  (!ok or !use_cache(sql)) -> ok
+	  	  true -> BaseEctoDAOSqlCache.clear_cache(sql)
+	  	end
 	  end
 	  
 	  @impl Krug.BaseEctoDAO
 	  def update(sql,params) do
-	  	execute_sql(sql,params,true)
+	  	ok = execute_sql(sql,params,true)
+	  	cond do
+	  	  (!ok or !use_cache(sql)) -> ok
+	  	  true -> BaseEctoDAOSqlCache.clear_cache(sql)
+	  	end
 	  end
 	  
 	  @impl Krug.BaseEctoDAO
 	  def delete(sql,params) do
-	  	execute_sql(sql,params,true)
+	  	ok = execute_sql(sql,params,true)
+	  	cond do
+	  	  (!ok or !use_cache(sql)) -> ok
+	  	  true -> BaseEctoDAOSqlCache.clear_cache(sql)
+	  	end
+	  end
+	  
+	  defp load_without_cache(sql,params \\[]) do
+        execute_sql(sql,params,false)
+	  end
+	  
+	  defp load_with_cache(sql,params \\[]) do
+        resultset = BaseEctoDAOSqlCache.load_from_cache(sql,params)
+	    cond do
+	      (nil != resultset) -> resultset
+	      true -> BaseEctoDAOSqlCache.put_cache(sql,params,execute_sql(sql,params,false))
+	    end
 	  end
 	  
 	  defp execute_sql(sql,params,bool_result) do
@@ -185,8 +231,16 @@ defmodule Krug.BaseEctoDAO do
 	      (bool_result) -> false
 	      true -> nil
 	    end
-	  end     
-    
+	  end 
+	  
+	  defp use_cache(sql) do
+	    cond do
+	      (nil == @nocache_tables or length(@nocache_tables) == 0) -> true
+	      (Enum.member?(@nocache_tables,BaseEctoDAOSqlCache.extract_table_name(sql))) -> false
+	      true -> true
+	    end
+	  end
+	     
     end
 
   end
