@@ -65,9 +65,8 @@ defmodule Krug.DateUtil do
   """  
   def get_date_now_string() do
     now = get_now()
-    Enum.join([StringUtil.left_zeros(now.day,2),
-               StringUtil.left_zeros(now.month,2),
-               StringUtil.left_zeros(now.year,4)],"/")
+    [StringUtil.left_zeros(now.day,2),"/",StringUtil.left_zeros(now.month,2),"/",StringUtil.left_zeros(now.year,4)] 
+      |> IO.iodata_to_binary()
   end
   
   
@@ -84,9 +83,8 @@ defmodule Krug.DateUtil do
   """  
   def get_time_now_string() do
   	time = Time.utc_now()
-  	Enum.join([StringUtil.left_zeros(time.hour,2),
-  	           StringUtil.left_zeros(time.minute,2),
-  	           StringUtil.left_zeros(time.second,2)],":")
+  	[StringUtil.left_zeros(time.hour,2),":",StringUtil.left_zeros(time.minute,2),":",StringUtil.left_zeros(time.second,2)] 
+  	  |> IO.iodata_to_binary()
   end
   
   
@@ -118,7 +116,7 @@ defmodule Krug.DateUtil do
   ```
   """  
   def get_date_and_time_now_string() do
-    Enum.join([get_date_now_string(),get_time_now_string()]," ")
+    [get_date_now_string()," ",get_time_now_string()] |> IO.iodata_to_binary()
   end
 
 
@@ -200,8 +198,9 @@ defmodule Krug.DateUtil do
     cond do
       (!(Enum.member?([10,19],String.length(sql_date)))) -> nil
       (with_time == true and length(arr) > 1) 
-        -> "#{Enum.at(arr2,2)}/#{Enum.at(arr2,1)}/#{Enum.at(arr2,0)} #{Enum.at(arr,1) |> String.slice(0,8)}"
-      true -> "#{Enum.at(arr2,2)}/#{Enum.at(arr2,1)}/#{Enum.at(arr2,0)}"
+        -> [Enum.at(arr2,2),"/",Enum.at(arr2,1),"/",Enum.at(arr2,0)," ",Enum.at(arr,1) |> String.slice(0,8)] 
+             |> IO.iodata_to_binary()
+      true -> [Enum.at(arr2,2),"/",Enum.at(arr2,1),"/",Enum.at(arr2,0)] |> IO.iodata_to_binary() 
     end
   end
   

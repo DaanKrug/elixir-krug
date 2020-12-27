@@ -86,7 +86,7 @@ defmodule Krug.NumberUtil do
     end
     invalid_combinations = ["-.","-,",".-",",-","--","..",".,",",.",",,"]
     cond do
-      (number == "" || number2 == "") -> true 
+      (number == "" or number2 == "") -> true 
       (Enum.member?([".",","],number |> String.slice(0..0))) -> true
       (StringUtil.replace_all(number,["-",".",","],"") == "") -> true
       (StringUtil.contains_one_element_of_array(number,invalid_combinations)) -> true
@@ -345,9 +345,9 @@ defmodule Krug.NumberUtil do
       true -> "" |> StringUtil.right_zeros(decimals)
     end
     cond do
-      (nil == decimals or !(decimals > 0)) -> "#{Enum.at(arr,0)}"
-      (!comma_as_decimal_separator) -> "#{Enum.at(arr,0)}.#{dec}"
-      true -> "#{Enum.at(arr,0)},#{dec}"
+      (nil == decimals or !(decimals > 0)) -> [Enum.at(arr,0)] |> IO.iodata_to_binary()
+      (!comma_as_decimal_separator) -> [Enum.at(arr,0),".",dec] |> IO.iodata_to_binary()
+      true -> [Enum.at(arr,0),",",dec] |> IO.iodata_to_binary()
     end
   end
   
@@ -536,8 +536,8 @@ defmodule Krug.NumberUtil do
   defp handle_extra_float_dots(number) do
     reversed_array = StringUtil.split(number,".") |> Enum.reverse()
     double_part = hd(reversed_array)
-    integer_part = tl(reversed_array) |> Enum.reverse() |> Enum.join("")
-    [integer_part,double_part] |> Enum.join(".")
+    integer_part = tl(reversed_array) |> Enum.reverse() |> IO.iodata_to_binary()
+    [integer_part,".",double_part] |> IO.iodata_to_binary()
   end
   
   

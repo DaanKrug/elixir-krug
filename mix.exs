@@ -6,14 +6,13 @@ defmodule Krug.MixProject do
   def project do
     [
       app: :krug,
-      version: "0.3.8",
+      version: "0.4.2",
       elixir: "~> 1.11",
       source_url: @project_url,
       homepage_url: @project_url,
       name: "Krug",
       description: "A Utilitary package functionalities modules for improve a secure performatic development.",
       start_permanent: Mix.env() == :prod,
-      #test_coverage: [tool: ExCoveralls],
       aliases: aliases(),
       package: package(),
       docs: [main: "readme", extras: ["README.md"]],

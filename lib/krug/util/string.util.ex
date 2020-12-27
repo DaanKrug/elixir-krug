@@ -49,7 +49,7 @@ defmodule Krug.StringUtil do
     cond do
       (string_a == "") -> string_b
       (string_b == "") -> string_a
-      true -> Enum.join([string_a,string_b],empty_if_nil(join_string))
+      true -> [string_a,empty_if_nil(join_string),string_b] |> IO.iodata_to_binary()
     end
   end
 
@@ -91,7 +91,7 @@ defmodule Krug.StringUtil do
   """
   def empty_if_nil(target) do
     cond do
-      (nil==target) -> ""
+      (nil == target) -> ""
       true -> "#{target}"
     end
   end
