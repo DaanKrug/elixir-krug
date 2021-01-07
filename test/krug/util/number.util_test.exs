@@ -130,6 +130,7 @@ defmodule Krug.NumberUtilTest do
   end
   
   test "[coalesce(value,value_if_empty_or_nil,zero_as_empty \\ false)]" do
+    assert NumberUtil.coalesce(nil,1,true) == 1
   	assert NumberUtil.coalesce(nil,1) == 1
   	assert NumberUtil.coalesce("",1) == 1
   	assert NumberUtil.coalesce(" ",1) == 1

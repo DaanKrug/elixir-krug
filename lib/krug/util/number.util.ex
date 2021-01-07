@@ -416,7 +416,7 @@ defmodule Krug.NumberUtil do
   ```
   """
   def coalesce(value,value_if_empty_or_nil,zero_as_empty \\ false) do
-    value = value |> StringUtil.replace(",",".")
+    value = value |> StringUtil.trim() |> StringUtil.replace(",",".")
     value_if_empty_or_nil = value_if_empty_or_nil |> StringUtil.replace(",",".")
     cond do
       (zero_as_empty and String.contains?(value,".") and to_float(value) == 0.0) 
