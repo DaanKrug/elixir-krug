@@ -8,7 +8,6 @@ defmodule Krug.SkallertenMailSender do
   """
   @moduledoc since: "0.3.0"
   
-  alias Krug.StringUtil
   alias Krug.GenericMail
   alias Krug.GenericSMTPMailer
 
@@ -64,12 +63,10 @@ defmodule Krug.SkallertenMailSender do
   """
   def mail(email_configuration,title,body,tto) do
   	cond do
-  	  (!addressCanBeReached(tto)) -> false
-  	  true -> sendmail(email_configuration,title,body,tto)
+  	  (is_deliverable(tto)) -> sendmail(email_configuration,title,body,tto)
+  	  true -> false
   	end
   end
-  
-  
   
   defp sendmail(email_configuration,title,body,tto) do
   	try do
@@ -88,23 +85,22 @@ defmodule Krug.SkallertenMailSender do
   	end
   end
   
-  
-  
-  defp addressCanBeReached(tto) do
-    provider = tto |> StringUtil.split("@") |> Enum.at(1)
-  	!(Enum.member?(notRecheableDomains(),provider))
+  defp is_deliverable(tto) do
+    cond do
+      (String.contains?(tto,"@aol.")) -> true
+      (String.contains?(tto,"@gmail.")) -> true
+      (String.contains?(tto,"@fastmail.")) -> true
+      (String.contains?(tto,"@freenet.")) -> true
+      (String.contains?(tto,"@libero.")) -> true
+      (String.contains?(tto,"@mail.")) -> true
+      (String.contains?(tto,"@virgilio.")) -> true
+      (String.contains?(tto,"@yahoo.")) -> true
+      (String.contains?(tto,"@vendasrd.com.br")) -> true
+      (String.contains?(tto,"@netcourrier.com")) -> true
+      (String.contains?(tto,"@expertarticles.com")) -> true
+      (String.contains?(tto,"@desktopemail.com")) -> true
+      true -> false
+    end
   end
   
-  
-  
-  defp notRecheableDomains() do
-  	["hotmail.com","mail.com","outlook.com","outlook.com.br",
-  	 "outlook.fr","outlook.de",
-  	 "live.com","msn.com",
-  	 "gmx.com","gmx.de","twcmail.de","web.de",
-  	 "ufpr.br","furb.br","icloud.com"]
-  end
-
-
-
 end
