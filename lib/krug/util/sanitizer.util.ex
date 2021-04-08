@@ -819,6 +819,7 @@ defmodule Krug.SanitizerUtil do
       (valid_chars == "email") -> email_chars()
       (valid_chars == "password") -> password_chars()
       (valid_chars == "url") -> url_chars()
+      (valid_chars == "url|") -> url_chars_pipe()
       (valid_chars == "hex") -> hex_chars()
       (valid_chars == "filename") -> filename_chars()
       true -> split_to_array_and_clear_empty(valid_chars,[],[],0)
@@ -956,6 +957,12 @@ defmodule Krug.SanitizerUtil do
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
      "0","1","2","3","4","5","6","7","8","9",
      "(",")","*","-","+","%","@","_",".",",","$",":"," ",";","/","\\","?","=","&","[","]","{","}"]
+  end
+  
+  
+  
+  defp url_chars_pipe() do
+    [ "|" | url_chars()]
   end
   
   
