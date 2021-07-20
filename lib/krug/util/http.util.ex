@@ -18,6 +18,10 @@ defmodule Krug.HttpUtil do
   If fail return nil. 
   
   If fail and was received a debug parameter as ```true```, then return the fail reason.
+  
+  The extra parameter 'full_response' returns the object 'response' if true
+  or 'response.body' if false.
+  make_get_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false)
 
   ## Examples
 
@@ -37,8 +41,8 @@ defmodule Krug.HttpUtil do
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def make_get_request(url,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.get(url,headers,options) |> handle_response(debug)
+  def make_get_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false) do
+    HTTPoison.get(url,headers,options) |> handle_response(debug,full_response)
   end
   
   
@@ -51,6 +55,10 @@ defmodule Krug.HttpUtil do
   If fail return nil. 
   
   If fail and was received a debug parameter as ```true```, then return the fail reason.
+  
+  The extra parameter 'full_response' returns the object 'response' if true
+  or 'response.body' if false.
+  make_post_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false)
 
   ## Examples
 
@@ -71,8 +79,8 @@ defmodule Krug.HttpUtil do
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def make_post_request(url,json_body,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.post(url,json_body,headers,options) |> handle_response(debug)
+  def make_post_request(url,json_body,headers \\ [], options \\ [],debug \\ false,full_response \\ false) do
+    HTTPoison.post(url,json_body,headers,options) |> handle_response(debug,full_response)
   end
   
   
@@ -85,6 +93,10 @@ defmodule Krug.HttpUtil do
   If fail return nil. 
   
   If fail and was received a debug parameter as ```true```, then return the fail reason.
+  
+  The extra parameter 'full_response' returns the object 'response' if true
+  or 'response.body' if false.
+  make_put_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false)
 
   ## Examples
 
@@ -105,8 +117,8 @@ defmodule Krug.HttpUtil do
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def make_put_request(url,json_body,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.put(url,json_body,headers,options) |> handle_response(debug)
+  def make_put_request(url,json_body,headers \\ [], options \\ [],debug \\ false,full_response \\ false) do
+    HTTPoison.put(url,json_body,headers,options) |> handle_response(debug,full_response)
   end
   
   
@@ -119,6 +131,10 @@ defmodule Krug.HttpUtil do
   If fail return nil. 
   
   If fail and was received a debug parameter as ```true```, then return the fail reason.
+  
+  The extra parameter 'full_response' returns the object 'response' if true
+  or 'response.body' if false.
+  make_patch_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false)
 
   ## Examples
 
@@ -139,8 +155,8 @@ defmodule Krug.HttpUtil do
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def make_patch_request(url,json_body,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.patch(url,json_body,headers,options) |> handle_response(debug)
+  def make_patch_request(url,json_body,headers \\ [], options \\ [],debug \\ false,full_response \\ false) do
+    HTTPoison.patch(url,json_body,headers,options) |> handle_response(debug,full_response)
   end
   
   
@@ -153,6 +169,10 @@ defmodule Krug.HttpUtil do
   If fail return nil. 
   
   If fail and was received a debug parameter as ```true```, then return the fail reason.
+  
+  The extra parameter 'full_response' returns the object 'response' if true
+  or 'response.body' if false.
+  make_delete_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false)
 
   ## Examples
 
@@ -172,19 +192,22 @@ defmodule Krug.HttpUtil do
   %HTTPoison.Error{id: nil, reason: :nxdomain}
   ```
   """
-  def make_delete_request(url,headers \\ [], options \\ [],debug \\ false) do
-    HTTPoison.delete(url,headers,options) |> handle_response(debug)
+  def make_delete_request(url,headers \\ [], options \\ [],debug \\ false,full_response \\ false) do
+    HTTPoison.delete(url,headers,options) |> handle_response(debug,full_response)
   end
   
   
   
-  defp handle_response({:ok,response},_debug) do
-  	response.body
+  defp handle_response({:ok,response},_debug,full_response) do
+    cond do
+      (full_response) -> response
+      true -> response.body
+    end
   end
   
   
   
-  defp handle_response({:error,reason},debug) do
+  defp handle_response({:error,reason},debug,_full_response) do
     cond do
       (debug) -> reason
       true -> nil
