@@ -421,7 +421,17 @@ defmodule Krug.SanitizerUtil do
   
   @doc """
   Convert received value to a string, make some validations of forbidden content.
+  Verify some HTML injection words contained in a restriction list above.
   
+  - Restriction list:
+  ```elixir
+    [
+      "< script","<script","script>","script >",
+      "< ?","<?","? >","?>",
+      "< %","<%","% >","%>"
+    ]
+  ```  
+    
   If forbidden content are finded, return nil. Otherwise return received value 
   making some unobfscating substution operations.
   
@@ -465,8 +475,72 @@ defmodule Krug.SanitizerUtil do
     input = StringUtil.replace(input,"despint","distinct")
     input = StringUtil.replace(input,"xstrike ","like ")
     input = StringUtil.replace(input,"quaspa","'")
+    input = StringUtil.replace(input,"  "," ")
     cond do
       (StringUtil.contains_one_element_of_array(input,forbidden())) -> nil
+      true -> input
+    end
+  end
+  
+  
+  
+  @doc """
+  Convert received value to a downcase string, make some validations of 
+  forbidden content for a SQL command. Verify some SQL injection words contained
+  in a restriction list above.
+  
+  - Restriction list:
+  ```elixir
+    [
+      "--","=","insert ","select ","delete ","drop ","truncate ","alter ",
+      "update ","cascade ","order by ","group by ","union ",
+      "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
+      "distinct(","concat(","group_concat(","between ","grant ",
+      "revoke ","commit ","rollback "," in ","exists ","like ","where "
+    ]
+  ```
+  
+  If forbidden word in content are finded, return nil. Otherwise return received value.
+  
+  Don't use it as unique validation way for input data. First apply other validation
+  methods on this module, and after that use this method for extra security.
+  
+  Warning: Can be throw false positives, as example if you have a innocent
+  text as example: " ... there are you coices: -- do it now, or -- do it tomorrow ...", 
+  or " ... take an action, select what you want do about it ... ". Be careful whit 
+  this method usage to don't cause unnecessary headaches.
+  
+  ## Examples
+  
+  ```elixir 
+  iex > Krug.SanitizerUtil.sanitize_sql("echo -- echo")
+  nil
+  ```
+  ```elixir 
+  iex > Krug.SanitizerUtil.sanitize_sql("echo - - echo")
+  echo - - echo
+  ```
+  ```elixir 
+  iex > Krug.SanitizerUtil.sanitize_sql("echo insert echo")
+  nil
+  ```
+  ```elixir 
+  iex > Krug.SanitizerUtil.sanitize_sql("echo inserted echo")
+  echo inserted echo
+  ```
+  """
+  @doc since: "0.4.15"
+  def sanitize_sql(input) do
+    forbidden_sql = [
+      "--","=","insert ","select ","delete ","drop ","truncate ","alter ",
+      "update ","cascade ","order by ","group by ","union ",
+      "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
+      "distinct(","concat(","group_concat(","between ","grant ",
+      "revoke ","commit ","rollback "," in ","exists ","like ","where "
+    ]
+    input = input |> String.downcase() |> StringUtil.replace("  "," ")
+    cond do
+      (StringUtil.contains_one_element_of_array(input,forbidden_sql)) -> nil
       true -> input
     end
   end
@@ -619,7 +693,7 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def sanitize_all(input,is_numeric,sanitize_input,max_size,valid_chars) do
-    input = "#{input}"
+    input = StringUtil.replace(input,"  "," ")
     forbidden = StringUtil.contains_one_element_of_array(input,forbidden())
     cond do
       (is_numeric and forbidden) -> "0"
@@ -882,7 +956,11 @@ defmodule Krug.SanitizerUtil do
   
   
   defp forbidden() do
-    ["< script","<script","script>","script >"]
+    [
+      "< script","<script","script>","script >",
+      "< ?","<?","? >","?>",
+      "< %","<%","% >","%>"
+    ]
   end
   
   

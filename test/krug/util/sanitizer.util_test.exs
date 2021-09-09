@@ -150,6 +150,14 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize("echo script > echo") == nil
     assert SanitizerUtil.sanitize("echoscript>echo") == nil
     assert SanitizerUtil.sanitize("echoscriptecho") == "echoscriptecho"
+    assert SanitizerUtil.sanitize("echo <      ? echo") == nil
+    assert SanitizerUtil.sanitize("echo <? echo") == nil
+    assert SanitizerUtil.sanitize("echo ?      > echo") == nil
+    assert SanitizerUtil.sanitize("echo ?> echo") == nil
+    assert SanitizerUtil.sanitize("echo <      % echo") == nil
+    assert SanitizerUtil.sanitize("echo <% echo") == nil
+    assert SanitizerUtil.sanitize("echo %      > echo") == nil
+    assert SanitizerUtil.sanitize("echo %> echo") == nil
   end
   
   test "[sanitize_all(input,is_numeric,sanitize_input,max_size,valid_chars)]" do
@@ -160,6 +168,42 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize_all("09 8778 987 ABCDEF ",false,true,250,"A-z") == ""
     assert SanitizerUtil.sanitize_all("09 8778 987 ABCDEF ",false,true,250,"0-9") == ""
     assert SanitizerUtil.sanitize_all("09 8778 987 ABCDEF ",false,true,250,"A-z0-9") == "09 8778 987 ABCDEF"
+  end
+  
+  test "[sanitize_sql(input)]" do
+    assert SanitizerUtil.sanitize_sql("echo -- echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo = echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo insert echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo select echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo delete echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo drop echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo truncate echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo alter echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo update echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo cascade echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo order by echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo group by echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo union echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo having echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo join echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo limit echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo min( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo max( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo avg( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo sum( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo distinct( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo coalesce( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo concat( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo group_concat( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo between echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo grant echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo revoke echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo commit echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo rollback echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo in echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo exists echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo like echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo where echo") == nil
   end
   
   test "[sanitize_filename(name,max_size)]" do
