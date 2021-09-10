@@ -492,11 +492,11 @@ defmodule Krug.SanitizerUtil do
   - Restriction list:
   ```elixir
     [
-      "--","=","insert ","select ","delete ","drop ","truncate ","alter ",
+      "--","insert ","select ","delete ","drop ","truncate ","alter ",
       "update ","cascade ","order by ","group by ","union ",
       "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
-      "distinct(","concat(","group_concat(","between ","grant ",
-      "revoke ","commit ","rollback "," in ","exists ","like ","where "
+      "distinct(","concat(","group_concat(","grant ",
+      "revoke ","commit ","rollback "
     ]
   ```
   
@@ -532,11 +532,11 @@ defmodule Krug.SanitizerUtil do
   @doc since: "0.4.15"
   def sanitize_sql(input) do
     forbidden_sql = [
-      "--","=","insert ","select ","delete ","drop ","truncate ","alter ",
+      "--","insert ","select ","delete ","drop ","truncate ","alter ",
       "update ","cascade ","order by ","group by ","union ",
       "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
-      "distinct(","concat(","group_concat(","between ","grant ",
-      "revoke ","commit ","rollback "," in ","exists ","like ","where "
+      "distinct(","concat(","group_concat(","grant ",
+      "revoke ","commit ","rollback "
     ]
     input = input |> String.downcase() |> StringUtil.replace("  "," ")
     cond do

@@ -172,7 +172,6 @@ defmodule Krug.SanitizerUtilTest do
   
   test "[sanitize_sql(input)]" do
     assert SanitizerUtil.sanitize_sql("echo -- echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo = echo") == nil
     assert SanitizerUtil.sanitize_sql("echo insert echo") == nil
     assert SanitizerUtil.sanitize_sql("echo select echo") == nil
     assert SanitizerUtil.sanitize_sql("echo delete echo") == nil
@@ -195,15 +194,10 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize_sql("echo coalesce( echo") == nil
     assert SanitizerUtil.sanitize_sql("echo concat( echo") == nil
     assert SanitizerUtil.sanitize_sql("echo group_concat( echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo between echo") == nil
     assert SanitizerUtil.sanitize_sql("echo grant echo") == nil
     assert SanitizerUtil.sanitize_sql("echo revoke echo") == nil
     assert SanitizerUtil.sanitize_sql("echo commit echo") == nil
     assert SanitizerUtil.sanitize_sql("echo rollback echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo in echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo exists echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo like echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo where echo") == nil
   end
   
   test "[sanitize_filename(name,max_size)]" do
