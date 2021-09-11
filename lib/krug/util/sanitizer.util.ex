@@ -538,9 +538,9 @@ defmodule Krug.SanitizerUtil do
       "distinct(","concat(","group_concat(","grant ",
       "revoke ","commit ","rollback "
     ]
-    input = input |> String.downcase() |> StringUtil.replace("  "," ")
+    input2 = input |> String.downcase() |> StringUtil.replace("  "," ")
     cond do
-      (StringUtil.contains_one_element_of_array(input,forbidden_sql)) -> nil
+      (StringUtil.contains_one_element_of_array(input2,forbidden_sql)) -> nil
       true -> input
     end
   end
