@@ -290,6 +290,8 @@ defmodule Krug.NumberUtil do
   """
   def to_float(number) do
     cond do
+      (is_float(number)) -> number
+      (is_integer(number)) -> convert_to_float(number)
       (is_nan(number)) -> 0.0
       true -> convert_to_float(number)
     end

@@ -24,11 +24,11 @@ defmodule Krug.BaseEctoDAOSqlCache do
       |> extract_key_par_list(sql,params)
   end
   
-  def put_cache(sql,params,resultset) do
+  def put_cache(sql,params,resultset,cache_objects_per_table) do
 	EtsUtil.new(:krug_base_ecto_dao_sql_tables_cache,"public")
 	table = extract_table_name(sql)
 	list_new = EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,table)
-	             |> replace_key_par_in_list(sql,params,resultset,0)
+	             |> replace_key_par_in_list(sql,params,resultset,0,cache_objects_per_table)
 	EtsUtil.store_in_cache(:krug_base_ecto_dao_sql_tables_cache,table,list_new)
 	resultset
   end
@@ -38,14 +38,14 @@ defmodule Krug.BaseEctoDAOSqlCache do
 	EtsUtil.remove_from_cache(:krug_base_ecto_dao_sql_tables_cache,extract_table_name(sql))
   end
   
-  defp replace_key_par_in_list(list,sql,params,resultset,counter) do
+  defp replace_key_par_in_list(list,sql,params,resultset,counter,cache_objects_per_table) do
     cond do
       (nil == list or counter >= length(list)) 
-        -> append_new_resultset_params_in_list(list,sql,params,resultset)
+        -> append_new_resultset_params_in_list(list,sql,params,resultset,cache_objects_per_table)
       (list |> Enum.at(counter) |> MapUtil.get(:sql) != sql) 
-        -> replace_key_par_in_list(list,sql,params,resultset,counter + 1)
+        -> replace_key_par_in_list(list,sql,params,resultset,counter + 1,cache_objects_per_table)
       (list |> Enum.at(counter) |> MapUtil.get(:params) != params) 
-        -> replace_key_par_in_list(list,sql,params,resultset,counter + 1)
+        -> replace_key_par_in_list(list,sql,params,resultset,counter + 1,cache_objects_per_table)
       true -> replace_resultset_at_list(list,counter,resultset)
     end
   end
@@ -66,7 +66,7 @@ defmodule Krug.BaseEctoDAOSqlCache do
     end
   end
   
-  defp append_new_resultset_params_in_list(list,sql,params,resultset) do
+  defp append_new_resultset_params_in_list(list,sql,params,resultset,cache_objects_per_table) do
     map = %{
       sql: sql, 
       params: params, 
@@ -75,15 +75,15 @@ defmodule Krug.BaseEctoDAOSqlCache do
     }
     cond do
       (nil == list or length(list) == 0) -> [map]
-      true -> [map | list] |> remove_old_cache_results()
+      true -> [map | list] |> remove_old_cache_results(cache_objects_per_table)
     end
   end
   
-  defp remove_old_cache_results(list) do
+  defp remove_old_cache_results(list,cache_objects_per_table) do
     cond do
-      (length(list) < 10) -> list
+      (length(list) < cache_objects_per_table) -> list
       true -> Enum.sort(list, &(&1.lastusedtime > &2.lastusedtime))
-                |> Enum.slice(0,10)
+                |> Enum.slice(0,cache_objects_per_table)
     end
   end
 	  

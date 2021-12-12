@@ -16,7 +16,7 @@ defmodule Krug.BaseEctoDAO do
   ```
   
   This mechanism also includes by default a in-memory query cache
-  of last 10 select results of each database table.
+  of last ```cache_objects_per_table``` (default to 10) select results of each database table.
   This cache (for respective table) is empty each time that a entry 
   is inserted/updated/deleted from the respective table.
   You can disable this mechanism for expensive tables (large text data or many columns), 
@@ -26,7 +26,7 @@ defmodule Krug.BaseEctoDAO do
   ```elixir
   defmodule MyApp.App.DAOService do
 
-    use Krug.BaseEctoDAO, repo: MyApp.App.Repo, nocache_tables: ["my_table_no_cache1","my_table_no_cache2"]
+    use Krug.BaseEctoDAO, repo: MyApp.App.Repo, nocache_tables: ["my_table_no_cache1","my_table_no_cache2"], cache_objects_per_table: 10
 
   end
   ```
@@ -167,6 +167,7 @@ defmodule Krug.BaseEctoDAO do
      
       @repo Keyword.get(opts,:repo)
       @nocache_tables Keyword.get(opts,:nocache_tables)
+      @cache_objects_per_table Keyword.get(opts,:cache_objects_per_table)
     
       @impl Krug.BaseEctoDAO
       def load(sql,params \\[]) do
@@ -211,7 +212,14 @@ defmodule Krug.BaseEctoDAO do
         resultset = BaseEctoDAOSqlCache.load_from_cache(sql,params)
 	    cond do
 	      (nil != resultset) -> resultset
-	      true -> BaseEctoDAOSqlCache.put_cache(sql,params,execute_sql(sql,params,false))
+	      true -> BaseEctoDAOSqlCache.put_cache(sql,params,execute_sql(sql,params,false),@cache_objects_per_table)
+	    end
+	  end
+	  
+	  defp get_cache_size() do
+	    cond do
+	      (nil == @cache_objects_per_table or !(@cache_objects_per_table > 0)) -> 10
+	      true -> @cache_objects_per_table
 	    end
 	  end
 	  
