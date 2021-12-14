@@ -8,19 +8,33 @@ defmodule Krug.BaseEctoDAOSqlCache do
   alias Krug.DateUtil
   
   
+  def normalize_sql(sql) do
+    sql 
+	  |> StringUtil.trim() 
+	  |> StringUtil.replace("\r\n"," ")
+	  |> StringUtil.replace("\n"," ")
+	  |> StringUtil.replace("  "," ")
+  end
+  
   def extract_table_name(sql) do
-    sql = sql |> StringUtil.trim() |> StringUtil.replace("("," ") |> StringUtil.replace("  "," ")
+    sql = sql 
+            |> normalize_sql() 
+            |> StringUtil.replace("("," ") 
 	split_string = cond do
 	  (sql |> String.contains?("insert into ")) -> "insert into "
 	  (sql |> String.contains?("update ")) -> "update "
 	  true -> " from "
 	end
-	sql |> StringUtil.split(split_string) |> Enum.at(1) |> StringUtil.split(" ") |> Enum.at(0)
+	sql 
+	  |> StringUtil.split(split_string) 
+	  |> Enum.at(1) 
+	  |> StringUtil.split(" ") 
+	  |> Enum.at(0)
   end    
 
   def load_from_cache(sql,params) do
 	EtsUtil.new(:krug_base_ecto_dao_sql_tables_cache,"public")
-    EtsUtil.read_from_cache(:krug_sql_tables_cache,extract_table_name(sql))
+    EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,extract_table_name(sql))
       |> extract_key_par_list(sql,params)
   end
   
@@ -59,10 +73,18 @@ defmodule Krug.BaseEctoDAOSqlCache do
   defp extract_key_par_list(list,sql,params) do
     cond do
       (nil == list or length(list) == 0) -> nil
-      (list |> hd() |> MapUtil.get(:sql) == sql 
-         and list |> hd() |> MapUtil.get(:params) == params) 
-        -> list |> hd() |> MapUtil.get(:resultset)
-      true -> extract_key_par_list(list |> tl(),sql,params)
+      true -> extract_key_par_list2(list,sql,params)
+    end
+  end
+  
+  defp extract_key_par_list2(list,sql,params) do
+    map = list |> hd()
+    cond do
+      (map |> MapUtil.get(:sql) != sql) 
+        -> list |> tl() |> extract_key_par_list(sql,params)
+      (map |> MapUtil.get(:params) != params)
+        -> list |> tl() |> extract_key_par_list(sql,params)
+      true -> map |> MapUtil.get(:resultset)
     end
   end
   

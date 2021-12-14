@@ -162,6 +162,8 @@ defmodule Krug.BaseEctoDAO do
     quote bind_quoted: [opts: opts] do
     
       alias Krug.BaseEctoDAOSqlCache
+      
+      alias Krug.StringUtil
     
       @behaviour Krug.BaseEctoDAO
      
@@ -171,6 +173,7 @@ defmodule Krug.BaseEctoDAO do
     
       @impl Krug.BaseEctoDAO
       def load(sql,params \\[]) do
+        sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
 	    cond do
 	      (use_cache(sql)) -> load_with_cache(sql,params)
 	      true -> load_without_cache(sql,params)
@@ -179,6 +182,7 @@ defmodule Krug.BaseEctoDAO do
 	  
 	  @impl Krug.BaseEctoDAO
 	  def insert(sql,params) do
+	    sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
 	  	ok = execute_sql(sql,params,true)
 	  	cond do
 	  	  (!ok or !use_cache(sql)) -> ok
@@ -188,6 +192,7 @@ defmodule Krug.BaseEctoDAO do
 	  
 	  @impl Krug.BaseEctoDAO
 	  def update(sql,params) do
+	    sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
 	  	ok = execute_sql(sql,params,true)
 	  	cond do
 	  	  (!ok or !use_cache(sql)) -> ok
@@ -197,6 +202,7 @@ defmodule Krug.BaseEctoDAO do
 	  
 	  @impl Krug.BaseEctoDAO
 	  def delete(sql,params) do
+	    sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
 	  	ok = execute_sql(sql,params,true)
 	  	cond do
 	  	  (!ok or !use_cache(sql)) -> ok
@@ -211,9 +217,19 @@ defmodule Krug.BaseEctoDAO do
 	  defp load_with_cache(sql,params \\[]) do
         resultset = BaseEctoDAOSqlCache.load_from_cache(sql,params)
 	    cond do
-	      (nil != resultset) -> resultset
-	      true -> BaseEctoDAOSqlCache.put_cache(sql,params,execute_sql(sql,params,false),@cache_objects_per_table)
+	      (nil != resultset and :nodata != resultset) -> resultset
+	      (resultset == :nodata) -> nil
+	      true -> load_and_put_to_cache(sql,params)
 	    end
+	  end
+	  
+	  defp load_and_put_to_cache(sql,params) do
+        resultset = execute_sql(sql,params,false)
+        cond do
+	      (nil != resultset) -> BaseEctoDAOSqlCache.put_cache(sql,params,resultset,@cache_objects_per_table)
+	      true -> BaseEctoDAOSqlCache.put_cache(sql,params,:nodata,@cache_objects_per_table)
+	    end
+	    resultset
 	  end
 	  
 	  defp get_cache_size() do
