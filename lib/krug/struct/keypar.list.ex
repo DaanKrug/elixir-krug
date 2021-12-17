@@ -15,7 +15,18 @@ defmodule Krug.KeyParList do
   def get(key,list) do
     cond do
       (nil == list or length(list) == 0) -> nil
-      (list |> hd() |> MapUtil.get(:key) == key) -> list |> hd() |> MapUtil.get(:value)
+      true -> get2(key,list)
+    end
+  end
+  
+  
+  
+  @doc false
+  defp get2(key,list) do
+    element = list |> hd()
+    cond do
+      (element |> MapUtil.get(:key) == key) 
+        -> element |> MapUtil.get(:value)
       true -> get(key,list |> tl())
     end
   end
@@ -35,10 +46,9 @@ defmodule Krug.KeyParList do
 
 
 
-
+  @doc false
   defp put_not_empty(key,value,list,counter) do
     cond do
-      (nil == list or length(list) == 0) -> [%{key: key, value: value} | list]
       (list |> Enum.at(counter) |> MapUtil.get(:key) == key) 
         -> List.replace_at(list,counter,%{key: key, value: value})
       true -> put_not_empty(key,value,list,counter + 1)

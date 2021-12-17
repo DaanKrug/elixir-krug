@@ -77,6 +77,16 @@ defmodule Krug.NumberUtil do
   ```
   """
   def is_nan(number) do
+    cond do
+      (is_number(number)) -> false 
+      true -> is_nan2(number)
+    end
+  end
+  
+  
+  
+  @doc false
+  defp is_nan2(number) do
     number = number |> StringUtil.trim() 
     number2 = number
     size = String.length(number2)
@@ -215,6 +225,7 @@ defmodule Krug.NumberUtil do
   """
   def to_integer(number) do
     cond do
+      (is_integer(number)) -> number 
       (is_nan(number)) -> 0
       true -> "#{number}" |> StringUtil.replace(",",".") 
                           |> StringUtil.split(".")
@@ -291,7 +302,7 @@ defmodule Krug.NumberUtil do
   def to_float(number) do
     cond do
       (is_float(number)) -> number
-      (is_integer(number)) -> convert_to_float(number)
+      (is_integer(number)) -> number
       (is_nan(number)) -> 0.0
       true -> convert_to_float(number)
     end
@@ -506,9 +517,18 @@ defmodule Krug.NumberUtil do
   
   
   defp numberize(value) do
+    cond do
+      (is_number(value)) -> value
+      (is_nan(value)) -> 0 
+      true -> numberize2(value)
+    end
+  end
+  
+  
+  
+  defp numberize2(value) do
     value2 = value |> StringUtil.replace(",",".")
     cond do
-      (is_nan(value)) -> 0 
       (String.contains?(value2,".")) -> to_float(value2)
       true -> to_integer(value2)
     end

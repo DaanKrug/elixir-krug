@@ -903,20 +903,20 @@ defmodule Krug.StringUtil do
   def to_char_code(array,position) do
     cond do
       (nil == array or position >= length(array)) -> nil
-      (Enum.member?(["",nil],array |> Enum.at(position))) -> nil
-      true -> array |> Enum.at(position) |> to_char_code()
+      true -> to_char_code2(array,position)
     end
   end
   
   
   
-  defp to_char_code(string_char) do
-    string_char 
-      |> empty_if_nil() 
-      |> String.to_charlist() 
-      |> hd()
+  defp to_char_code2(array,position) do
+    string_char = array |> Enum.at(position)
+    cond do
+      (Enum.member?(["",nil],string_char)) -> nil
+      true -> "#{string_char}"
+                |> String.to_charlist() 
+                |> hd()
+    end
   end
-  
-  
     
 end
