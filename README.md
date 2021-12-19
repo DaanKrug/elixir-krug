@@ -10,7 +10,7 @@ The package can be installed by adding `krug` to your list of dependencies in `m
 ```elixir
 def deps do
   [
-    {:krug, "~> 0.4.24"}
+    {:krug, "~> 0.4.25"}
   ]
 end
 ```
