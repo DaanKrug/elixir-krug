@@ -326,6 +326,59 @@ defmodule Krug.FileUtil do
   
   
   
+  @doc """
+  Creates a zip from a directory with same name directory name plus ".zip" extension. 
+  This function uses ```File.ls!``` to obtain directory files and because that dont is recursive.
+  
+  If already exists a zip file with this name, or the ```path``` directory don't exists
+  or isn't a directory, then return false. Otherwise tries create a zip and return
+  true if succeed.
+  
+  If ```drop_if_exists``` parameter received and equals "true" boolean, then
+  tries delete the equivalent zipped dir if these already exists before try zip.
+  
+  Finally change permissions of these zip dir to 777 (chmod), in success case.
+  
+  ## Example
+
+  ```elixir 
+  iex > Krug.FileUtil.zip_dir(path)
+  true (or false if fail)
+  ```
+  """
+  @doc since: "0.4.24"
+  def zip_dir(path,drop_if_exists \\ false) do
+    path_zip = "#{path}.zip"
+  	cond do
+  	  (!File.exists?(path) or !File.dir?(path)) -> false
+  	  (File.exists?(path_zip) and drop_if_exists) -> drop_zip_and_retry(path,path_zip)
+      (File.exists?(path_zip)) -> false
+      true -> try_zip_dir(path,path_zip)
+    end
+  end
+  
+  
+  
+  defp try_zip_dir(path,path_zip) do
+    files = File.ls!(path)
+              |> Enum.map(fn(filename) -> Path.join(path,filename) end)
+              |> Enum.map(&String.to_charlist/1)
+    :zip.create(String.to_charlist(path_zip),files)
+    cond do
+      (File.exists?(path_zip)) -> chmod(path_zip,0o777)
+      true -> false
+    end
+  end
+  
+  
+  
+  defp drop_zip_and_retry(path,path_zip) do
+    drop_file(path_zip)
+    zip_dir(path,false)
+  end
+  
+  
+  
   defp read_content({:ok, binary}) do
     cond do
       (nil == binary) -> nil

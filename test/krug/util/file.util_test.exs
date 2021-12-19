@@ -28,4 +28,37 @@ defmodule Krug.FileUtilTest do
     assert FileUtil.drop_dir(path2) == true
   end
   
+  test "[zip_dir empty]" do
+    path = "./echo_#{SanitizerUtil.generate_random_only_num(20)}"
+    path_zip = "#{path}.zip"
+    assert FileUtil.create_dir(path) == true
+    assert FileUtil.zip_dir(path) == true
+    assert FileUtil.zip_dir(path) == false
+    assert FileUtil.zip_dir(path,true) == true
+    assert FileUtil.drop_file(path_zip) == true
+    assert FileUtil.zip_dir(path) == true
+    assert FileUtil.drop_file(path_zip) == true
+    assert FileUtil.zip_dir(path) == true
+    assert FileUtil.drop_file(path_zip) == true
+    assert FileUtil.drop_dir(path) == true
+  end
+  
+  test "[zip_dir not empty]" do
+    path = "./echo_#{SanitizerUtil.generate_random_only_num(20)}"
+    path_zip = "#{path}.zip"
+    file1 = "./echo.txt"
+    file2 = "#{path}/echo.txt"
+    assert FileUtil.create_dir(path) == true
+    assert FileUtil.copy_file(file1,file2) == true
+    assert FileUtil.zip_dir(path) == true
+    assert FileUtil.zip_dir(path) == false
+    assert FileUtil.zip_dir(path,true) == true
+    assert FileUtil.drop_file(path_zip) == true
+    assert FileUtil.zip_dir(path) == true
+    assert FileUtil.drop_file(path_zip) == true
+    assert FileUtil.zip_dir(path) == true
+    assert FileUtil.drop_file(path_zip) == true
+    assert FileUtil.drop_dir(path) == true
+  end
+  
 end
