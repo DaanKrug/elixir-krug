@@ -6,7 +6,7 @@ defmodule Krug.MixProject do
   def project do
     [
       app: :krug,
-      version: "0.4.26",
+      version: "0.4.27",
       elixir: "~> 1.12",
       source_url: @project_url,
       homepage_url: @project_url,
@@ -31,6 +31,7 @@ defmodule Krug.MixProject do
     [
       {:earmark, "~> 1.4.13", only: :dev, runtime: false},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.1", only: :dev, runtime: false},
       {:bcrypt_elixir, "~> 2.2.0"},
       {:poison, "~> 4.0.1"},
       {:httpoison, "~> 1.7"},

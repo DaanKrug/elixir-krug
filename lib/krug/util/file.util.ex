@@ -380,10 +380,7 @@ defmodule Krug.FileUtil do
   
   
   defp read_content({:ok, binary}) do
-    cond do
-      (nil == binary) -> nil
-      true -> "#{binary}" |> StringUtil.trim()
-    end
+    binary |> StringUtil.trim()
   end
   
   

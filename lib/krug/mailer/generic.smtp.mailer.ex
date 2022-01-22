@@ -15,7 +15,7 @@ defmodule Krug.GenericSMTPMailer do
   defp deliver_now(adapter,email,config) do
     email = email |> validate_and_normalize(adapter)
     cond do
-      (nil == email or nil == MapUtil.get(email,:to)) -> debugg_unsent(email)
+      (nil == MapUtil.get(email,:to)) -> debugg_unsent(email)
       true -> deliver_and_debugg_sent(email,config,adapter)
     end
     email

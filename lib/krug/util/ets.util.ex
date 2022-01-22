@@ -131,12 +131,11 @@ defmodule Krug.EtsUtil do
   def store_in_cache(session_key,key,value) do
     cond do
       (!ets_table_exists(session_key)) -> false
-      (!remove_from_cache(session_key,key)) -> false
-      true -> :ets.insert(session_key,{key,value})
+      true -> remove_from_cache_and_insert_new(session_key,key,value)
     end
   end
   
-  
+ 
   
   @doc """
   Read a value relative to a key ```key``` stored in a ets table whit received ```session_key```.
@@ -220,6 +219,13 @@ defmodule Krug.EtsUtil do
       true -> :ets.delete(session_key,key)
     end
   end
+
+
+
+  defp remove_from_cache_and_insert_new(session_key,key,value) do
+    remove_from_cache(session_key,key)
+    :ets.insert(session_key,{key,value})
+  end  
   
   
   
