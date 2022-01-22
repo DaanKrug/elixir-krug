@@ -46,11 +46,11 @@ defmodule Krug.StructUtil do
   """
   def get_value_from_tuple(tuple) do
   	array = cond do
-      (nil == tuple) -> nil
+      (nil == tuple) -> []
       true -> Tuple.to_list(tuple)
     end
     cond do
-      (nil == array or length(array) == 0) -> nil
+      (length(array) < 1) -> nil
       true -> array |> Enum.at(1)
     end
   end
@@ -157,9 +157,8 @@ defmodule Krug.StructUtil do
   """
   def list_contains_one_of(list,values) do
     cond do
-      (nil == list or length(list) == 0 or nil == values or length(values) == 0) -> false
-      (Enum.member?(list,hd(values))) -> true
-      true -> list_contains_one_of(list,tl(values))
+      (nil == list or length(list) == 0 or nil == values) -> false
+      true -> list_contains_one_of2(list,values)
     end
   end
   
@@ -217,18 +216,27 @@ defmodule Krug.StructUtil do
   @doc since: "0.2.1"
   def get_key_par_value_from_list(key,list) do
     cond do
-      (nil == key or nil == list or StringUtil.trim(key) == "" or length(list) == 0) -> nil
-      true -> get_key_par_value_from_string(key,list)
+      (nil == key or nil == list or StringUtil.trim(key) == "") -> nil
+      true -> get_key_par_value_from_list2(StringUtil.trim(key),list)
     end
   end
   
   
   
-  defp get_key_par_value_from_string(key,list) do
+  defp get_key_par_value_from_list2(key,list) do
+    cond do
+      (length(list) == 0) -> nil
+      true -> get_key_par_value_from_list3(key,list)
+    end
+  end
+  
+  
+  
+  defp get_key_par_value_from_list3(key,list) do
     value_from_key = get_key_value_from_string(key,hd(list))
     cond do
       (nil != value_from_key) -> value_from_key
-      true -> get_key_par_value_from_list(key,tl(list))
+      true -> get_key_par_value_from_list2(key,tl(list))
     end
   end
   
@@ -240,6 +248,16 @@ defmodule Krug.StructUtil do
       (length(key_value_array) < 2) -> nil
       (StringUtil.trim(hd(key_value_array)) == key) -> key_value_array |> Enum.at(1) |> StringUtil.trim()
       true -> nil
+    end
+  end
+  
+  
+  
+  defp list_contains_one_of2(list,values) do
+    cond do
+      (length(values) == 0) -> false
+      (Enum.member?(list,hd(values))) -> true
+      true -> list_contains_one_of2(list,tl(values))
     end
   end
   

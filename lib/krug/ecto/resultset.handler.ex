@@ -46,7 +46,7 @@ defmodule Krug.ResultSetHandler do
   "54,23,34"
   ```
   """
-  def concat_cols_of_result_rows(resultset,col) do 
+  def concat_cols_of_result_rows(resultset,col \\ 0) do 
     get_column_values_concat("",resultset,0,col)
   end
   
@@ -86,11 +86,12 @@ defmodule Krug.ResultSetHandler do
   }
   ```  
   """
-  def get_column_value(resultset,row,col) do
+  def get_column_value(resultset,row,col \\ 0) do
     array_data = get_row_as_array(resultset,row)
+    size = length(array_data)
     value = cond do
-      (nil == array_data or length(array_data) == 0) -> "" 
-      (nil == col or !(col >= 0) or col >= length(array_data)) -> "" 
+      (size == 0) -> "" 
+      (!(col >= 0) or col >= size) -> "" 
       true -> array_data |> Enum.at(col)
     end
   	"#{value}"
@@ -100,10 +101,10 @@ defmodule Krug.ResultSetHandler do
   
   defp get_row_as_array(resultset,row) do
   	cond do
-  	  (nil == resultset or nil == resultset.rows) -> nil
-  	  (nil == row or !(row >= 0)) -> nil 
-  	  (nil == resultset.rows or length(resultset.rows) == 0) -> nil
-  	  (row >= length(resultset.rows)) -> nil
+  	  (nil == resultset or nil == resultset.rows) -> []
+  	  (nil == row or !(row >= 0)) -> [] 
+  	  (nil == resultset.rows or length(resultset.rows) == 0) -> []
+  	  (row >= length(resultset.rows)) -> []
   	  true -> resultset.rows |> Enum.at(row)
   	end
   end
@@ -122,9 +123,10 @@ defmodule Krug.ResultSetHandler do
   
   defp get_column_value_use_nil(resultset,row,col) do
     array_data = get_row_as_array(resultset,row)
+    size = length(array_data)
     cond do
-      (nil == array_data or length(array_data) == 0) -> nil
-      (nil == col or !(col >= 0) or col >= length(array_data)) -> nil
+      (size == 0) -> nil
+      (!(col >= 0) or col >= size) -> nil
       true -> array_data |> Enum.at(col)
     end
   end

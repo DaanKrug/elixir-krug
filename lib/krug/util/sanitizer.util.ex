@@ -276,9 +276,10 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def generate_random(size) do
+    size = NumberUtil.to_integer(size)
     size = cond do
-      (NumberUtil.is_nan(size)) -> 10
-      true -> NumberUtil.to_integer(size)
+      (size > 0) -> size
+      true -> 10
     end
     generate_random_seq(size,alpha_nums(),"")
   end
@@ -319,9 +320,10 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def generate_random_only_num(size) do
+    size = NumberUtil.to_integer(size)
     size = cond do
-      (NumberUtil.is_nan(size)) -> 10
-      true -> NumberUtil.to_integer(size)
+      (size > 0) -> size
+      true -> 10
     end
     generate_random_seq(size,only_nums(),"")
   end
@@ -362,9 +364,10 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def generate_random_filename(size) do
+    size = NumberUtil.to_integer(size)
     size = cond do
-      (NumberUtil.is_nan(size)) -> 10
-      true -> NumberUtil.to_integer(size)
+      (size > 0) -> size
+      true -> 10
     end
     generate_random_seq(size,filename_chars(),"")
   end

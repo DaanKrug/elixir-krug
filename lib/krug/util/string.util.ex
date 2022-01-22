@@ -92,7 +92,7 @@ defmodule Krug.StringUtil do
   def empty_if_nil(target) do
     cond do
       (nil == target) -> ""
-      true -> "#{target}"
+      true -> target |> to_string_if_not_binary()
     end
   end
 
@@ -159,13 +159,12 @@ defmodule Krug.StringUtil do
     cond do
       (nil == target) -> []
       (target == "") -> [""]
-      (nil == searched or searched == "") -> ["#{target}"]
-      (!(String.contains?("#{target}","#{searched}"))) -> ["#{target}"]
-      true -> String.split("#{target}","#{searched}")
+      (nil == searched or searched == "") -> [target]
+      true -> split2(target,searched)
     end
   end
-
-
+  
+  
   
   @doc """
   Convert a value to string with all words capitalized.
@@ -235,16 +234,12 @@ defmodule Krug.StringUtil do
   ```
   """
   def replace(target,searched,replace_to) do 
-    replace_to = empty_if_nil(replace_to)
-    recursion_throwble = String.contains?(replace_to,"#{searched}")
     cond do
       (nil == target) -> nil
-      (nil == searched or searched == "") -> "#{target}"
-      (recursion_throwble and String.contains?("#{target}","#{searched}")) 
-        -> String.replace("#{target}","#{searched}",replace_to)
-      (String.contains?("#{target}","#{searched}")) 
-        -> String.replace("#{target}","#{searched}",replace_to) |> replace(searched,replace_to)
-      true -> "#{target}"
+      (target == "") -> ""
+      (nil == searched or searched == "") -> target
+      (nil == replace_to) -> target
+      true -> replace2(target,searched,replace_to)
     end
   end
   
@@ -286,9 +281,8 @@ defmodule Krug.StringUtil do
   def replace_all(target,searched_array,replace_to) do 
     cond do
       (nil == target) -> nil
-      (target == "" or nil == searched_array or length(searched_array) == 0) -> target
-      true -> replace(target,hd(searched_array),replace_to) 
-                |> replace_all(tl(searched_array),replace_to)
+      (target == "" or nil == searched_array) -> target
+      true -> replace_all2(target,searched_array,empty_if_nil(replace_to))
     end
   end
   
@@ -417,8 +411,7 @@ defmodule Krug.StringUtil do
     string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> concat("0",string,"") |> left_zeros(size)
+      true -> left_zeros2(string,size)
     end
   end
   
@@ -487,8 +480,7 @@ defmodule Krug.StringUtil do
     string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> concat(string,"0","") |> right_zeros(size)
+      true -> right_zeros2(string,size)
     end
   end
   
@@ -557,8 +549,7 @@ defmodule Krug.StringUtil do
     string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> concat(" ",string,"") |> left_spaces(size)
+      true -> left_spaces2(string,size)
     end
   end
   
@@ -627,8 +618,7 @@ defmodule Krug.StringUtil do
     string = empty_if_nil(string)
     cond do
       (nil == size or !(size > 0)) -> string
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
-      true -> right_spaces(concat(string," ",""),size)
+      true -> right_spaces2(string,size)
     end
   end
   
@@ -726,10 +716,8 @@ defmodule Krug.StringUtil do
   """
   def contains_one_element_of_array(target,array) do
     cond do
-      (nil == array or length(array) == 0) -> false
-      ("#{hd(array)}" == "") -> contains_one_element_of_array(target,tl(array))
-      (String.contains?("#{target}","#{hd(array)}")) -> true
-      true -> contains_one_element_of_array(target,tl(array))
+      (nil == array) -> false
+      true -> target |> to_string_if_not_binary() |> contains_one_element_of_array2(array)
     end
   end
   
@@ -909,14 +897,119 @@ defmodule Krug.StringUtil do
   
   
   
+  defp replace2(target,searched,replace_to) do 
+    target = target |> to_string_if_not_binary()
+    searched = searched |> to_string_if_not_binary()
+    replace_to = replace_to |> to_string_if_not_binary()
+    cond do
+      (!(String.contains?(target,searched))) -> target
+      (String.contains?(replace_to,searched)) 
+        -> String.replace(target,searched,replace_to)
+      true 
+        -> String.replace(target,searched,replace_to) 
+             |> replace(searched,replace_to)
+    end
+  end
+  
+  
+  
+  defp split2(target,searched) do 
+    target = target |> to_string_if_not_binary()
+    searched = searched |> to_string_if_not_binary()
+    cond do
+      (String.contains?(target,searched)) -> String.split(target,searched)
+      true -> [target]
+    end
+  end
+  
+  
+  
+  defp to_string_if_not_binary(value) do
+    cond do
+      (is_number(value) or !is_binary(value)) -> "#{value}"
+      true -> value
+    end
+  end
+  
+  
+  
   defp to_char_code2(array,position) do
     string_char = array |> Enum.at(position)
     cond do
       (Enum.member?(["",nil],string_char)) -> nil
-      true -> "#{string_char}"
+      true -> string_char 
+                |> to_string_if_not_binary()
                 |> String.to_charlist() 
                 |> hd()
     end
   end
+  
+  
+  
+  defp replace_all2(target,searched_array,replace_to) do 
+    cond do
+      (length(searched_array) == 0) -> target
+      true -> replace(target,hd(searched_array),replace_to) 
+                |> replace_all2(tl(searched_array),replace_to)
+    end
+  end
+   
+  
+  
+  defp left_zeros2(string,size) do
+    cond do
+      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      true -> concat("0",string,"") |> left_zeros2(size)
+    end
+  end
+  
+  
+  
+  defp right_zeros2(string,size) do
+    cond do
+      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      true -> concat(string,"0","") |> right_zeros2(size)
+    end
+  end
+   
+  
+ 
+  defp left_spaces2(string,size) do
+    cond do
+      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      true -> concat(" ",string,"") |> left_spaces2(size)
+    end
+  end 
+ 
+ 
+ 
+  defp right_spaces2(string,size) do
+    cond do
+      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      true -> concat(string," ","") |> right_spaces2(size)
+    end
+  end
+   
+  
+  
+  def contains_one_element_of_array2(target,array) do
+    cond do
+      (length(array) == 0) -> false
+      true -> contains_one_element_of_array3(target,array)
+    end
+  end
+  
+  
+  
+  def contains_one_element_of_array3(target,array) do
+    value = array |> hd() |> to_string_if_not_binary()
+    cond do
+      (value == "" or !(String.contains?(target,value))) 
+        -> contains_one_element_of_array2(target,tl(array))
+      true -> true
+    end
+  end 
+   
+   
     
 end

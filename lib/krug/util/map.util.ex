@@ -78,7 +78,7 @@ defmodule Krug.MapUtil do
     cond do
       (nil == map or nil == keys or length(keys) == 0) -> map
       (length(keys) == 1) -> delete(map,hd(keys))
-      true -> delete_all(delete(map,hd(keys)),tl(keys))
+      true -> delete(map,hd(keys)) |> delete_all(tl(keys))
     end
   end
 

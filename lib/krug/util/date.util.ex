@@ -162,9 +162,10 @@ defmodule Krug.DateUtil do
   def get_now_to_sql(diff_days,begin_day,end_day) do
     date = get_now()
     cond do
-      (nil != diff_days && diff_days != 0) 
-        -> Date.add(date,diff_days) |> get_now_to_sql_internal(begin_day,end_day)
-      true -> get_now_to_sql_internal(date,begin_day,end_day)
+      (diff_days == 0 or nil == diff_days) 
+        -> get_now_to_sql_internal(date,begin_day,end_day)
+      true -> Date.add(date,diff_days) 
+                |> get_now_to_sql_internal(begin_day,end_day)
     end
   end
   

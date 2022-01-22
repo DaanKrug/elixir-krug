@@ -7,6 +7,13 @@ defmodule Krug.NumberUtil do
   alias Krug.StringUtil
   
   
+  @numerals ["0","1","2","3","4","5","6","7","8","9"]
+  @float_chars ["-",".",",","0","1","2","3","4","5","6","7","8","9"]
+  @positive_float_chars [".",",","0","1","2","3","4","5","6","7","8","9"]
+  @numeric_specials ["-",".",","]
+  @numeric_specials_invalid ["-.","-,",".-",",-","--","..",".,",",.",",,"]
+  
+  
   
   @doc """
   Return the max integer value. 
@@ -85,29 +92,6 @@ defmodule Krug.NumberUtil do
   
   
   
-  @doc false
-  defp is_nan2(number) do
-    number = number |> StringUtil.trim() 
-    number2 = number
-    size = String.length(number2)
-    number2 = cond do 
-      (size > 1) -> number2 |> String.slice(1..size)
-      true -> number2
-    end
-    invalid_combinations = ["-.","-,",".-",",-","--","..",".,",",.",",,"]
-    cond do
-      (number == "" or number2 == "") -> true 
-      (Enum.member?([".",","],number |> String.slice(0..0))) -> true
-      (StringUtil.replace_all(number,["-",".",","],"") == "") -> true
-      (StringUtil.contains_one_element_of_array(number,invalid_combinations)) -> true
-      (StringUtil.replace_all(number,number_chars(false),"") != "") -> true
-      (StringUtil.replace_all(number2,number_chars(true),"") != "") -> true 
-      true -> false
-    end
-  end
-  
-  
-  
   @doc """
   Convert any number or string that could be converted in a number to
   a positive float number.
@@ -163,10 +147,9 @@ defmodule Krug.NumberUtil do
   ```
   """
   def to_positive(number) do
-    number = to_float(number)
     cond do
-      (number < 0) -> (number * -1)
-      true -> number
+      (is_number(number)) -> number |> to_positive2()
+      true -> number |> to_float() |> to_positive2()
     end
   end
   
@@ -226,11 +209,8 @@ defmodule Krug.NumberUtil do
   def to_integer(number) do
     cond do
       (is_integer(number)) -> number 
-      (is_nan(number)) -> 0
-      true -> "#{number}" |> StringUtil.replace(",",".") 
-                          |> StringUtil.split(".")
-                          |> Enum.at(0) 
-                          |> String.to_integer()
+      (is_float(number)) -> number |> round()
+      true -> number |> StringUtil.trim() |> to_integer2()
     end
   end
   
@@ -351,16 +331,10 @@ defmodule Krug.NumberUtil do
   """
   def to_float_format(number,decimals,comma_as_decimal_separator \\ true) do
     number = number |> to_float()
-    arr = :io_lib.format("~.#{decimals}f",[number]) |> StringUtil.split(".")
-    dec = cond do
-      (nil == decimals or !(decimals > 0)) -> ""
-      (length(arr) > 1) -> Enum.at(arr,1) |> StringUtil.right_zeros(decimals)
-      true -> "" |> StringUtil.right_zeros(decimals)
-    end
+    number_array = :io_lib.format("~.#{decimals}f",[number]) |> StringUtil.split(".")
     cond do
-      (nil == decimals or !(decimals > 0)) -> [Enum.at(arr,0)] |> IO.iodata_to_binary()
-      (!comma_as_decimal_separator) -> [Enum.at(arr,0),".",dec] |> IO.iodata_to_binary()
-      true -> [Enum.at(arr,0),",",dec] |> IO.iodata_to_binary()
+      (nil == decimals or !(decimals > 0)) -> number_array |> Enum.at(0)
+      true -> to_float_format2(number_array,decimals,comma_as_decimal_separator)
     end
   end
   
@@ -429,22 +403,11 @@ defmodule Krug.NumberUtil do
   ```
   """
   def coalesce(value,value_if_empty_or_nil,zero_as_empty \\ false) do
-    value = value |> StringUtil.trim() |> StringUtil.replace(",",".")
-    value_if_empty_or_nil = value_if_empty_or_nil |> StringUtil.replace(",",".")
+    value = value |> StringUtil.trim()
     cond do
-      (zero_as_empty and String.contains?(value,".") and to_float(value) == 0.0) 
-        -> to_float(value_if_empty_or_nil)
-      (zero_as_empty and !String.contains?(value,".") and to_integer(value) == 0) 
-        -> to_integer(value_if_empty_or_nil)
-      (!is_nan(value) and String.contains?(value,".")) 
-        -> to_float(value)
-      (!is_nan(value)) 
-        -> to_integer(value)
-      (!is_nan(value_if_empty_or_nil) and String.contains?(value_if_empty_or_nil,".")) 
-        -> to_float(value_if_empty_or_nil)
-      (!is_nan(value_if_empty_or_nil)) 
-        -> to_integer(value_if_empty_or_nil)
-      true -> 0
+      (value == "") -> value_if_empty_or_nil
+      (value |> is_nan3()) -> value_if_empty_or_nil
+      true -> coalesce2(value,value_if_empty_or_nil,zero_as_empty)
     end
   end
   
@@ -502,12 +465,20 @@ defmodule Krug.NumberUtil do
   ```
   """
   def coalesce_interval(value,min,max) do
+    cond do
+      (is_nan(value)) -> 0
+      (is_nan(min) or is_nan(max)) -> numberize(value)
+      true -> coalesce_interval2(value,min,max)
+    end
+  end
+  
+  
+  
+  defp coalesce_interval2(value,min,max) do
     value2 = numberize(value)
     min2 = numberize(min)
     max2 = numberize(max)
     cond do
-      (is_nan(value)) -> 0
-      (is_nan(min) or is_nan(max)) -> value2
       (value2 < min2) -> min2
       (value2 > max2) -> max2
       true -> value2
@@ -519,7 +490,6 @@ defmodule Krug.NumberUtil do
   defp numberize(value) do
     cond do
       (is_number(value)) -> value
-      (is_nan(value)) -> 0 
       true -> numberize2(value)
     end
   end
@@ -531,15 +501,6 @@ defmodule Krug.NumberUtil do
     cond do
       (String.contains?(value2,".")) -> to_float(value2)
       true -> to_integer(value2)
-    end
-  end
-  
-  
-  
-  defp number_chars(only_positive) do
-    cond do
-      (only_positive) -> [",",".","0","1","2","3","4","5","6","7","8","9"]
-      true -> ["-",",",".","0","1","2","3","4","5","6","7","8","9"]
     end
   end
   
@@ -560,6 +521,118 @@ defmodule Krug.NumberUtil do
     double_part = hd(reversed_array)
     integer_part = tl(reversed_array) |> Enum.reverse() |> IO.iodata_to_binary()
     [integer_part,".",double_part] |> IO.iodata_to_binary()
+  end
+  
+  
+  
+  @doc false
+  defp is_nan2(number) do
+    number = number |> StringUtil.trim()
+    cond do
+      (number == "") -> true
+      true -> is_nan3(number)
+    end
+  end
+  
+  
+  
+  @doc false
+  defp is_nan3(number) do
+    cond do
+      (StringUtil.replace_all(number,@float_chars,"") != "") -> true
+      (Enum.member?([".",","],number |> String.slice(0..0))) -> true
+      (StringUtil.replace_all(number,@numeric_specials,"") == "") -> true
+      (StringUtil.contains_one_element_of_array(number,@numeric_specials_invalid)) -> true
+      true -> is_nan4(number)
+    end
+  end
+  
+  
+  
+  @doc false
+  defp is_nan4(number) do
+    size = String.length(number)
+    number2 = cond do 
+      (size > 1) -> number |> String.slice(1..size)
+      true -> number
+    end
+    StringUtil.replace_all(number2,@positive_float_chars,"") != ""
+  end
+  
+  
+  
+  @doc false
+  defp to_positive2(number) do
+    cond do
+      (number < 0) -> (number * -1)
+      true -> number
+    end
+  end
+  
+  
+  
+  @doc false
+  defp to_integer2(number) do
+    cond do
+      (number == "") -> 0
+      (number |> StringUtil.replace_all(@numerals,"") == "")
+        -> number |> String.to_integer()
+      (number |> is_nan3()) -> 0
+      true -> number |> StringUtil.replace(",",".") 
+                          |> StringUtil.split(".")
+                          |> Enum.at(0) 
+                          |> String.to_integer()
+    end
+  end
+
+
+  
+  @doc false
+  defp to_float_format2(number_array,decimals,comma_as_decimal_separator) do
+    decimal_part = cond do
+      (length(number_array) > 1) -> number_array |> Enum.at(1) |> StringUtil.right_zeros(decimals)
+      true -> "" |> StringUtil.right_zeros(decimals)
+    end
+    integer_part = number_array |> Enum.at(0)
+    cond do
+      (!comma_as_decimal_separator) -> [integer_part,".",decimal_part] |> IO.iodata_to_binary()
+      true -> [integer_part,",",decimal_part] |> IO.iodata_to_binary()
+    end
+  end
+
+
+  
+  @doc false
+  defp coalesce2(value,value_if_empty_or_nil,zero_as_empty) do
+    value = value |> StringUtil.replace(",",".")
+    cond do
+      (String.contains?(value,".")) -> coalesce_float(value,value_if_empty_or_nil,zero_as_empty)
+      true -> coalesce_integer(value,value_if_empty_or_nil,zero_as_empty)
+    end
+  end
+  
+  
+  
+  @doc false
+  defp coalesce_integer(value,value_if_empty_or_nil,zero_as_empty) do
+    value = to_integer(value)
+    cond do
+      (zero_as_empty and value == 0) 
+        -> value_if_empty_or_nil
+      true -> value
+    end
+  end
+  
+  
+  
+  @doc false
+  defp coalesce_float(value,value_if_empty_or_nil,zero_as_empty) do
+    value = to_float(value)
+    cond do
+      (zero_as_empty and value == 0.0) 
+        -> value_if_empty_or_nil
+      true -> value
+    end
   end
   
   
