@@ -162,6 +162,7 @@ defmodule Krug.BaseEctoDAO do
     quote bind_quoted: [opts: opts] do
     
       alias Krug.BaseEctoDAOSqlCache
+      alias Krug.BaseEctoDAOUtil
       
       alias Krug.StringUtil
     
@@ -173,63 +174,63 @@ defmodule Krug.BaseEctoDAO do
     
       @impl Krug.BaseEctoDAO
       def load(sql,params \\[]) do
-        sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
+        normalized_sql = sql |> BaseEctoDAOUtil.normalize_sql()
+        table_name = normalized_sql |> BaseEctoDAOUtil.extract_table_name()
 	    cond do
-	      (use_cache(sql)) -> load_with_cache(sql,params)
-	      true -> load_without_cache(sql,params)
+	      (table_name |> use_cache()) -> load_with_cache(normalized_sql,table_name,params)
+	      true -> load_without_cache(normalized_sql,params)
 	    end
 	  end
 	  
 	  @impl Krug.BaseEctoDAO
 	  def insert(sql,params) do
-	    sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
-	  	ok = execute_sql(sql,params,true)
-	  	cond do
-	  	  (!ok or !use_cache(sql)) -> ok
-	  	  true -> BaseEctoDAOSqlCache.clear_cache(sql)
-	  	end
+	    cud_operation(sql,params)
 	  end
 	  
 	  @impl Krug.BaseEctoDAO
 	  def update(sql,params) do
-	    sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
-	  	ok = execute_sql(sql,params,true)
-	  	cond do
-	  	  (!ok or !use_cache(sql)) -> ok
-	  	  true -> BaseEctoDAOSqlCache.clear_cache(sql)
-	  	end
+	    cud_operation(sql,params)
 	  end
 	  
 	  @impl Krug.BaseEctoDAO
 	  def delete(sql,params) do
-	    sql = sql |> BaseEctoDAOSqlCache.normalize_sql()
-	  	ok = execute_sql(sql,params,true)
+	    cud_operation(sql,params)
+	  end
+	  
+	  defp cud_operation(sql,params) do
+	    normalized_sql = sql |> BaseEctoDAOUtil.normalize_sql()
+	    table_name = normalized_sql |> BaseEctoDAOUtil.extract_table_name()
+	  	ok = normalized_sql |> execute_sql(params,true)
 	  	cond do
-	  	  (!ok or !use_cache(sql)) -> ok
-	  	  true -> BaseEctoDAOSqlCache.clear_cache(sql)
+	  	  (!ok) -> ok
+	  	  (table_name |> use_cache()) 
+	  	    -> BaseEctoDAOSqlCache.clear_cache(table_name)
+	  	  true -> ok
 	  	end
 	  end
 	  
-	  defp load_without_cache(sql,params \\[]) do
-        execute_sql(sql,params,false)
+	  defp load_without_cache(normalized_sql,params \\[]) do
+        execute_sql(normalized_sql,params,false)
 	  end
 	  
-	  defp load_with_cache(sql,params \\[]) do
-        resultset = BaseEctoDAOSqlCache.load_from_cache(sql,params)
+	  defp load_with_cache(normalized_sql,table_name,params \\[]) do
+        resultset = BaseEctoDAOSqlCache.load_from_cache(table_name,normalized_sql,params)
 	    cond do
 	      (nil != resultset and :nodata != resultset) -> resultset
 	      (resultset == :nodata) -> nil
-	      true -> load_and_put_to_cache(sql,params)
+	      true -> table_name |> load_and_put_to_cache(normalized_sql,params)
 	    end
 	  end
 	  
-	  defp load_and_put_to_cache(sql,params) do
-        resultset = execute_sql(sql,params,false)
+	  defp load_and_put_to_cache(table_name,normalized_sql,params) do
+        resultset = execute_sql(normalized_sql,params,false)
         cond do
-	      (nil != resultset) -> BaseEctoDAOSqlCache.put_cache(sql,params,resultset,@cache_objects_per_table)
-	      true -> BaseEctoDAOSqlCache.put_cache(sql,params,:nodata,@cache_objects_per_table)
+	      (nil != resultset) 
+	        -> BaseEctoDAOSqlCache.put_cache(table_name,normalized_sql,params,resultset,
+	                                         @cache_objects_per_table)
+	      true -> BaseEctoDAOSqlCache.put_cache(table_name,normalized_sql,params,:nodata,
+	                                            @cache_objects_per_table)
 	    end
-	    resultset
 	  end
 	  
 	  defp get_cache_size() do
@@ -257,10 +258,10 @@ defmodule Krug.BaseEctoDAO do
 	    end
 	  end 
 	  
-	  defp use_cache(sql) do
+	  defp use_cache(table_name) do
 	    cond do
 	      (nil == @nocache_tables or length(@nocache_tables) == 0) -> true
-	      (Enum.member?(@nocache_tables,BaseEctoDAOSqlCache.extract_table_name(sql))) -> false
+	      (Enum.member?(@nocache_tables,table_name)) -> false
 	      true -> true
 	    end
 	  end

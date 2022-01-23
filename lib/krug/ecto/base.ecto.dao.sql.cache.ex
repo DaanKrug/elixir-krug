@@ -8,58 +8,43 @@ defmodule Krug.BaseEctoDAOSqlCache do
   alias Krug.DateUtil
   
   
-  def normalize_sql(sql) do
-    sql 
-	  |> StringUtil.trim() 
-	  |> StringUtil.replace("\r\n"," ")
-	  |> StringUtil.replace("\n"," ")
-	  |> StringUtil.replace("  "," ")
+  def load_from_cache(table_name,normalized_sql,params) do
+	EtsUtil.new(:krug_base_ecto_dao_sql_tables_cache,"public")
+    EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,table_name)
+      |> extract_key_par_list(normalized_sql,params)
   end
   
-  def extract_table_name(sql) do
-    sql = sql 
-            |> normalize_sql() 
-            |> StringUtil.replace("("," ") 
-	split_string = cond do
-	  (sql |> String.contains?("insert into ")) -> "insert into "
-	  (sql |> String.contains?("update ")) -> "update "
-	  true -> " from "
-	end
-	sql 
-	  |> StringUtil.split(split_string) 
-	  |> Enum.at(1) 
-	  |> StringUtil.split(" ") 
-	  |> Enum.at(0)
-  end    
-
-  def load_from_cache(sql,params) do
+  def put_cache(table_name,normalized_sql,params,resultset,cache_objects_per_table) do
 	EtsUtil.new(:krug_base_ecto_dao_sql_tables_cache,"public")
-    EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,extract_table_name(sql))
-      |> extract_key_par_list(sql,params)
-  end
-  
-  def put_cache(sql,params,resultset,cache_objects_per_table) do
-	EtsUtil.new(:krug_base_ecto_dao_sql_tables_cache,"public")
-	table = extract_table_name(sql)
-	list_new = EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,table)
-	             |> replace_key_par_in_list(sql,params,resultset,0,cache_objects_per_table)
-	EtsUtil.store_in_cache(:krug_base_ecto_dao_sql_tables_cache,table,list_new)
+	list_new = EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,table_name)
+	             |> replace_key_par_in_list(normalized_sql,params,resultset,0,cache_objects_per_table)
+	EtsUtil.store_in_cache(:krug_base_ecto_dao_sql_tables_cache,table_name,list_new)
 	resultset
   end
   	  
-  def clear_cache(sql) do
+  def clear_cache(table_name) do
     EtsUtil.new(:krug_base_ecto_dao_sql_tables_cache,"public")
-	EtsUtil.remove_from_cache(:krug_base_ecto_dao_sql_tables_cache,extract_table_name(sql))
+	EtsUtil.remove_from_cache(:krug_base_ecto_dao_sql_tables_cache,table_name)
   end
   
-  defp replace_key_par_in_list(list,sql,params,resultset,counter,cache_objects_per_table) do
+  defp replace_key_par_in_list(list,normalized_sql,params,resultset,counter,cache_objects_per_table) do
     cond do
-      (nil == list or counter >= length(list)) 
-        -> append_new_resultset_params_in_list(list,sql,params,resultset,cache_objects_per_table)
-      (list |> Enum.at(counter) |> MapUtil.get(:sql) != sql) 
-        -> replace_key_par_in_list(list,sql,params,resultset,counter + 1,cache_objects_per_table)
-      (list |> Enum.at(counter) |> MapUtil.get(:params) != params) 
-        -> replace_key_par_in_list(list,sql,params,resultset,counter + 1,cache_objects_per_table)
+      (nil == list or length(list) == 0) 
+        -> [new_resultset_param_map(normalized_sql,params,resultset)]
+      (counter >= length(list)) 
+        -> append_resultset_params_in_list(list,normalized_sql,params,resultset,cache_objects_per_table)
+      true -> replace_key_par_in_list2(list,normalized_sql,params,resultset,counter,cache_objects_per_table)
+    end
+  end
+  
+  defp replace_key_par_in_list2(list,normalized_sql,params,resultset,counter,cache_objects_per_table) do
+    cache_result = list |> Enum.at(counter)
+    cache_sql = cache_result |> MapUtil.get(:sql)
+    cache_params = cache_result |> MapUtil.get(:params)
+    cond do
+      (cache_sql != normalized_sql or cache_params != params) 
+          -> replace_key_par_in_list(list,normalized_sql,params,
+                                     resultset,counter + 1,cache_objects_per_table)
       true -> replace_resultset_at_list(list,counter,resultset)
     end
   end
@@ -70,35 +55,43 @@ defmodule Krug.BaseEctoDAOSqlCache do
     List.replace_at(list,position,map)
   end
 	
-  defp extract_key_par_list(list,sql,params) do
+  defp extract_key_par_list(list,normalized_sql,params) do
     cond do
-      (nil == list or length(list) == 0) -> nil
-      true -> extract_key_par_list2(list,sql,params)
+      (nil == list) -> nil
+      true -> extract_key_par_list2(list,normalized_sql,params)
     end
   end
   
-  defp extract_key_par_list2(list,sql,params) do
-    map = list |> hd()
+  defp extract_key_par_list2(list,normalized_sql,params) do
     cond do
-      (map |> MapUtil.get(:sql) != sql) 
-        -> list |> tl() |> extract_key_par_list(sql,params)
-      (map |> MapUtil.get(:params) != params)
-        -> list |> tl() |> extract_key_par_list(sql,params)
+      (length(list) == 0) -> nil
+      true -> extract_key_par_list3(list,normalized_sql,params)
+    end
+  end
+  
+  defp extract_key_par_list3(list,normalized_sql,params) do
+    map = list |> hd()
+    key_par_sql = map |> MapUtil.get(:sql)
+    key_par_params = map |> MapUtil.get(:params)
+    cond do
+      (key_par_sql != normalized_sql or key_par_params != params) 
+        -> list |> tl() |> extract_key_par_list2(normalized_sql,params)
       true -> map |> MapUtil.get(:resultset)
     end
   end
   
-  defp append_new_resultset_params_in_list(list,sql,params,resultset,cache_objects_per_table) do
-    map = %{
-      sql: sql, 
+  defp new_resultset_param_map(normalized_sql,params,resultset) do
+    %{
+      sql: normalized_sql, 
       params: params, 
       resultset: resultset, 
       lastusedtime: DateUtil.get_date_time_now_millis()
     }
-    cond do
-      (nil == list or length(list) == 0) -> [map]
-      true -> [map | list] |> remove_old_cache_results(cache_objects_per_table)
-    end
+  end
+  
+  defp append_resultset_params_in_list(list,normalized_sql,params,resultset,cache_objects_per_table) do
+    [new_resultset_param_map(normalized_sql,params,resultset) | list] 
+      |> remove_old_cache_results(cache_objects_per_table)
   end
   
   defp remove_old_cache_results(list,cache_objects_per_table) do
