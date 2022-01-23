@@ -2,7 +2,6 @@ defmodule Krug.BaseEctoDAOSqlCache do
 
   @moduledoc false
   
-  alias Krug.StringUtil
   alias Krug.MapUtil
   alias Krug.EtsUtil
   alias Krug.DateUtil
