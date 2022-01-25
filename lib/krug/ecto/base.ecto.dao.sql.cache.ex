@@ -18,7 +18,10 @@ defmodule Krug.BaseEctoDAOSqlCache do
 	list_new = EtsUtil.read_from_cache(:krug_base_ecto_dao_sql_tables_cache,table_name)
 	             |> replace_key_par_in_list(normalized_sql,params,resultset,0,cache_objects_per_table)
 	EtsUtil.store_in_cache(:krug_base_ecto_dao_sql_tables_cache,table_name,list_new)
-	resultset
+	cond do
+	  (resultset != :nodata) -> resultset
+	  true -> nil
+	end
   end
   	  
   def clear_cache(table_name) do
