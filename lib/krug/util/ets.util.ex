@@ -176,7 +176,7 @@ defmodule Krug.EtsUtil do
       true -> :ets.lookup(session_key,key)
     end
     element = cond do
-      (nil == tuple_array or length(tuple_array) < 1) -> nil
+      (nil == tuple_array or Enum.empty?(tuple_array)) -> nil
       true -> tuple_array |> Enum.at(0)
     end
     cond do

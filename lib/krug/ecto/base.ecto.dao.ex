@@ -260,7 +260,7 @@ defmodule Krug.BaseEctoDAO do
 	  
 	  defp use_cache(table_name) do
 	    cond do
-	      (nil == @nocache_tables or length(@nocache_tables) == 0) -> true
+	      (nil == @nocache_tables or Enum.empty?(@nocache_tables)) -> true
 	      (Enum.member?(@nocache_tables,table_name)) -> false
 	      true -> true
 	    end

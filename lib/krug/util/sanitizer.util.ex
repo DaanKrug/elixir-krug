@@ -229,7 +229,7 @@ defmodule Krug.SanitizerUtil do
   """
   def array_has_one_less_than(array_values,value) do
     cond do
-      (nil == array_values or length(array_values) == 0) -> true
+      (nil == array_values or Enum.empty?(array_values)) -> true
       (NumberUtil.is_nan(value)) -> false
       true -> Enum.min(array_values) < NumberUtil.to_float(value)
     end
@@ -281,7 +281,7 @@ defmodule Krug.SanitizerUtil do
       (size > 0) -> size
       true -> 10
     end
-    generate_random_seq(size,alpha_nums(),"")
+    generate_random_seq(size,0,alpha_nums(),alpha_nums() |> length(),[])
   end
   
   
@@ -325,7 +325,7 @@ defmodule Krug.SanitizerUtil do
       (size > 0) -> size
       true -> 10
     end
-    generate_random_seq(size,only_nums(),"")
+    generate_random_seq(size,0,only_nums(),only_nums() |> length(),[])
   end
   
   
@@ -369,7 +369,7 @@ defmodule Krug.SanitizerUtil do
       (size > 0) -> size
       true -> 10
     end
-    generate_random_seq(size,filename_chars(),"")
+    generate_random_seq(size,0,filename_chars(),filename_chars() |> length(),[])
   end
   
   
@@ -417,7 +417,7 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def translate(input) do
-    translate_from_array_chars(input,strange_chars(),translated_chars(),0)
+    translate_from_array_chars(input,strange_chars(),translated_chars())
   end
   
   
@@ -870,8 +870,10 @@ defmodule Krug.SanitizerUtil do
   
   defp sanitize_by_valid_chars(input,translated,valid_chars,is_numeric) do
     enabled_chars = get_valid_chars_for_sanitize_input(valid_chars,is_numeric)
+    translated_array = String.graphemes(translated)
+    max = length(translated_array)
     cond do
-      (all_chars_validated_for_position(enabled_chars,String.graphemes(translated),is_numeric,0)) -> input
+      (all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,0,max)) -> input
       is_numeric -> "0"
       true -> ""
     end
@@ -879,12 +881,13 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position) do
+  defp all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position,max) do
+    char = Enum.at(translated_array,position)
     cond do
-      (length(translated_array) <= position) -> true
-      (is_numeric and position > 0 and Enum.at(translated_array,position) == "-") -> false
-      (!StructUtil.list_contains(enabled_chars,Enum.at(translated_array,position))) -> false
-      true -> all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position + 1)
+      (max <= position) -> true
+      (is_numeric and position > 0 and char == "-") -> false
+      (!StructUtil.list_contains(enabled_chars,char)) -> false
+      true -> all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position + 1,max)
     end
   end
   
@@ -908,51 +911,60 @@ defmodule Krug.SanitizerUtil do
       (valid_chars == "url|") -> url_chars_pipe()
       (valid_chars == "hex") -> hex_chars()
       (valid_chars == "filename") -> filename_chars()
-      true -> split_to_array_and_clear_empty(valid_chars,[],[],0)
-    end
-  end
-  
-  
-  
-  defp split_to_array_and_clear_empty(valid_chars,arr,cleaned_array,position) do
-    cond do
       (StringUtil.trim(valid_chars) == "") -> alpha_nums()
-      (length(arr) == 0) 
-        -> split_to_array_and_clear_empty(valid_chars,StringUtil.split(arr,","),cleaned_array,position)
-      (length(arr) <= position) -> cleaned_array
-      true -> split_to_array_and_clear_empty(valid_chars,arr,
-                                             add_to_array_if_not_empty(cleaned_array,Enum.at(arr,position)),
-                                             position + 1)
+      true -> valid_chars 
+      			|> StringUtil.split(",") 
+      			|> add_to_array_if_not_empty([])
     end
   end
   
   
   
-  defp add_to_array_if_not_empty(arr,value) do
+  defp add_to_array_if_not_empty(arr,cleaned_array) do
     cond do
-      (nil == value or StringUtil.trim(value) == "") -> arr
-      true -> [value | arr]
+      (Enum.empty?(arr)) -> cleaned_array
+      true -> add_to_array_if_not_empty(arr |> tl(),
+                                        arr |> hd() |> add_to_array_if_not_empty2(cleaned_array))
     end
   end
   
   
   
-  defp translate_from_array_chars(input,arr1,arr2,position) do
+  defp add_to_array_if_not_empty2(value,cleaned_array) do
     cond do
-      (length(arr1) <= position) -> input
-      true -> translate_from_array_chars(StringUtil.replace(input,Enum.at(arr1,position),
-                                         Enum.at(arr2,position)),arr1,arr2,position + 1)
+      (nil == value or StringUtil.trim(value) == "") -> cleaned_array
+      true -> [value | cleaned_array]
     end
   end
   
   
   
-  defp generate_random_seq(size,arr,seq) do
-    position = arr |> length() |> :rand.uniform()
-    char = arr |> Enum.at(position) |> StringUtil.trim()
+  defp translate_from_array_chars(input,arr1,arr2) do
     cond do
-      (String.length(seq) == size) -> seq
-      true -> generate_random_seq(size,arr,"#{seq}#{char}")
+      (Enum.empty?(arr1)) -> input
+      true -> StringUtil.replace(input,arr1 |> hd(),arr2 |> hd())
+                |> translate_from_array_chars(arr1 |> tl(),arr2 |> tl())
+    end
+  end
+  
+  
+  
+  defp generate_random_seq(size,count,arr,arr_length,seq_arr) do
+    cond do
+      (count >= size) -> seq_arr |> Enum.reverse() |> Enum.join("")
+      true -> generate_random_seq2(size,count,arr,arr_length,seq_arr)
+    end
+  end
+  
+  
+  
+  defp generate_random_seq2(size,count,arr,arr_length,seq_arr) do
+    position = arr_length |> :rand.uniform()
+    char = arr |> Enum.at(position) 
+    cond do
+      (nil == char or StringUtil.trim(char) == "") 
+        -> generate_random_seq2(size,count,arr,arr_length,seq_arr)
+      true -> generate_random_seq(size,count + 1,arr,arr_length,[char | seq_arr])
     end
   end
   

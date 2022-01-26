@@ -50,7 +50,7 @@ defmodule Krug.StructUtil do
       true -> Tuple.to_list(tuple)
     end
     cond do
-      (length(array) < 1) -> nil
+      (Enum.empty?(array)) -> nil
       true -> array |> Enum.at(1)
     end
   end
@@ -102,7 +102,7 @@ defmodule Krug.StructUtil do
   """
   def list_contains(list,value) do
     cond do
-      (nil == list or length(list) == 0) -> false
+      (nil == list or Enum.empty?(list)) -> false
       true -> (Enum.member?(list,value))
     end
   end
@@ -157,7 +157,7 @@ defmodule Krug.StructUtil do
   """
   def list_contains_one_of(list,values) do
     cond do
-      (nil == list or length(list) == 0 or nil == values) -> false
+      (nil == list or nil == values or Enum.empty?(list)) -> false
       true -> list_contains_one_of2(list,values)
     end
   end
@@ -225,7 +225,7 @@ defmodule Krug.StructUtil do
   
   defp get_key_par_value_from_list2(key,list) do
     cond do
-      (length(list) == 0) -> nil
+      (Enum.empty?(list)) -> nil
       true -> get_key_par_value_from_list3(key,list)
     end
   end
@@ -243,10 +243,19 @@ defmodule Krug.StructUtil do
   
   
   defp get_key_value_from_string(key,string) do
+    cond do
+      (nil == string or !(String.contains?(string,"="))) -> nil
+      true -> get_key_value_from_string2(key,string)
+    end
+  end
+  
+  
+  
+  defp get_key_value_from_string2(key,string) do
     key_value_array = StringUtil.split(string,"=")
     cond do
-      (length(key_value_array) < 2) -> nil
-      (StringUtil.trim(hd(key_value_array)) == key) -> key_value_array |> Enum.at(1) |> StringUtil.trim()
+      (StringUtil.trim(hd(key_value_array)) == key) 
+        -> key_value_array |> Enum.at(1) |> StringUtil.trim()
       true -> nil
     end
   end
@@ -255,7 +264,7 @@ defmodule Krug.StructUtil do
   
   defp list_contains_one_of2(list,values) do
     cond do
-      (length(values) == 0) -> false
+      (Enum.empty?(values)) -> false
       (Enum.member?(list,hd(values))) -> true
       true -> list_contains_one_of2(list,tl(values))
     end

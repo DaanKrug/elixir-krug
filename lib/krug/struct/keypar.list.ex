@@ -14,7 +14,7 @@ defmodule Krug.KeyParList do
   """
   def get(key,list) do
     cond do
-      (nil == list or length(list) == 0) -> nil
+      (nil == list or Enum.empty?(list)) -> nil
       true -> get2(key,list)
     end
   end
@@ -39,7 +39,7 @@ defmodule Krug.KeyParList do
   """
   def put(key,value,list) do
     cond do
-      (nil == list or length(list) == 0) -> [%{key: key, value: value}]
+      (nil == list or Enum.empty?(list)) -> [%{key: key, value: value}]
       true -> put_not_empty(key,value,list,0)
     end
   end

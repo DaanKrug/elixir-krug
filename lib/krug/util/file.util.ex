@@ -230,13 +230,14 @@ defmodule Krug.FileUtil do
       (!(String.contains?(path,"."))) -> []
       true -> StringUtil.split(path,".")
     end
+    size = length(arr)
     ext = cond do
-      (length(arr) > 1) -> Enum.at(arr,length(arr) - 1) 
+      (size > 1) -> Enum.at(arr,size - 1) 
       true -> ""
     end
     cond do
       (File.exists?(path) and File.dir?(path)) -> false
-      (!(length(arr) > 1)) -> false
+      (!(size > 1)) -> false
       (!(Enum.member?(valid_extensions(),ext))) -> false
       (nil != insertion_points and length(insertion_points) == 2 
         and nil != insertion_point_tag and StringUtil.trim(insertion_point_tag) != "") 
@@ -273,15 +274,17 @@ defmodule Krug.FileUtil do
       (!(String.contains?(path,"."))) -> []
       true -> StringUtil.split(path,".")
     end
+    size = length(arr)
     ext = cond do
-      (length(arr) > 1) -> Enum.at(arr,length(arr) - 1) 
+      (size > 1) -> Enum.at(arr,size - 1) 
       true -> ""
     end
     cond do
       (File.exists?(path) and File.dir?(path)) -> false
-      (!(length(arr) > 1)) -> false
+      (!(size > 1)) -> false
       (!(Enum.member?(valid_extensions(),ext))) -> false
-      (nil != insertion_points and length(insertion_points) == 2) -> remove_from_file(path,insertion_points) 
+      (nil != insertion_points and length(insertion_points) == 2) 
+        -> remove_from_file(path,insertion_points) 
       true -> false
     end
   end
@@ -313,8 +316,9 @@ defmodule Krug.FileUtil do
       (!(String.contains?(path,"."))) -> []
       true -> StringUtil.split(path,".")
     end
+    size = length(arr)
     ext = cond do
-      (length(arr) > 1) -> Enum.at(arr,length(arr) - 1) 
+      (size > 1) -> Enum.at(arr,size - 1) 
       true -> ""
     end
     cond do

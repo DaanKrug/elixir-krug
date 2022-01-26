@@ -31,7 +31,7 @@ defmodule Krug.BaseEctoDAOSqlCache do
   
   defp replace_key_par_in_list(list,normalized_sql,params,resultset,counter,cache_objects_per_table) do
     cond do
-      (nil == list or length(list) == 0) 
+      (nil == list or Enum.empty?(list)) 
         -> [new_resultset_param_map(normalized_sql,params,resultset)]
       (counter >= length(list)) 
         -> append_resultset_params_in_list(list,normalized_sql,params,resultset,cache_objects_per_table)
@@ -66,7 +66,7 @@ defmodule Krug.BaseEctoDAOSqlCache do
   
   defp extract_key_par_list2(list,normalized_sql,params) do
     cond do
-      (length(list) == 0) -> nil
+      (Enum.empty?(list)) -> nil
       true -> extract_key_par_list3(list,normalized_sql,params)
     end
   end

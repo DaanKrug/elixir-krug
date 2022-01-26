@@ -56,7 +56,7 @@ defmodule Krug.JsonUtil do
   
   defp make_substitutions(json,array) do
     cond do
-      (nil == array or length(array) == 0) -> json
+      (nil == array or Enum.empty?(array)) -> json
       true -> make_substitutions(make_substitution(json,hd(array)),tl(array))
     end
   end

@@ -39,7 +39,7 @@ defmodule Krug.ArrayUtil do
   @doc since: "0.4.3"
   def rotate_right(array,positions) do
     cond do
-      (nil == array or length(array) < 2) -> array
+      (nil == array or Enum.empty?(array)) -> array
       (nil == positions or !(positions > 0)) -> array
       true -> rotate_right2(array,positions)
     end
@@ -78,7 +78,7 @@ defmodule Krug.ArrayUtil do
   @doc since: "0.4.3"
   def rotate_left(array,positions) do
     cond do
-      (nil == array or length(array) < 2) -> array
+      (nil == array or Enum.empty?(array)) -> array
       (nil == positions or !(positions > 0)) -> array
       true -> rotate_left2(array,positions)
     end
@@ -87,9 +87,10 @@ defmodule Krug.ArrayUtil do
   
   
   defp rotate_right2(array,positions) do
-    remainder = rem(positions,length(array))
+    size = length(array)
+    remainder = rem(positions,size)
     cond do
-      (remainder == 0) -> array
+      (remainder == 0 or size < 2) -> array
       true -> rotate_right_positions(array,remainder,0)
     end
   end
@@ -97,9 +98,10 @@ defmodule Krug.ArrayUtil do
   
   
   defp rotate_left2(array,positions) do
-    remainder = rem(positions,length(array))
+    size = length(array)
+    remainder = rem(positions,size)
     cond do
-      (remainder == 0) -> array
+      (remainder == 0 or size < 2) -> array
       true -> rotate_left_positions(array,remainder,0)
     end
   end

@@ -88,10 +88,9 @@ defmodule Krug.ResultSetHandler do
   """
   def get_column_value(resultset,row,col \\ 0) do
     array_data = get_row_as_array(resultset,row)
-    size = length(array_data)
     value = cond do
-      (size == 0) -> "" 
-      (!(col >= 0) or col >= size) -> "" 
+      (Enum.empty?(array_data)) -> "" 
+      (!(col >= 0)) -> "" 
       true -> array_data |> Enum.at(col)
     end
   	"#{value}"
@@ -101,11 +100,10 @@ defmodule Krug.ResultSetHandler do
   
   defp get_row_as_array(resultset,row) do
   	cond do
-  	  (nil == resultset or nil == resultset.rows) -> []
+  	  (nil == resultset or nil == resultset.rows or resultset.rows == 0) -> []
   	  (nil == row or !(row >= 0)) -> [] 
-  	  (nil == resultset.rows or length(resultset.rows) == 0) -> []
-  	  (row >= length(resultset.rows)) -> []
-  	  true -> resultset.rows |> Enum.at(row)
+  	  (nil == resultset.rows or Enum.empty?(resultset.rows)) -> []
+  	  true -> resultset.rows |> Enum.at(row,[])
   	end
   end
   
@@ -123,10 +121,9 @@ defmodule Krug.ResultSetHandler do
   
   defp get_column_value_use_nil(resultset,row,col) do
     array_data = get_row_as_array(resultset,row)
-    size = length(array_data)
     cond do
-      (size == 0) -> nil
-      (!(col >= 0) or col >= size) -> nil
+      (Enum.empty?(array_data)) -> nil
+      (!(col >= 0)) -> nil
       true -> array_data |> Enum.at(col)
     end
   end

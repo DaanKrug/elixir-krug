@@ -339,7 +339,7 @@ defmodule Krug.StringUtil do
   """
   def get_decoded_value_param(array_params,param,separator) do
     cond do
-      (nil == array_params or length(array_params) == 0) -> ""
+      (nil == array_params or Enum.empty?(array_params)) -> ""
       (String.contains?(hd(array_params),"#{param}#{separator}")) 
         -> decode_uri(replace(hd(array_params),param <> separator,""))
       true -> get_decoded_value_param(tl(array_params),param,separator)
@@ -890,7 +890,7 @@ defmodule Krug.StringUtil do
   """
   def to_char_code(array,position) do
     cond do
-      (nil == array or position >= length(array)) -> nil
+      (nil == array or Enum.empty?(array)) -> nil
       true -> to_char_code2(array,position)
     end
   end
@@ -948,7 +948,7 @@ defmodule Krug.StringUtil do
   
   defp replace_all2(target,searched_array,replace_to) do 
     cond do
-      (length(searched_array) == 0) -> target
+      (Enum.empty?(searched_array)) -> target
       true -> replace(target,hd(searched_array),replace_to) 
                 |> replace_all2(tl(searched_array),replace_to)
     end
@@ -994,7 +994,7 @@ defmodule Krug.StringUtil do
   
   def contains_one_element_of_array2(target,array) do
     cond do
-      (length(array) == 0) -> false
+      (Enum.empty?(array)) -> false
       true -> contains_one_element_of_array3(target,array)
     end
   end
