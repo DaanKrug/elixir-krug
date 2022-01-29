@@ -26,8 +26,7 @@ defmodule Krug.DateUtil do
     cond do
       (nil == timestamp or !(timestamp > 0)) -> nil
       true -> DateTime.from_unix(timestamp, :millisecond) 
-                |> Tuple.to_list() 
-                |> Enum.at(1) 
+                |> elem(1) 
                 |> DateTime.to_string()
                 |> String.slice(0..18)
     end
@@ -194,8 +193,8 @@ defmodule Krug.DateUtil do
   ```
   """  
   def sql_date_to_time(sql_date,with_time \\ true) do
-    arr = sql_date |> StringUtil.split(" ")
-    arr2 = arr |> Enum.at(0) |> StringUtil.split("-")
+    arr = sql_date |> StringUtil.split(" ",true)
+    arr2 = arr |> hd() |> StringUtil.split("-",true)
     cond do
       (!(Enum.member?([10,19],String.length(sql_date)))) -> nil
       (with_time == true and length(arr) > 1) 
@@ -326,14 +325,14 @@ defmodule Krug.DateUtil do
   
   defp sql_date_to_date_time(sql_date) do
     sql_date = sql_date |> String.slice(0..18)
-    date_arr = sql_date |> StringUtil.trim() |> StringUtil.split(" ")
-    date_arr1 = date_arr |> Enum.at(0) |> StringUtil.split("-")
-    date_arr2 = date_arr |> Enum.at(1) |> StringUtil.split(":")
-    year = date_arr1 |> Enum.at(0) |> NumberUtil.to_integer()
-    month = date_arr1 |> Enum.at(1) |> NumberUtil.to_integer()
+    date_arr = sql_date |> StringUtil.trim() |> StringUtil.split(" ",true)
+    date_arr1 = date_arr |> hd() |> StringUtil.split("-",true)
+    date_arr2 = date_arr |> tl() |> hd() |> StringUtil.split(":",true)
+    year = date_arr1 |> hd() |> NumberUtil.to_integer()
+    month = date_arr1 |> tl() |> hd() |> NumberUtil.to_integer()
     day = date_arr1 |> Enum.at(2) |> NumberUtil.to_integer()
-    hour = date_arr2 |> Enum.at(0) |> NumberUtil.to_integer()
-    minute = date_arr2 |> Enum.at(1) |> NumberUtil.to_integer()
+    hour = date_arr2 |> hd() |> NumberUtil.to_integer()
+    minute = date_arr2 |> tl() |> hd() |> NumberUtil.to_integer()
     second = date_arr1 |> Enum.at(2) |> NumberUtil.to_integer()
     %DateTime{year: year, month: month, day: day,hour: hour, minute: minute, second: second,
               zone_abbr: "GMT", utc_offset: -10800, std_offset: 0, time_zone: "America/Sao Paulo"}
@@ -345,11 +344,11 @@ defmodule Krug.DateUtil do
     year = date.year
     month = StringUtil.left_zeros(date.month,2)
     day = StringUtil.left_zeros(date.day,2)
-    string_date = Enum.join([year,month,day],"-")
+    string_date = [year,"-",month,"-",day] |> IO.iodata_to_binary()
     cond do
-      begin_day ->  Enum.join([string_date,"00:00:00"]," ")
-      end_day ->  Enum.join([string_date,"23:59:59"]," ")
-      true -> Enum.join([string_date,get_time_now_string()]," ")
+      begin_day -> [string_date," ","00:00:00"] |> IO.iodata_to_binary()
+      end_day -> [string_date," ","23:59:59"] |> IO.iodata_to_binary()
+      true -> [string_date," ",get_time_now_string()] |> IO.iodata_to_binary()
     end
   end
   

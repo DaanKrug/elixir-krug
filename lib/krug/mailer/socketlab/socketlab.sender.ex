@@ -69,7 +69,7 @@ defmodule Krug.SocketLabSender do
   def mail(email_configuration,title,body,tto) do
     try do
   	  try do
-  	    arr = email_configuration.sender_password |> StringUtil.split(",")
+  	    arr = email_configuration.sender_password |> StringUtil.split(",",true)
         credentials = %{server: "smtp.socketlabs.com", 
   	                    username: Enum.at(arr,0), 
   	                    password: Enum.at(arr,1)}

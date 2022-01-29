@@ -5,6 +5,7 @@ defmodule Krug.StringUtilTest do
   
   alias Krug.StringUtil
   
+  
   test "[concat(string_a,string_b,join_string)]" do
     assert StringUtil.concat(nil,nil,nil) == ""
     assert StringUtil.concat(nil,nil,",") == ""

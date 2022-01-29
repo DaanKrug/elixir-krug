@@ -55,7 +55,7 @@ defmodule Krug.FileUtil do
       true -> File.cp_r(from_dir,to_dir)
     end
     cond do
-      (:ok != result |> Tuple.to_list() |> Enum.at(0)) -> false
+      (:ok != result |> elem(0)) -> false
       true -> chmod(to_dir,0o777)
     end
   end
@@ -86,7 +86,7 @@ defmodule Krug.FileUtil do
       (!(File.exists?(path)) or !(File.dir?(path))) -> {:error, :enotdir}
       true -> File.rm_rf(path)
     end
-    (:ok == result |> Tuple.to_list() |> Enum.at(0))
+    (:ok == result |> elem(0))
   end
   
   
@@ -117,7 +117,7 @@ defmodule Krug.FileUtil do
       true -> File.copy(from_file,to_file)
     end
     cond do
-      (:ok != result |> Tuple.to_list() |> Enum.at(0)) -> false
+      (:ok != result |> elem(0)) -> false
       true -> chmod(to_file,0o777)
     end
   end
@@ -228,7 +228,7 @@ defmodule Krug.FileUtil do
   def write(path,content,insertion_points \\ [],insertion_point_tag \\ nil) do
     arr = cond do
       (!(String.contains?(path,"."))) -> []
-      true -> StringUtil.split(path,".")
+      true -> StringUtil.split(path,".",true)
     end
     size = length(arr)
     ext = cond do
@@ -272,7 +272,7 @@ defmodule Krug.FileUtil do
   def remove(path,insertion_points) do
     arr = cond do
       (!(String.contains?(path,"."))) -> []
-      true -> StringUtil.split(path,".")
+      true -> StringUtil.split(path,".",true)
     end
     size = length(arr)
     ext = cond do
@@ -314,7 +314,7 @@ defmodule Krug.FileUtil do
   def replace_in_file(path,search_by,replace_to) do
     arr = cond do
       (!(String.contains?(path,"."))) -> []
-      true -> StringUtil.split(path,".")
+      true -> StringUtil.split(path,".",true)
     end
     size = length(arr)
     ext = cond do
@@ -445,7 +445,7 @@ defmodule Krug.FileUtil do
     content_new = cond do
       (search_by |> StringUtil.trim() == "") -> nil
       (replace_to |> StringUtil.trim() == "") -> nil
-      true -> content |> StringUtil.replace(search_by,replace_to)
+      true -> content |> StringUtil.replace(search_by,replace_to,true)
     end
     cond do
       (content_new == nil) -> false
@@ -520,8 +520,8 @@ defmodule Krug.FileUtil do
   
   
   defp make_replacement_in_file(path,content,insertion_content,ip0,ip1) do
-    before_part = content |> StringUtil.split("#{ip0}") |> Enum.at(0)
-    after_part = content |> StringUtil.split("#{ip1}") |> Enum.at(1)
+    before_part = content |> StringUtil.split("#{ip0}",true) |> Enum.at(0)
+    after_part = content |> StringUtil.split("#{ip1}",true) |> Enum.at(1)
     content_new = "#{before_part}#{ip0}\n#{insertion_content}\n#{ip1}#{after_part}"
     write_to_file(path,content_new)
   end
@@ -530,17 +530,17 @@ defmodule Krug.FileUtil do
   
   defp make_insertion_in_file(path,content,insertion_content,ip0,ip1,insertion_point_tag) do
     replacement = "#{ip0}\n#{insertion_content}\n#{ip1}\n#{insertion_point_tag}"
-    content_new = StringUtil.replace(content,insertion_point_tag,replacement)
+    content_new = StringUtil.replace(content,insertion_point_tag,replacement,true)
     write_to_file(path,content_new)
   end
   
   
   
   defp make_remove_from_file(path,content,ip0,ip1) do
-    before_parts = content |> StringUtil.split("#{ip0}")
+    before_parts = content |> StringUtil.split("#{ip0}",true)
     after_parts = cond do
-      (String.contains?(content,"#{ip1}\n")) -> content |> StringUtil.split("#{ip1}\n")
-      true -> content |> StringUtil.split("#{ip1}")
+      (String.contains?(content,"#{ip1}\n")) -> content |> StringUtil.split("#{ip1}\n",true)
+      true -> content |> StringUtil.split("#{ip1}",true)
     end
     cond do
       (!(length(before_parts) == 2)) -> false

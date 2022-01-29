@@ -8,19 +8,20 @@ defmodule Krug.BaseEctoDAOUtil do
   def normalize_sql(sql) do
     sql 
 	  |> StringUtil.trim() 
-	  |> StringUtil.replace("\r\n"," ")
-	  |> StringUtil.replace("\n"," ")
-	  |> StringUtil.replace("  "," ")
+	  |> StringUtil.replace("\r\n"," ",true)
+	  |> StringUtil.replace("\n"," ",true)
+	  |> StringUtil.replace("  "," ",true)
   end
   
   def extract_table_name(normalized_sql) do
 	split_string = normalized_sql |> extract_split_string()
 	normalized_sql 
-	  |> StringUtil.replace("("," ") 
-	  |> StringUtil.split(split_string) 
-	  |> Enum.at(1) 
-	  |> StringUtil.split(" ") 
-	  |> Enum.at(0)
+	  |> StringUtil.replace("("," ",true) 
+	  |> StringUtil.split(split_string,true) 
+	  |> tl()
+	  |> hd()
+	  |> StringUtil.split(" ",true) 
+	  |> hd()
   end   
   
   defp extract_split_string(normalized_sql) do 

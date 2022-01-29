@@ -5,12 +5,30 @@ defmodule Krug.BaseEctoDAO do
   to facilitate the raw queries usage with Ecto.
   
   Utilization: Create a module that extends ```Krug.BaseEctoDAO```.
-  - ```MyApp.App.Repo``` should be a module that extends Ecto.Repo.
+  - ```MyApp.App.Repo``` should be a module that extends Ecto.Repo. (Required)
+  - ```ets_key```should be an atom thats identifier the ETS table for caching. (Required)
+    This should be created in Ecto repository initialization, inside the init/2 function,
+    call Krug.EtsUtil.new(:my_ets_key_atom_identifier)
   
   ```elixir
+  defmodule MyApp.App.Repo do 
+    
+    use Ecto.Repo, otp_app: :my_app, adapter: Ecto.Adapters.MyXQL
+    ...
+    alias Krug.EtsUtil
+    
+    def init(_type, config) do
+      ...
+      EtsUtil.new(:my_ets_key_atom_identifier)
+      {:ok, config}
+    end
+  
+  end
+  
+  
   defmodule MyApp.App.DAOService do
 
-    use Krug.BaseEctoDAO, repo: MyApp.App.Repo
+    use Krug.BaseEctoDAO, repo: MyApp.App.Repo, ets_key: :my_ets_key_atom_identifier
 
   end
   ```
@@ -26,7 +44,11 @@ defmodule Krug.BaseEctoDAO do
   ```elixir
   defmodule MyApp.App.DAOService do
 
-    use Krug.BaseEctoDAO, repo: MyApp.App.Repo, nocache_tables: ["my_table_no_cache1","my_table_no_cache2"], cache_objects_per_table: 10
+    use Krug.BaseEctoDAO, 
+      repo: MyApp.App.Repo, 
+      nocache_tables: ["my_table_no_cache1","my_table_no_cache2"], 
+      cache_objects_per_table: 10,
+      ets_key: :my_ets_key_atom_identifier
 
   end
   ```
@@ -171,13 +193,14 @@ defmodule Krug.BaseEctoDAO do
       @repo Keyword.get(opts,:repo)
       @nocache_tables Keyword.get(opts,:nocache_tables)
       @cache_objects_per_table Keyword.get(opts,:cache_objects_per_table)
+      @ets_key Keyword.get(opts,:ets_key)
     
       @impl Krug.BaseEctoDAO
       def load(sql,params \\[]) do
         normalized_sql = sql |> BaseEctoDAOUtil.normalize_sql()
         table_name = normalized_sql |> BaseEctoDAOUtil.extract_table_name()
 	    cond do
-	      (table_name |> use_cache()) -> load_with_cache(normalized_sql,table_name,params)
+	      (table_name |> use_cache()) -> load_with_cache(normalized_sql,params)
 	      true -> load_without_cache(normalized_sql,params)
 	    end
 	  end
@@ -204,7 +227,7 @@ defmodule Krug.BaseEctoDAO do
 	  	cond do
 	  	  (!ok) -> ok
 	  	  (table_name |> use_cache()) 
-	  	    -> BaseEctoDAOSqlCache.clear_cache(table_name)
+	  	    -> BaseEctoDAOSqlCache.clear_cache(@ets_key)
 	  	  true -> ok
 	  	end
 	  end
@@ -213,23 +236,21 @@ defmodule Krug.BaseEctoDAO do
         execute_sql(normalized_sql,params,false)
 	  end
 	  
-	  defp load_with_cache(normalized_sql,table_name,params \\[]) do
-        resultset = BaseEctoDAOSqlCache.load_from_cache(table_name,normalized_sql,params)
+	  defp load_with_cache(normalized_sql,params \\[]) do
+        resultset = BaseEctoDAOSqlCache.load_from_cache(@ets_key,normalized_sql,params)
 	    cond do
-	      (nil != resultset and :nodata != resultset) -> resultset
-	      (resultset == :nodata) -> nil
-	      true -> table_name |> load_and_put_to_cache(normalized_sql,params)
+	      (nil != resultset) -> resultset
+	      true -> load_and_put_to_cache(normalized_sql,params)
 	    end
 	  end
 	  
-	  defp load_and_put_to_cache(table_name,normalized_sql,params) do
+	  defp load_and_put_to_cache(normalized_sql,params) do
         resultset = execute_sql(normalized_sql,params,false)
         cond do
 	      (nil != resultset) 
-	        -> BaseEctoDAOSqlCache.put_cache(table_name,normalized_sql,params,resultset,
+	        -> BaseEctoDAOSqlCache.put_cache(@ets_key,normalized_sql,params,resultset,
 	                                         @cache_objects_per_table)
-	      true -> BaseEctoDAOSqlCache.put_cache(table_name,normalized_sql,params,:nodata,
-	                                            @cache_objects_per_table)
+	      true -> nil
 	    end
 	  end
 	  

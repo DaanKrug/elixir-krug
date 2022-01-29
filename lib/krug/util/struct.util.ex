@@ -45,13 +45,9 @@ defmodule Krug.StructUtil do
   ```
   """
   def get_value_from_tuple(tuple) do
-  	array = cond do
-      (nil == tuple) -> []
-      true -> Tuple.to_list(tuple)
-    end
-    cond do
-      (Enum.empty?(array)) -> nil
-      true -> array |> Enum.at(1)
+  	cond do
+      (nil == tuple or (tuple_size(tuple) < 2)) -> nil
+      true -> tuple |> elem(1)
     end
   end
   
@@ -252,10 +248,10 @@ defmodule Krug.StructUtil do
   
   
   defp get_key_value_from_string2(key,string) do
-    key_value_array = StringUtil.split(string,"=")
+    key_value_array = StringUtil.split(string,"=",true)
     cond do
-      (StringUtil.trim(hd(key_value_array)) == key) 
-        -> key_value_array |> Enum.at(1) |> StringUtil.trim()
+      (key_value_array |> hd() |> StringUtil.trim() == key) 
+        -> key_value_array |> tl() |> hd() |> StringUtil.trim()
       true -> nil
     end
   end

@@ -49,15 +49,15 @@ defmodule Krug.ImageUtil do
     cond do
       (!(String.contains?(url,"https://")) or !(String.contains?(url,"."))) -> false
       (String.length(url) < 13) -> false
-      (url |> StringUtil.split(":") |> Enum.at(0) != "https") -> false
-      true -> url |> StringUtil.split(".") |> validate_url_extension()
+      (url |> StringUtil.split(":",true) |> hd() != "https") -> false
+      true -> url |> StringUtil.split(".",true) |> validate_url_extension()
     end
   end
 
 
   
   defp validate_url_extension(arr) do
-    ext = Enum.at(arr,length(arr) - 1) |> StringUtil.trim() |> String.downcase()
+    ext = arr |> Enum.reverse() |> hd() |> StringUtil.trim() |> String.downcase()
     Enum.member?(["png","bmp","jpg","jpeg","gif"],ext)
   end
 

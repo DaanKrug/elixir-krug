@@ -333,7 +333,7 @@ defmodule Krug.NumberUtil do
     number = number |> to_float()
     number_array = :io_lib.format("~.#{decimals}f",[number]) |> StringUtil.split(".")
     cond do
-      (nil == decimals or !(decimals > 0)) -> number_array |> Enum.at(0)
+      (nil == decimals or !(decimals > 0)) -> number_array |> hd()
       true -> to_float_format2(number_array,decimals,comma_as_decimal_separator)
     end
   end
@@ -497,7 +497,7 @@ defmodule Krug.NumberUtil do
   
   
   defp numberize2(value) do
-    value2 = value |> StringUtil.replace(",",".")
+    value2 = value |> StringUtil.replace(",",".",true)
     cond do
       (String.contains?(value2,".")) -> to_float(value2)
       true -> to_integer(value2)
@@ -507,7 +507,7 @@ defmodule Krug.NumberUtil do
   
   
   defp convert_to_float(number) do
-    number = StringUtil.replace(number," ","") |> StringUtil.replace(",",".")
+    number = StringUtil.replace(number," ","",true) |> StringUtil.replace(",",".",true)
     cond do
       (!(String.contains?(number,"."))) -> number |> String.to_integer()
       true -> handle_extra_float_dots(number) |> String.to_float()
@@ -578,10 +578,11 @@ defmodule Krug.NumberUtil do
       (number |> StringUtil.replace_all(@numerals,"") == "")
         -> number |> String.to_integer()
       (number |> is_nan3()) -> 0
-      true -> number |> StringUtil.replace(",",".") 
-                          |> StringUtil.split(".")
-                          |> Enum.at(0) 
-                          |> String.to_integer()
+      true -> number 
+                |> StringUtil.replace(",",".",true) 
+                |> StringUtil.split(".")
+                |> hd()
+                |> String.to_integer()
     end
   end
 
@@ -590,10 +591,10 @@ defmodule Krug.NumberUtil do
   @doc false
   defp to_float_format2(number_array,decimals,comma_as_decimal_separator) do
     decimal_part = cond do
-      (length(number_array) > 1) -> number_array |> Enum.at(1) |> StringUtil.right_zeros(decimals)
+      (length(number_array) > 1) -> number_array |> tl() |> hd() |> StringUtil.right_zeros(decimals)
       true -> "" |> StringUtil.right_zeros(decimals)
     end
-    integer_part = number_array |> Enum.at(0)
+    integer_part = number_array |> hd()
     cond do
       (!comma_as_decimal_separator) -> [integer_part,".",decimal_part] |> IO.iodata_to_binary()
       true -> [integer_part,",",decimal_part] |> IO.iodata_to_binary()
@@ -604,7 +605,7 @@ defmodule Krug.NumberUtil do
   
   @doc false
   defp coalesce2(value,value_if_empty_or_nil,zero_as_empty) do
-    value = value |> StringUtil.replace(",",".")
+    value = value |> StringUtil.replace(",",".",true)
     cond do
       (String.contains?(value,".")) -> coalesce_float(value,value_if_empty_or_nil,zero_as_empty)
       true -> coalesce_integer(value,value_if_empty_or_nil,zero_as_empty)

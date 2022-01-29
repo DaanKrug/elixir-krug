@@ -11,6 +11,15 @@ defmodule Krug.SanitizerUtil do
   alias Krug.StructUtil
   
   
+  @forbidden_sql [
+    "--","insert ","select ","delete ","drop ","truncate ","alter ",
+    "update ","cascade ","order by ","group by ","union ",
+    "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
+    "distinct(","concat(","group_concat(","grant ",
+    "revoke ","commit ","rollback "
+  ]
+  
+  
   
   @doc """
   Verify if an email contains only allowed chars to be present on email. 
@@ -534,16 +543,9 @@ defmodule Krug.SanitizerUtil do
   """
   @doc since: "0.4.15"
   def sanitize_sql(input) do
-    forbidden_sql = [
-      "--","insert ","select ","delete ","drop ","truncate ","alter ",
-      "update ","cascade ","order by ","group by ","union ",
-      "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
-      "distinct(","concat(","group_concat(","grant ",
-      "revoke ","commit ","rollback "
-    ]
-    input2 = input |> String.downcase() |> StringUtil.replace("  "," ")
+    input2 = input |> String.downcase() |> StringUtil.replace("  "," ",true)
     cond do
-      (StringUtil.contains_one_element_of_array(input2,forbidden_sql)) -> nil
+      (StringUtil.contains_one_element_of_array(input2,@forbidden_sql)) -> nil
       true -> input
     end
   end
@@ -772,14 +774,10 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def sanitize_filename(name,max_size) do
-    max_size2 = cond do
-      (nil == max_size or !(max_size > 0)) -> 10
-      true -> max_size
-    end
-    name = sanitize_input(name,false,max_size,"filename")
     cond do
-      (String.length(name) == 0) -> generate_random_filename(max_size2)
-      true -> name
+      (nil == max_size or !(max_size > 0)) 
+        -> sanitize_filename2(name,10)
+      true -> sanitize_filename2(name,max_size)
     end
   end
   
@@ -855,25 +853,24 @@ defmodule Krug.SanitizerUtil do
   
   defp sanitize_input(input,is_numeric,max_size,valid_chars) do
     original_input = StringUtil.trim(input)
-    translated = translate(original_input)
-    size = length(String.graphemes(translated))
+    translated_array = original_input |> translate() |> String.graphemes()
+    size = length(translated_array)
     cond do
       (is_numeric and original_input == "") -> "0"
       (original_input == "") -> ""
       (is_numeric and max_size > 0 and (size > max_size or size == 0)) -> "0"
       (max_size > 0 and (size > max_size or size == 0)) -> ""
-      true -> sanitize_by_valid_chars(original_input,translated,valid_chars,is_numeric)
+      true -> sanitize_by_valid_chars(original_input,translated_array,valid_chars,is_numeric)
     end
   end
   
   
   
-  defp sanitize_by_valid_chars(input,translated,valid_chars,is_numeric) do
+  defp sanitize_by_valid_chars(input,translated_array,valid_chars,is_numeric) do
     enabled_chars = get_valid_chars_for_sanitize_input(valid_chars,is_numeric)
-    translated_array = String.graphemes(translated)
-    max = length(translated_array)
     cond do
-      (all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,0,max)) -> input
+      (is_numeric and NumberUtil.is_nan(input)) -> "0"
+      (all_chars_validated_for_position(enabled_chars,translated_array)) -> input
       is_numeric -> "0"
       true -> ""
     end
@@ -881,13 +878,12 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position,max) do
-    char = Enum.at(translated_array,position)
+  defp all_chars_validated_for_position(enabled_chars,translated_array) do
     cond do
-      (max <= position) -> true
-      (is_numeric and position > 0 and char == "-") -> false
-      (!StructUtil.list_contains(enabled_chars,char)) -> false
-      true -> all_chars_validated_for_position(enabled_chars,translated_array,is_numeric,position + 1,max)
+      (Enum.empty?(translated_array)) -> true
+      (enabled_chars |> Enum.member?(translated_array |> hd()))
+        -> enabled_chars |> all_chars_validated_for_position(translated_array |> tl())
+      true -> false
     end
   end
   
@@ -913,7 +909,7 @@ defmodule Krug.SanitizerUtil do
       (valid_chars == "filename") -> filename_chars()
       (StringUtil.trim(valid_chars) == "") -> alpha_nums()
       true -> valid_chars 
-      			|> StringUtil.split(",") 
+      			|> StringUtil.split(",",true) 
       			|> add_to_array_if_not_empty([])
     end
   end
@@ -942,7 +938,7 @@ defmodule Krug.SanitizerUtil do
   defp translate_from_array_chars(input,arr1,arr2) do
     cond do
       (Enum.empty?(arr1)) -> input
-      true -> StringUtil.replace(input,arr1 |> hd(),arr2 |> hd())
+      true -> StringUtil.replace(input,arr1 |> hd(),arr2 |> hd(),true)
                 |> translate_from_array_chars(arr1 |> tl(),arr2 |> tl())
     end
   end
@@ -951,7 +947,7 @@ defmodule Krug.SanitizerUtil do
   
   defp generate_random_seq(size,count,arr,arr_length,seq_arr) do
     cond do
-      (count >= size) -> seq_arr |> Enum.reverse() |> Enum.join("")
+      (count >= size) -> seq_arr |> IO.iodata_to_binary()
       true -> generate_random_seq2(size,count,arr,arr_length,seq_arr)
     end
   end
@@ -960,9 +956,9 @@ defmodule Krug.SanitizerUtil do
   
   defp generate_random_seq2(size,count,arr,arr_length,seq_arr) do
     position = arr_length |> :rand.uniform()
-    char = arr |> Enum.at(position) 
+    char = :lists.nth(position,arr) #arr |> Enum.at(position) 
     cond do
-      (nil == char or StringUtil.trim(char) == "") 
+      (char == " ") 
         -> generate_random_seq2(size,count,arr,arr_length,seq_arr)
       true -> generate_random_seq(size,count + 1,arr,arr_length,[char | seq_arr])
     end
@@ -1111,6 +1107,23 @@ defmodule Krug.SanitizerUtil do
   
   defp date_sql() do
     [":","-"," ","0","1","2","3","4","5","6","7","8","9"]
+  end
+  
+  
+  
+  defp sanitize_filename2(name,max_size) do
+    sanitize_input(name,false,max_size,"filename")
+      |> sanitize_filename3(max_size)
+  end
+  
+  
+  
+  defp sanitize_filename3(name,max_size) do
+    cond do
+      (String.length(name) == 0) 
+        -> generate_random_filename(max_size)
+      true -> name
+    end
   end
   
   

@@ -11,6 +11,25 @@ defmodule Krug.EtsUtil do
   visibility. Case the table already exists, do not create a new,
   only return the existing session_key.
   
+  SHOULD BE created in a process that act a task, living across
+  the runtime of application. One good example is a Ecto repository.
+  
+  ```elixir
+  defmodule MyApp.App.Repo do 
+    
+    use Ecto.Repo, otp_app: :my_app, adapter: Ecto.Adapters.MyXQL
+    ...
+    alias Krug.EtsUtil
+    
+    def init(_type, config) do
+      ...
+      EtsUtil.new(:my_ets_key_atom_identifier)
+      {:ok, config}
+    end
+  
+  end
+  ``
+  
   Visibility can be one of ["public","protected","private"] as 
   in ets documentation. By default the value is "protected", as
   defined in :ets machanism. If a not valid value for visibilty is received,
@@ -57,9 +76,7 @@ defmodule Krug.EtsUtil do
   def new(session_key,visibility \\ "protected") do
     cond do
       (ets_table_exists(session_key)) -> session_key
-      (visibility == "public") -> :ets.new(session_key, [:set, :public, :named_table])
-      (visibility == "private") -> :ets.new(session_key, [:set, :private, :named_table])
-      true -> :ets.new(session_key,get_ets_options())
+      true -> :ets.new(session_key,get_ets_options(visibility))
     end
   end
   
@@ -130,8 +147,9 @@ defmodule Krug.EtsUtil do
   """
   def store_in_cache(session_key,key,value) do
     cond do
-      (!ets_table_exists(session_key)) -> false
-      true -> remove_from_cache_and_insert_new(session_key,key,value)
+      (!ets_table_exists(session_key)) 
+        -> false
+      true -> :ets.insert(session_key,{key,value})
     end
   end
   
@@ -171,17 +189,10 @@ defmodule Krug.EtsUtil do
   ```
   """
   def read_from_cache(session_key,key) do
-    tuple_array = cond do
-      (!ets_table_exists(session_key)) -> nil
-      true -> :ets.lookup(session_key,key)
-    end
-    element = cond do
-      (nil == tuple_array or Enum.empty?(tuple_array)) -> nil
-      true -> tuple_array |> Enum.at(0)
-    end
     cond do
-      (nil == element) -> nil
-      true -> element |> elem(1) 
+      (!ets_table_exists(session_key)) -> nil
+      true -> :ets.lookup(session_key,key) 
+                |> read_from_cache2()
     end
   end
   
@@ -222,27 +233,27 @@ defmodule Krug.EtsUtil do
 
 
 
-  defp remove_from_cache_and_insert_new(session_key,key,value) do
-    remove_from_cache(session_key,key)
-    :ets.insert(session_key,{key,value})
-  end  
+  defp read_from_cache2(tuple_array) do
+    cond do
+      (nil == tuple_array or Enum.empty?(tuple_array)) -> nil
+      true -> tuple_array |> hd() |> elem(1)
+    end
+  end
   
-  
-  
+
+
   defp ets_table_exists(session_key) do
     :ets.whereis(session_key) != :undefined
   end
 
 
 
-  defp get_ets_options() do
-    [
-      :set, 
-      :protected, 
-      :named_table,
-      write_concurrency: true,
-      read_concurrency: true
-    ]
+  defp get_ets_options(visibility) do
+    cond do
+      (visibility == "protected") -> [:set, :protected, :named_table]
+      (visibility == "private") -> [:set, :private, :named_table]
+      true -> [:set, :public, :named_table]
+    end
   end
 
 

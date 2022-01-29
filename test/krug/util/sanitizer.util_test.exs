@@ -5,6 +5,7 @@ defmodule Krug.SanitizerUtilTest do
   
   alias Krug.SanitizerUtil
   
+ 
   test "[validate_email(email)]" do
     assert SanitizerUtil.validate_email(nil) == false
     assert SanitizerUtil.validate_email("") == false

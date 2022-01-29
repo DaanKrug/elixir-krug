@@ -44,11 +44,11 @@ defmodule Krug.JsonUtil do
   
   defp encodeMap_to_log(map,substitutions_array) do
     Poison.encode!(map)
-      |> StringUtil.replace(":",": ")
-      |> StringUtil.replace(",",", ") 
-      |> StringUtil.replace("\"","")
-      |> StringUtil.replace("{","")
-      |> StringUtil.replace("}","")
+      |> StringUtil.replace(":",": ",true)
+      |> StringUtil.replace(",",", ",true) 
+      |> StringUtil.replace("\"","",true)
+      |> StringUtil.replace("{","",true)
+      |> StringUtil.replace("}","",true)
       |> make_substitutions(substitutions_array)
   end
   
@@ -57,14 +57,14 @@ defmodule Krug.JsonUtil do
   defp make_substitutions(json,array) do
     cond do
       (nil == array or Enum.empty?(array)) -> json
-      true -> make_substitutions(make_substitution(json,hd(array)),tl(array))
+      true -> json |> make_substitution(hd(array)) |> make_substitutions(tl(array))
     end
   end
 
 
 
   defp make_substitution(json,array_element) do
-    json |> StringUtil.replace(array_element |> Enum.at(0),array_element |> Enum.at(1))
+    json |> StringUtil.replace(array_element |> hd(),array_element |> tl() |> hd(),true)
   end
 
 
