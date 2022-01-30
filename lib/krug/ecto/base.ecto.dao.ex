@@ -200,7 +200,8 @@ defmodule Krug.BaseEctoDAO do
         normalized_sql = sql |> BaseEctoDAOUtil.normalize_sql()
         table_name = normalized_sql |> BaseEctoDAOUtil.extract_table_name()
 	    cond do
-	      (table_name |> use_cache()) -> load_with_cache(normalized_sql,params)
+	      (table_name |> use_cache()) 
+	        -> load_with_cache(table_name,normalized_sql,params)
 	      true -> load_without_cache(normalized_sql,params)
 	    end
 	  end
@@ -227,7 +228,7 @@ defmodule Krug.BaseEctoDAO do
 	  	cond do
 	  	  (!ok) -> ok
 	  	  (table_name |> use_cache()) 
-	  	    -> BaseEctoDAOSqlCache.clear_cache(@ets_key)
+	  	    -> BaseEctoDAOSqlCache.clear_cache(@ets_key,table_name)
 	  	  true -> ok
 	  	end
 	  end
@@ -236,20 +237,20 @@ defmodule Krug.BaseEctoDAO do
         execute_sql(normalized_sql,params,false)
 	  end
 	  
-	  defp load_with_cache(normalized_sql,params \\[]) do
-        resultset = BaseEctoDAOSqlCache.load_from_cache(@ets_key,normalized_sql,params)
+	  defp load_with_cache(table_name,normalized_sql,params \\[]) do
+        resultset = BaseEctoDAOSqlCache.load_from_cache(@ets_key,table_name,normalized_sql,params)
 	    cond do
 	      (nil != resultset) -> resultset
-	      true -> load_and_put_to_cache(normalized_sql,params)
+	      true -> load_and_put_to_cache(table_name,normalized_sql,params)
 	    end
 	  end
 	  
-	  defp load_and_put_to_cache(normalized_sql,params) do
+	  defp load_and_put_to_cache(table_name,normalized_sql,params) do
         resultset = execute_sql(normalized_sql,params,false)
         cond do
 	      (nil != resultset) 
-	        -> BaseEctoDAOSqlCache.put_cache(@ets_key,normalized_sql,params,resultset,
-	                                         @cache_objects_per_table)
+	        -> BaseEctoDAOSqlCache.put_cache(@ets_key,table_name,normalized_sql,
+	                                         params,resultset,@cache_objects_per_table)
 	      true -> nil
 	    end
 	  end
