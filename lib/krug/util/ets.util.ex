@@ -7,9 +7,9 @@ defmodule Krug.EtsUtil do
 
 
   @doc """
-  Creates a new ets table whit received ```session_key``` and
+  Creates a new ets table whit received ```ets_key``` and
   visibility. Case the table already exists, do not create a new,
-  only return the existing session_key.
+  only return the existing ets_key.
   
   SHOULD BE created in a process that act a task, living across
   the runtime of application. One good example is a Ecto repository.
@@ -45,7 +45,7 @@ defmodule Krug.EtsUtil do
   explicitly make it. Do not forget of call ```EtsUtil.delete(:my_key)```
   before of terminate the proccess that has created it whit ```EtsUtil.new(...)```.
   
-  Equivalent to ```:ets.new(session_key, [:set, :private, :named_table])```
+  Equivalent to ```:ets.new(ets_key, [:set, :private, :named_table])```
   
   Doesn't acceppt string as key. ```EtsUtil.new("key")``` will fail, as
   in :ets direct call.
@@ -73,17 +73,17 @@ defmodule Krug.EtsUtil do
   :echo
   ```
   """
-  def new(session_key,visibility \\ "protected") do
+  def new(ets_key,visibility \\ "public") do
     cond do
-      (ets_table_exists(session_key)) -> session_key
-      true -> :ets.new(session_key,get_ets_options(visibility))
+      (ets_table_exists(ets_key)) -> ets_key
+      true -> :ets.new(ets_key,get_ets_options(visibility))
     end
   end
   
   
   
   @doc """
-  Deletes a existing ets table whit received ```session_key```.
+  Deletes a existing ets table whit received ```ets_key```.
   Case the table don't exists, return true.
   
   The garbage collector do not destroy the ets tables. We need
@@ -93,7 +93,7 @@ defmodule Krug.EtsUtil do
   Doesn't acceppt string as key. ```EtsUtil.delete("key")``` will fail, as
   in :ets direct call.
   
-  Equivalent to ```:ets.delete(session_key)```.
+  Equivalent to ```:ets.delete(ets_key)```.
   
   ## Examples
   
@@ -110,22 +110,22 @@ defmodule Krug.EtsUtil do
   true
   ```
   """
-  def delete(session_key) do
+  def delete(ets_key) do
     cond do
-      (!ets_table_exists(session_key)) -> true
-      true -> :ets.delete(session_key)
+      (!ets_table_exists(ets_key)) -> true
+      true -> :ets.delete(ets_key)
     end
   end
   
   
   
   @doc """
-  Store a key/value par in ets table identified by received ```session_key```.
+  Store a key/value par in ets table identified by received ```ets_key```.
   Case the table don't exists, return false.
   
   If a old value exists and couldn't be replaced, return false.
   
-  Equivalent to ```:ets.insert(session_key,{key,value})```.
+  Equivalent to ```:ets.insert(ets_key,{key,value})```.
   
   ## Examples
   
@@ -145,23 +145,23 @@ defmodule Krug.EtsUtil do
   true
   ```
   """
-  def store_in_cache(session_key,key,value) do
+  def store_in_cache(ets_key,key,value) do
     cond do
-      (!ets_table_exists(session_key)) 
+      (!ets_table_exists(ets_key)) 
         -> false
-      true -> :ets.insert(session_key,{key,value})
+      true -> :ets.insert(ets_key,{key,value})
     end
   end
   
  
   
   @doc """
-  Read a value relative to a key ```key``` stored in a ets table whit received ```session_key```.
+  Read a value relative to a key ```key``` stored in a ets table whit received ```ets_key```.
   Case the table don't exists, return nil.
   
   If the key don't exists, return nil.
   
-  Equivalent to ```:ets.lookup(session_key,key) |> Tuple.to_list() |> Enum.at(1)```
+  Equivalent to ```:ets.lookup(ets_key,key) |> Tuple.to_list() |> Enum.at(1)```
   
   ## Examples
   
@@ -188,10 +188,10 @@ defmodule Krug.EtsUtil do
   "foo"
   ```
   """
-  def read_from_cache(session_key,key) do
+  def read_from_cache(ets_key,key) do
     cond do
-      (!ets_table_exists(session_key)) -> nil
-      true -> :ets.lookup(session_key,key) 
+      (!ets_table_exists(ets_key)) -> nil
+      true -> :ets.lookup(ets_key,key) 
                 |> read_from_cache2()
     end
   end
@@ -199,12 +199,12 @@ defmodule Krug.EtsUtil do
   
   
   @doc """
-  Delete a key/value par in ets table identified by received ```session_key```.
+  Delete a key/value par in ets table identified by received ```ets_key```.
   Case the table don't exists, return true.
   
   If the ```key``` don't exists in ets table or its value is nil, return true.
   
-  Equivalent to ```:ets.delete(session_key,key)```
+  Equivalent to ```:ets.delete(ets_key,key)```
   
   ## Examples
   
@@ -224,10 +224,10 @@ defmodule Krug.EtsUtil do
   true
   ```
   """
-  def remove_from_cache(session_key,key) do
+  def remove_from_cache(ets_key,key) do
     cond do
-      (!ets_table_exists(session_key)) -> true
-      true -> :ets.delete(session_key,key)
+      (!ets_table_exists(ets_key)) -> true
+      true -> :ets.delete(ets_key,key)
     end
   end
 
@@ -242,8 +242,8 @@ defmodule Krug.EtsUtil do
   
 
 
-  defp ets_table_exists(session_key) do
-    :ets.whereis(session_key) != :undefined
+  defp ets_table_exists(ets_key) do
+    :ets.whereis(ets_key) != :undefined
   end
 
 

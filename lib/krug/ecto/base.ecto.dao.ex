@@ -56,6 +56,45 @@ defmodule Krug.BaseEctoDAO do
   @moduledoc since: "0.2.0"
   
   
+  @doc """
+  Return the ets_key (```:my_ets_key_atom_identifier```) value 
+  to be used whit other database services
+  to handle other cache storage functionalities, for example store
+  processed list objects relative to a SQL search in place of store
+  the brute database resultset.
+  
+  ```elixir 
+  Krug.EtsUtil.store_in_cache(ets_key,obj_key,obj_value)
+  BaseEctoDAOSqlCache.put_cache(ets_key,table_name,normalized_sql,params,resultset,cache_objects_per_table)
+  
+  cache_result = Krug.EtsUtil.load_from_cache(ets_key,key)
+  cache_result = Krug.BaseEctoDAOSqlCache.load_from_cache(ets_key,table_name,normalized_sql,params)
+  
+  Krug.EtsUtil.remove_from_cache(ets_key,obj_key)
+  
+  
+  ```
+  """
+  @doc since: "1.0.2"
+  @callback get_ets_key() :: atom
+  
+  
+  
+  @doc """
+  Return the ets_key (```:cache_objects_per_table```) value 
+  to be used whit other database services
+  to handle other cache storage functionalities, for example store
+  processed list objects relative to a SQL search in place of store
+  the brute database resultset.
+  
+  ```elixir 
+  BaseEctoDAOSqlCache.put_cache(ets_key,table_name,normalized_sql,params,resultset,cache_objects_per_table)
+  ```
+  """
+  @doc since: "1.0.3"
+  @callback get_cache_objects_per_table() :: number
+  
+  
   
   @doc """
   Load a resultset from a table. Return nil only if fail in execution of SQL command.
@@ -194,6 +233,19 @@ defmodule Krug.BaseEctoDAO do
       @nocache_tables Keyword.get(opts,:nocache_tables)
       @cache_objects_per_table Keyword.get(opts,:cache_objects_per_table)
       @ets_key Keyword.get(opts,:ets_key)
+      
+      @impl Krug.BaseEctoDAO
+      def get_ets_key() do
+        @ets_key
+      end
+      
+      @impl Krug.BaseEctoDAO
+      def get_cache_objects_per_table() do
+        cond do
+          (nil == @cache_objects_per_table or !(@cache_objects_per_table > 0)) -> 10
+          true -> @cache_objects_per_table
+        end
+      end
     
       @impl Krug.BaseEctoDAO
       def load(sql,params \\[]) do
@@ -250,7 +302,7 @@ defmodule Krug.BaseEctoDAO do
         cond do
 	      (nil != resultset) 
 	        -> BaseEctoDAOSqlCache.put_cache(@ets_key,table_name,normalized_sql,
-	                                         params,resultset,@cache_objects_per_table)
+	                                         params,resultset,get_cache_size())
 	      true -> nil
 	    end
 	  end
