@@ -540,7 +540,7 @@ defmodule Krug.NumberUtil do
   defp is_nan3(number) do
     cond do
       (StringUtil.replace_all(number,@float_chars,"") != "") -> true
-      (Enum.member?([".",","],number |> String.slice(0..0))) -> true
+      (Enum.member?([".",","],number |> StringUtil.slice(0,0))) -> true
       (StringUtil.replace_all(number,@numeric_specials,"") == "") -> true
       (StringUtil.contains_one_element_of_array(number,@numeric_specials_invalid)) -> true
       true -> is_nan4(number)
@@ -553,7 +553,7 @@ defmodule Krug.NumberUtil do
   defp is_nan4(number) do
     size = String.length(number)
     number2 = cond do 
-      (size > 1) -> number |> String.slice(1..size)
+      (size > 1) -> number |> StringUtil.slice(1,size)
       true -> number
     end
     StringUtil.replace_all(number2,@positive_float_chars,"") != ""

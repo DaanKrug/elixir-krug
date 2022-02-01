@@ -92,6 +92,32 @@ defmodule Krug.StringUtil do
   def empty_if_nil(target) do
     target |> to_string_if_not_binary()
   end
+  
+  
+  
+  @doc """
+  Obtain a substring of a ```string``` begining the cut at ```start_position```
+  position and finishing cut at ```end_position```.
+  Same expected parameters and results as ```String.slice/3``` function,
+  however more performatic than.
+  
+  No safety verifications implemented due to preserve the performance. Take care on use
+  (only pass valid strings and start/end interval between string length).
+  
+  ## Examples
+
+  ```elixir 
+  iex > Krug.StringUtil.slice("ABCDEFGH",1,5)
+  "BCDEF"
+  ```
+  """
+  @doc since: "1.1.0"
+  def slice(string,start_position,end_position) do
+    string 
+      |> :string.to_graphemes()
+      |> :lists.sublist(start_position + 1,end_position - start_position + 1)
+      |> IO.iodata_to_binary()
+  end
 
 
   
@@ -672,6 +698,11 @@ defmodule Krug.StringUtil do
   
   If ```array``` is nil/empty return false.
   
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
+  
+  unsafe
+  
   ## Examples
 
   ```elixir 
@@ -719,10 +750,11 @@ defmodule Krug.StringUtil do
   true
   ```
   """
-  def contains_one_element_of_array(target,array) do
+  def contains_one_element_of_array(target,array,unsafe \\ false) do
     cond do
-      (nil == array) -> false
-      true -> target |> to_string_if_not_binary() |> contains_one_element_of_array2(array)
+      (nil == target or nil == array) -> false
+      (unsafe) -> target |> contains_one_element_of_array2(array,true)
+      true -> target |> to_string_if_not_binary() |> contains_one_element_of_array2(array,false)
     end
   end
   
@@ -736,6 +768,9 @@ defmodule Krug.StringUtil do
   case the received value is nil.
   
   Useful to forces a default value, to validations for example. 
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
   
   ## Examples
 
@@ -975,7 +1010,7 @@ defmodule Krug.StringUtil do
   
   defp left_zeros2(string,size) do
     cond do
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      (String.length(string) >= size) -> string |> slice(0,size - 1)
       true -> ["0",string] |> IO.iodata_to_binary() |> left_zeros2(size)
     end
   end
@@ -984,7 +1019,7 @@ defmodule Krug.StringUtil do
   
   defp right_zeros2(string,size) do
     cond do
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      (String.length(string) >= size) -> string |> slice(0,size - 1)
       true -> [string,"0"] |> IO.iodata_to_binary() |> right_zeros2(size)
     end
   end
@@ -993,7 +1028,7 @@ defmodule Krug.StringUtil do
  
   defp left_spaces2(string,size) do
     cond do
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      (String.length(string) >= size) -> string |> slice(0,size - 1)
       true -> [" ",string] |> IO.iodata_to_binary() |> left_spaces2(size)
     end
   end 
@@ -1002,27 +1037,30 @@ defmodule Krug.StringUtil do
  
   defp right_spaces2(string,size) do
     cond do
-      (String.length(string) >= size) -> string |> String.slice(0..size - 1)
+      (String.length(string) >= size) -> string |> slice(0,size - 1)
       true -> [string," "] |> IO.iodata_to_binary() |> right_spaces2(size)
     end
   end
    
   
   
-  def contains_one_element_of_array2(target,array) do
+  def contains_one_element_of_array2(target,array,unsafe) do
     cond do
       (Enum.empty?(array)) -> false
-      true -> contains_one_element_of_array3(target,array)
+      true -> contains_one_element_of_array3(target,array,unsafe)
     end
   end
   
   
   
-  def contains_one_element_of_array3(target,array) do
-    value = array |> hd() |> to_string_if_not_binary()
+  def contains_one_element_of_array3(target,array,unsafe) do
+    value = cond do
+      (unsafe) -> array |> hd()
+      true -> array |> hd() |> to_string_if_not_binary()
+    end
     cond do
       (value == "" or !(String.contains?(target,value))) 
-        -> contains_one_element_of_array2(target,tl(array))
+        -> contains_one_element_of_array2(target,tl(array),unsafe)
       true -> true
     end
   end 

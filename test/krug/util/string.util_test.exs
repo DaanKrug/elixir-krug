@@ -27,6 +27,17 @@ defmodule Krug.StringUtilTest do
     assert StringUtil.empty_if_nil(-10.05) == "-10.05"
   end
   
+  test "[slice(string,start,end)]" do
+    assert StringUtil.slice("",0,0) == ""
+    assert StringUtil.slice("",0,1) == ""
+    assert StringUtil.slice("",0,10) == ""
+    assert StringUtil.slice(" A ",0,0) == " "
+    assert StringUtil.slice(" A ",0,1) == " A"
+    assert StringUtil.slice(" A ",0,2) == " A "
+    assert StringUtil.slice(" A ",0,10) == " A "
+    assert StringUtil.slice(" ABCDEFGHIJ K L M",1,14) == "ABCDEFGHIJ K L"
+  end
+  
   test "[split(target,searched)]" do
     assert StringUtil.split(nil,nil) == []
     assert StringUtil.split(nil,"") == []

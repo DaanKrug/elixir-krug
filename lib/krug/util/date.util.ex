@@ -28,7 +28,7 @@ defmodule Krug.DateUtil do
       true -> DateTime.from_unix(timestamp, :millisecond) 
                 |> elem(1) 
                 |> DateTime.to_string()
-                |> String.slice(0..18)
+                |> StringUtil.slice(0,18)
     end
   end
 
@@ -198,7 +198,7 @@ defmodule Krug.DateUtil do
     cond do
       (!(Enum.member?([10,19],String.length(sql_date)))) -> nil
       (with_time == true and length(arr) > 1) 
-        -> [Enum.at(arr2,2),"/",Enum.at(arr2,1),"/",Enum.at(arr2,0)," ",Enum.at(arr,1) |> String.slice(0,8)] 
+        -> [Enum.at(arr2,2),"/",Enum.at(arr2,1),"/",Enum.at(arr2,0)," ",Enum.at(arr,1) |> StringUtil.slice(0,8)] 
              |> IO.iodata_to_binary()
       true -> [Enum.at(arr2,2),"/",Enum.at(arr2,1),"/",Enum.at(arr2,0)] |> IO.iodata_to_binary() 
     end
@@ -324,7 +324,7 @@ defmodule Krug.DateUtil do
   
   
   defp sql_date_to_date_time(sql_date) do
-    sql_date = sql_date |> String.slice(0..18)
+    sql_date = sql_date |> StringUtil.slice(0,18)
     date_arr = sql_date |> StringUtil.trim() |> StringUtil.split(" ",true)
     date_arr1 = date_arr |> hd() |> StringUtil.split("-",true)
     date_arr2 = date_arr |> tl() |> hd() |> StringUtil.split(":",true)

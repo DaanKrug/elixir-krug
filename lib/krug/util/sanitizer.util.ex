@@ -19,6 +19,52 @@ defmodule Krug.SanitizerUtil do
     "revoke ","commit ","rollback "
   ]
   
+  @forbidden [
+    "< script","<script","script>","script >",
+    "< ?","<?","? >","?>",
+    "< %","<%","% >","%>"
+  ]
+  
+  @strange_chars [
+    "ã","á","à","â","ä","å","æ",
+    "é","è","ê","ë",
+    "í","ì","î","ï",
+    "õ","ó","ò","ô","ö","ø","œ","ð",
+    "ú","ù","û","ü","µ",
+    "ç","š","ž","ß","ñ","ý","ÿ",
+    "Ã","Á","À","Â","Ä","Å","Æ",
+    "É","È","Ê","Ë",
+    "Í","Ì","Î","Ï",
+    "Õ","Ó","Ò","Ô","Ö","Ø","Œ",
+    "Ú","Ù","Û","Ü",
+    "Ç","Š","Ž","Ÿ","¥","Ý","Ð","Ñ"
+  ]
+  
+  @translated_chars [
+    "a","a","a","a","a","a","a",
+    "e","e","e","e",
+    "i","i","i","i",
+    "o","o","o","o","o","o","o","o",
+    "u","u","u","u","u",
+    "c","s","z","s","n","y","y",
+    "A","A","A","A","A","A","A",
+    "E","E","E","E",
+    "I","I","I","I",
+    "O","O","O","O","O","O","O",
+    "U","U","U","U",
+    "C","S","Z","Y","Y","Y","D","N"
+  ]
+  
+  @alpha_nums [
+    "A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+    "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
+    "0","1","2","3","4","5","6","7","8","9",
+    "(",")","*","-","+","%","@","_",".",",","$",":"," ","/","º","ª","?","!"
+  ]
+  
+  @nums [
+    "-",".","0","1","2","3","4","5","6","7","8","9"
+  ]
   
   
   @doc """
@@ -130,8 +176,8 @@ defmodule Krug.SanitizerUtil do
     cond do
       (sanitized_url == "") -> false 
       (sanitized_url != url) -> false
-      (url |> String.slice(0..6) == "http://") -> true
-      (url |> String.slice(0..7) == "https://") -> true
+      (url |> StringUtil.slice(0,6) == "http://") -> true
+      (url |> StringUtil.slice(0,7) == "https://") -> true
       true -> false
     end
   end
@@ -290,7 +336,7 @@ defmodule Krug.SanitizerUtil do
       (size > 0) -> size
       true -> 10
     end
-    generate_random_seq(size,0,alpha_nums(),alpha_nums() |> length(),[])
+    generate_random_seq(size,0,@alpha_nums,@alpha_nums |> length(),[])
   end
   
   
@@ -426,7 +472,7 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def translate(input) do
-    translate_from_array_chars(input,strange_chars(),translated_chars())
+    translate_from_array_chars(input,@strange_chars,@translated_chars)
   end
   
   
@@ -479,17 +525,17 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def sanitize(input) do
-    input = StringUtil.replace(input,"quirbula",",") 
-    input = StringUtil.replace(input,"xcrept ","select ")
-    input = StringUtil.replace(input,"xoo ","and ")
-    input = StringUtil.replace(input,"yoo ","or ")
-    input = StringUtil.replace(input,"x43re ","where ")
-    input = StringUtil.replace(input,"despint","distinct")
-    input = StringUtil.replace(input,"xstrike ","like ")
-    input = StringUtil.replace(input,"quaspa","'")
-    input = StringUtil.replace(input,"  "," ")
+    input = StringUtil.replace(input,"quirbula",",",true) 
+              |> StringUtil.replace("xcrept ","select ",true)
+              |> StringUtil.replace("xoo ","and ",true)
+              |> StringUtil.replace("yoo ","or ",true)
+              |> StringUtil.replace("x43re ","where ",true)
+              |> StringUtil.replace("despint","distinct",true)
+              |> StringUtil.replace("xstrike ","like ",true)
+              |> StringUtil.replace("quaspa","'",true)
+              |> StringUtil.replace("  "," ",true)
     cond do
-      (StringUtil.contains_one_element_of_array(input,forbidden())) -> nil
+      (StringUtil.contains_one_element_of_array(input,@forbidden,true)) -> nil
       true -> input
     end
   end
@@ -545,7 +591,7 @@ defmodule Krug.SanitizerUtil do
   def sanitize_sql(input) do
     input2 = input |> String.downcase() |> StringUtil.replace("  "," ",true)
     cond do
-      (StringUtil.contains_one_element_of_array(input2,@forbidden_sql)) -> nil
+      (StringUtil.contains_one_element_of_array(input2,@forbidden_sql,true)) -> nil
       true -> input
     end
   end
@@ -699,7 +745,7 @@ defmodule Krug.SanitizerUtil do
   """
   def sanitize_all(input,is_numeric,sanitize_input,max_size,valid_chars) do
     input = StringUtil.replace(input,"  "," ")
-    forbidden = StringUtil.contains_one_element_of_array(input,forbidden())
+    forbidden = StringUtil.contains_one_element_of_array(input,@forbidden,true)
     cond do
       (is_numeric and forbidden) -> "0"
       (forbidden) -> ""
@@ -794,7 +840,7 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def nums() do
-    ["-",".","0","1","2","3","4","5","6","7","8","9"]
+    @nums
   end
   
   
@@ -891,11 +937,11 @@ defmodule Krug.SanitizerUtil do
   
   defp get_valid_chars_for_sanitize_input(valid_chars,is_numeric) do
     cond do
-      (nil == valid_chars and is_numeric) -> nums()
-      (nil == valid_chars or valid_chars == "A-z0-9") -> alpha_nums()
+      (nil == valid_chars and is_numeric) -> @nums
+      (nil == valid_chars or valid_chars == "A-z0-9") -> @alpha_nums
       (valid_chars == "A-z0-9Name") -> alpha_nums_name()
       (valid_chars == "A-z0-9|") -> alpha_nums_pipe()
-      (valid_chars == "0-9") -> nums()
+      (valid_chars == "0-9") -> @nums
       (valid_chars == "A-z") -> alphas()
       (valid_chars == "a-z") -> alpha_lowers()
       (valid_chars == "A-Z") -> alpha_uppers()
@@ -907,7 +953,7 @@ defmodule Krug.SanitizerUtil do
       (valid_chars == "url|") -> url_chars_pipe()
       (valid_chars == "hex") -> hex_chars()
       (valid_chars == "filename") -> filename_chars()
-      (StringUtil.trim(valid_chars) == "") -> alpha_nums()
+      (StringUtil.trim(valid_chars) == "") -> @alpha_nums
       true -> valid_chars 
       			|> StringUtil.split(",",true) 
       			|> add_to_array_if_not_empty([])
@@ -966,50 +1012,6 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp forbidden() do
-    [
-      "< script","<script","script>","script >",
-      "< ?","<?","? >","?>",
-      "< %","<%","% >","%>"
-    ]
-  end
-  
-  
-  
-  defp strange_chars() do
-    ["ã","á","à","â","ä","å","æ",
-     "é","è","ê","ë",
-     "í","ì","î","ï",
-     "õ","ó","ò","ô","ö","ø","œ","ð",
-     "ú","ù","û","ü","µ",
-     "ç","š","ž","ß","ñ","ý","ÿ",
-     "Ã","Á","À","Â","Ä","Å","Æ",
-     "É","È","Ê","Ë",
-     "Í","Ì","Î","Ï",
-     "Õ","Ó","Ò","Ô","Ö","Ø","Œ",
-     "Ú","Ù","Û","Ü",
-     "Ç","Š","Ž","Ÿ","¥","Ý","Ð","Ñ"]
-  end
-  
-  
-  
-  defp translated_chars() do
-    ["a","a","a","a","a","a","a",
-     "e","e","e","e",
-     "i","i","i","i",
-     "o","o","o","o","o","o","o","o",
-     "u","u","u","u","u",
-     "c","s","z","s","n","y","y",
-     "A","A","A","A","A","A","A",
-     "E","E","E","E",
-     "I","I","I","I",
-     "O","O","O","O","O","O","O",
-     "U","U","U","U",
-     "C","S","Z","Y","Y","Y","D","N"]
-  end
-  
-  
-  
   defp alphas() do
     ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
@@ -1032,12 +1034,7 @@ defmodule Krug.SanitizerUtil do
   
   
   
-  defp alpha_nums() do
-  	["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-     "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
-     "0","1","2","3","4","5","6","7","8","9",
-     "(",")","*","-","+","%","@","_",".",",","$",":"," ","/","º","ª","?","!"]
-  end
+  
   
   
   
@@ -1079,7 +1076,10 @@ defmodule Krug.SanitizerUtil do
   
   
   defp alpha_nums_pipe() do
-    [ "|" | alpha_nums()]
+    ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+     "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
+     "0","1","2","3","4","5","6","7","8","9",
+     "(",")","*","-","+","%","@","_",".",",","$",":"," ","/","º","ª","?","!","|"]
   end
   
   
