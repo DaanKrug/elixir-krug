@@ -341,7 +341,7 @@ defmodule Krug.DateUtil do
   
   
   defp get_now_to_sql_internal(date,begin_day,end_day) do
-    year = date.year
+    year = "#{date.year}"
     month = StringUtil.left_zeros(date.month,2)
     day = StringUtil.left_zeros(date.day,2)
     string_date = [year,"-",month,"-",day] |> IO.iodata_to_binary()

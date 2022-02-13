@@ -6,6 +6,7 @@ defmodule Krug.DateUtilTest do
   alias Krug.DateUtil
   alias Krug.StringUtil 
   
+  
   test "[time_to_sql_date(timestamp)]" do
     assert DateUtil.time_to_sql_date(1309876543456) == "2011-07-05 14:35:43"
     assert DateUtil.time_to_sql_date(1409876543456) == "2014-09-05 00:22:23"
@@ -80,6 +81,33 @@ defmodule Krug.DateUtilTest do
     assert DateUtil.minus_minutes_sql(1) == DateUtil.time_to_sql_date(nowMinusOne)
     nowMinusOne = now - (150 * 60000)
     assert DateUtil.minus_minutes_sql(150) == DateUtil.time_to_sql_date(nowMinusOne)
+  end
+  
+  test "[get_now_to_sql(diff_days,begin_day,end_day)]" do
+    now = DateUtil.get_date_time_now_millis()
+    now_sql_date = now |> DateUtil.time_to_sql_date() |> StringUtil.split(" ") |> hd()
+    assert DateUtil.get_now_to_sql(0,false,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(nil,false,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(0,true,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(nil,true,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(0,false,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(nil,false,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(0,true,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(nil,true,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    
+    now = DateUtil.get_date_time_now_millis() - 86400000
+    now_sql_date = now |> DateUtil.time_to_sql_date() |> StringUtil.split(" ") |> hd()
+    assert DateUtil.get_now_to_sql(-1,false,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(-1,true,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(-1,false,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(-1,true,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    
+    now = DateUtil.get_date_time_now_millis() + 86400000
+    now_sql_date = now |> DateUtil.time_to_sql_date() |> StringUtil.split(" ") |> hd()
+    assert DateUtil.get_now_to_sql(1,false,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(1,true,false) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(1,false,true) |> StringUtil.split(" ") |> hd() == now_sql_date
+    assert DateUtil.get_now_to_sql(1,true,true) |> StringUtil.split(" ") |> hd() == now_sql_date
   end
   
 end
