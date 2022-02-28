@@ -250,9 +250,9 @@ defmodule Krug.EtsUtil do
 
   defp get_ets_options(visibility) do
     cond do
-      (visibility == "protected") -> [:set, :protected, :named_table]
-      (visibility == "private") -> [:set, :private, :named_table]
-      true -> [:set, :public, :named_table]
+      (visibility == "protected") -> [:set, :protected, :named_table, {:read_concurrency, true}]
+      (visibility == "private") -> [:set, :private, :named_table, {:read_concurrency, true}]
+      true -> [:set, :public, :named_table, {:read_concurrency, true}]
     end
   end
 
