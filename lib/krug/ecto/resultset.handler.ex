@@ -88,12 +88,11 @@ defmodule Krug.ResultSetHandler do
   """
   def get_column_value(resultset,row,col \\ 0) do
     array_data = get_row_as_array(resultset,row)
-    value = cond do
+    cond do
       (Enum.empty?(array_data)) -> "" 
       (!(col >= 0)) -> "" 
-      true -> array_data |> Enum.at(col)
+      true -> "#{array_data |> Enum.at(col)}"
     end
-  	"#{value}"
   end
   
   
@@ -112,8 +111,12 @@ defmodule Krug.ResultSetHandler do
   defp get_column_values_concat(string,resultset,row,col) do
     value = get_column_value_use_nil(resultset,row,col)
     cond do
-      (nil == value) -> string |> get_column_values_concat(resultset,row + 1,col)
-      true -> string |> StringUtil.concat(value,",") |> get_column_values_concat(resultset,row + 1,col)
+      (nil == value) 
+        -> string 
+             |> get_column_values_concat(resultset,row + 1,col)
+      true -> string 
+                |> StringUtil.concat(value,",") 
+                |> get_column_values_concat(resultset,row + 1,col)
     end
   end
   

@@ -391,6 +391,9 @@ defmodule Krug.StringUtil do
   If ```size``` is < that ```value``` received size, 
   return the ```value``` received truncated to ```size```.
   
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
+  
   ## Examples
 
   ```elixir 
@@ -438,11 +441,18 @@ defmodule Krug.StringUtil do
   "33.45"
   ```
   """
-  def left_zeros(string,size) do
-    string = empty_if_nil(string)
+  def left_zeros(string,size,unsafe \\ false) do
     cond do
-      (nil == size or !(size > 0)) -> string
-      true -> left_zeros2(string,size)
+      (unsafe) 
+        -> string 
+             |> left_zeros2(size)
+      (nil == size or !(size > 0)) 
+        -> string 
+             |> empty_if_nil()
+      true 
+        -> string 
+             |> empty_if_nil() 
+             |> left_zeros2(size)
     end
   end
   
@@ -459,6 +469,9 @@ defmodule Krug.StringUtil do
   
   If ```size``` is < that ```value``` received size, 
   return the ```value``` received truncated to ```size```.
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
   
   ## Examples
 
@@ -507,11 +520,18 @@ defmodule Krug.StringUtil do
   "33.45"
   ```
   """
-  def right_zeros(string,size) do
-    string = empty_if_nil(string)
+  def right_zeros(string,size,unsafe \\ false) do
     cond do
-      (nil == size or !(size > 0)) -> string
-      true -> right_zeros2(string,size)
+      (unsafe) 
+        -> string 
+             |> right_zeros2(size)
+      (nil == size or !(size > 0)) 
+        -> string 
+             |> empty_if_nil()
+      true 
+        -> string 
+             |> empty_if_nil() 
+             |> right_zeros2(size)
     end
   end
   
@@ -528,6 +548,9 @@ defmodule Krug.StringUtil do
   
   If ```size``` is < that ```value``` received size, 
   return the ```value``` received truncated to ```size```.
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
   
   ## Examples
 
@@ -576,11 +599,18 @@ defmodule Krug.StringUtil do
   "33.45"
   ```
   """
-  def left_spaces(string,size) do
-    string = empty_if_nil(string)
+  def left_spaces(string,size,unsafe \\ false) do
     cond do
-      (nil == size or !(size > 0)) -> string
-      true -> left_spaces2(string,size)
+      (unsafe) 
+        -> string 
+             |> left_spaces2(size)
+      (nil == size or !(size > 0)) 
+        -> string 
+             |> empty_if_nil()
+      true 
+        -> string 
+             |> empty_if_nil() 
+             |> left_spaces2(size)
     end
   end
   
@@ -597,6 +627,9 @@ defmodule Krug.StringUtil do
   
   If ```size``` is < that ```value``` received size, 
   return the ```value``` received truncated to ```size```.
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
   
   ## Examples
 
@@ -645,11 +678,18 @@ defmodule Krug.StringUtil do
   "33.45"
   ```
   """
-  def right_spaces(string,size) do
-    string = empty_if_nil(string)
+  def right_spaces(string,size,unsafe \\ false) do
     cond do
-      (nil == size or !(size > 0)) -> string
-      true -> right_spaces2(string,size)
+      (unsafe) 
+        -> string 
+             |> right_spaces2(size)
+      (nil == size or !(size > 0)) 
+        -> string 
+             |> empty_if_nil()
+      true 
+        -> string 
+             |> empty_if_nil() 
+             |> right_spaces2(size)
     end
   end
   
@@ -700,8 +740,6 @@ defmodule Krug.StringUtil do
   
   The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
   in binary format and not null/empty. This will improve some performance.
-  
-  unsafe
   
   ## Examples
 
@@ -1010,8 +1048,12 @@ defmodule Krug.StringUtil do
   
   defp left_zeros2(string,size) do
     cond do
-      (String.length(string) >= size) -> string |> slice(0,size - 1)
-      true -> ["0",string] |> IO.iodata_to_binary() |> left_zeros2(size)
+      (String.length(string) >= size) 
+        -> string |> slice(0,size - 1)
+      true 
+        -> ["0",string] 
+             |> IO.iodata_to_binary() 
+             |> left_zeros2(size)
     end
   end
   

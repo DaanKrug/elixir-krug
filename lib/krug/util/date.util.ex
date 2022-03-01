@@ -64,7 +64,13 @@ defmodule Krug.DateUtil do
   """  
   def get_date_now_string() do
     now = get_now()
-    [StringUtil.left_zeros(now.day,2),"/",StringUtil.left_zeros(now.month,2),"/",StringUtil.left_zeros(now.year,4)] 
+    [
+      StringUtil.left_zeros("#{now.day}",2,true),
+      "/",
+      StringUtil.left_zeros("#{now.month}",2,true),
+      "/",
+      StringUtil.left_zeros("#{now.year}",4,true)
+    ] 
       |> IO.iodata_to_binary()
   end
   
@@ -82,7 +88,13 @@ defmodule Krug.DateUtil do
   """  
   def get_time_now_string() do
   	time = Time.utc_now()
-  	[StringUtil.left_zeros(time.hour,2),":",StringUtil.left_zeros(time.minute,2),":",StringUtil.left_zeros(time.second,2)] 
+  	[
+  	  StringUtil.left_zeros("#{time.hour}",2,true),
+  	  ":",
+  	  StringUtil.left_zeros("#{time.minute}",2,true),
+  	  ":",
+  	  StringUtil.left_zeros("#{time.second}",2,true)
+  	] 
   	  |> IO.iodata_to_binary()
   end
   
@@ -115,7 +127,12 @@ defmodule Krug.DateUtil do
   ```
   """  
   def get_date_and_time_now_string() do
-    [get_date_now_string()," ",get_time_now_string()] |> IO.iodata_to_binary()
+    [
+      get_date_now_string(),
+      " ",
+      get_time_now_string()
+    ] 
+      |> IO.iodata_to_binary()
   end
 
 

@@ -35,12 +35,13 @@ defmodule Krug.BaseEctoDAOSqlCache do
   
   defp replace_key_par_in_list2(list,normalized_sql,params,resultset,counter,cache_objects_per_table) do
     cache_result = list |> Enum.at(counter)
-    cache_sql = cache_result |> MapUtil.get(:sql)
-    cache_params = cache_result |> MapUtil.get(:params)
     cond do
-      (cache_sql != normalized_sql or cache_params != params) 
-          -> replace_key_par_in_list(list,normalized_sql,params,
-                                     resultset,counter + 1,cache_objects_per_table)
+      (cache_result |> MapUtil.get(:sql) != normalized_sql)
+        -> replace_key_par_in_list(list,normalized_sql,params,
+                                   resultset,counter + 1,cache_objects_per_table)
+      (cache_result |> MapUtil.get(:params) != params) 
+        -> replace_key_par_in_list(list,normalized_sql,params,
+                                   resultset,counter + 1,cache_objects_per_table)
       true -> replace_resultset_at_list(list,counter,resultset)
     end
   end
@@ -67,10 +68,10 @@ defmodule Krug.BaseEctoDAOSqlCache do
   
   defp extract_key_par_list3(list,normalized_sql,params) do
     map = list |> hd()
-    key_par_sql = map |> MapUtil.get(:sql)
-    key_par_params = map |> MapUtil.get(:params)
     cond do
-      (key_par_sql != normalized_sql or key_par_params != params) 
+      (map |> MapUtil.get(:sql) != normalized_sql) 
+        -> list |> tl() |> extract_key_par_list2(normalized_sql,params)
+      (map |> MapUtil.get(:params) != params) 
         -> list |> tl() |> extract_key_par_list2(normalized_sql,params)
       true -> map |> MapUtil.get(:resultset)
     end

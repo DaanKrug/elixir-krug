@@ -590,14 +590,26 @@ defmodule Krug.NumberUtil do
   
   @doc false
   defp to_float_format2(number_array,decimals,comma_as_decimal_separator) do
-    decimal_part = cond do
-      (length(number_array) > 1) -> number_array |> tl() |> hd() |> StringUtil.right_zeros(decimals)
-      true -> "" |> StringUtil.right_zeros(decimals)
-    end
-    integer_part = number_array |> hd()
+    decimal_part = number_array 
+                     |> tl() 
+                     |> get_decimal_part(decimals)
     cond do
-      (!comma_as_decimal_separator) -> [integer_part,".",decimal_part] |> IO.iodata_to_binary()
-      true -> [integer_part,",",decimal_part] |> IO.iodata_to_binary()
+      (!comma_as_decimal_separator) 
+        -> [number_array |> hd(),".",decimal_part] |> IO.iodata_to_binary()
+      true 
+        -> [number_array |> hd(),",",decimal_part] |> IO.iodata_to_binary()
+    end
+  end
+  
+  
+  
+  @doc false
+  defp get_decimal_part(tail,decimals) do
+    cond do
+      (Enum.empty?(tail)) 
+        -> "" |> StringUtil.right_zeros(decimals,true)
+      true 
+        -> tail |> hd() |> StringUtil.right_zeros(decimals,true)
     end
   end
 
