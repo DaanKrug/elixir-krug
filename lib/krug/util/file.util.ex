@@ -364,10 +364,9 @@ defmodule Krug.FileUtil do
   
   
   defp try_zip_dir(path,path_zip) do
-    files = File.ls!(path)
-              |> Enum.map(fn(filename) -> Path.join(path,filename) end)
-              |> Enum.map(&String.to_charlist/1)
-    :zip.create(String.to_charlist(path_zip),files)
+    executable = "zip"
+    arguments = ["-r",path_zip,path]
+    System.cmd(executable,arguments,stderr_to_stdout: true)
     cond do
       (File.exists?(path_zip)) -> chmod(path_zip,0o777)
       true -> false
@@ -376,6 +375,15 @@ defmodule Krug.FileUtil do
   
   
   
+  #defp obtain_all_files_of_dir(path) do 
+    #files = File.ls!(path)
+    #          |> Enum.map(fn(filename) -> Path.join(path,filename) end)
+    #          |> Enum.map(&String.to_charlist/1)
+  #  Path.wildcard("#{path}/**")
+  #end
+
+  
+    
   defp drop_zip_and_retry(path,path_zip) do
     drop_file(path_zip)
     zip_dir(path,false)
