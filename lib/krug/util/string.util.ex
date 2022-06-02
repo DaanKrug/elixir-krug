@@ -10,6 +10,30 @@ defmodule Krug.StringUtil do
 
   
   @doc """
+  Convert a string value in raw binary format <<xxx,xx,xx>> to string
+  
+  ## Examples
+  ```elixir 
+  iex > Krug.StringUtil.raw_binary_to_string(<<65,241,111,32,100,101,32,70,97,99,116>>)
+  "Año de Fact"
+  ```
+  """
+  @doc since: "1.1.7"
+  def raw_binary_to_string(raw_string) do
+    cond do
+      (nil == raw_string) 
+        -> nil
+      ("" == raw_string) 
+        -> ""
+      true 
+        -> raw_string 
+             |> raw_binary_to_string2()
+    end
+  end
+
+
+  
+  @doc """
   Merge 2 strings, A and B using a ```join_string``` as a join connector.
   If A is nil a receive a empty string value, making the same process
   to B and to ```join_string```.
@@ -1108,5 +1132,37 @@ defmodule Krug.StringUtil do
   end 
    
    
-    
+   
+  defp raw_binary_to_string2(raw_string) do
+    raw_string 
+      |> String.codepoints()
+      |> Enum.reduce(
+           fn(raw_char,result) 
+             -> parse_raw_char_to_utf8_and_concat(raw_char,result)
+           end
+         )
+  end
+  
+  
+  
+  defp parse_raw_char_to_utf8_and_concat(raw_char,result) do
+    cond do
+      (String.valid?(raw_char)) 
+        -> "#{result}#{raw_char}"
+      true 
+        -> raw_char
+             |> parse_raw_char_to_utf8()
+             |> parse_raw_char_to_utf8_and_concat(result)
+    end
+  end  
+  
+  
+  
+  defp parse_raw_char_to_utf8(raw_char) do
+    <<parsed :: 8>> = raw_char
+    <<parsed :: utf8>>
+  end  
+  
+  
+   
 end

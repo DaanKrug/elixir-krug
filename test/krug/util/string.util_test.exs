@@ -5,6 +5,14 @@ defmodule Krug.StringUtilTest do
   
   alias Krug.StringUtil
   
+  test "[raw_binary_to_string(raw_string)]" do
+    raw0 = <<65,241,111,32,100,101,32,70,97,99,116>>
+    assert StringUtil.raw_binary_to_string(raw0) == "Año de Fact"
+    raw1 = "Año de Fact"
+    assert StringUtil.raw_binary_to_string(raw1) == "Año de Fact"
+    raw2 = "Ano de Fact"
+    assert StringUtil.raw_binary_to_string(raw2) == "Ano de Fact"
+  end
   
   test "[concat(string_a,string_b,join_string)]" do
     assert StringUtil.concat(nil,nil,nil) == ""
