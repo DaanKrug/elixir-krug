@@ -473,8 +473,8 @@ defmodule Krug.SanitizerUtil do
   """
   def translate(input) do
     input
-      |> translate_from_array_chars(@strange_chars,@translated_chars)
       |> StringUtil.raw_binary_to_string()
+      |> translate_from_array_chars(@strange_chars,@translated_chars)
   end
   
   
