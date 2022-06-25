@@ -4,6 +4,51 @@ defmodule Krug.SanitizerUtilTest do
   doctest Krug.SanitizerUtil
   
   alias Krug.SanitizerUtil
+  alias Krug.StringUtil
+  
+  test "[translate(...)]" do
+    assert SanitizerUtil.translate("Á") == "A"
+    assert SanitizerUtil.translate("À") == "A"
+    assert SanitizerUtil.translate("Ã") == "A"
+    assert SanitizerUtil.translate("Â") == "A"
+    assert SanitizerUtil.translate("Ä") == "A"
+    assert SanitizerUtil.translate("É") == "E"
+    assert SanitizerUtil.translate("È") == "E"
+    assert SanitizerUtil.translate("Ê") == "E"
+    assert SanitizerUtil.translate("Ë") == "E"
+    assert SanitizerUtil.translate("Í") == "I"
+    assert SanitizerUtil.translate("Ì") == "I"
+    assert SanitizerUtil.translate("Î") == "I"
+    assert SanitizerUtil.translate("Ï") == "I"
+    assert SanitizerUtil.translate("Ó") == "O"
+    assert SanitizerUtil.translate("Ò") == "O"
+    assert SanitizerUtil.translate("Ô") == "O"
+    assert SanitizerUtil.translate("Õ") == "O"
+    assert SanitizerUtil.translate("Ö") == "O"
+    assert SanitizerUtil.translate("Ú") == "U"
+    assert SanitizerUtil.translate("Ú") == "U"
+    assert SanitizerUtil.translate("Ú") == "U"
+    assert SanitizerUtil.translate("Ù") == "U"
+    assert SanitizerUtil.translate("Û") == "U"
+    assert SanitizerUtil.translate("Ü") == "U"
+    assert SanitizerUtil.translate("éèêëÇŠŽŸ¥ÝÐÑ") == "eeeeCSZYYYDN"
+    assert SanitizerUtil.translate("áàâãäéèêëíìîïóòôõöúùũûüÇŠŽŸ¥ÝÐÑ") == "aaaaaeeeeiiiiooooouuuuuCSZYYYDN"
+    strange = "ãáàâäåæéèêëíìîïõóòôöøœðũúùûüµçšžßñýÿÃÁÀÂÄÅÆÉÈÊËÍÌÎÏÕÓÒÔÖØŒŨÚÙÛÜÇŠŽŸ¥ÝÐÑ"
+    translated = "aaaaaaaeeeeiiiioooooooouuuuuucszsnyyAAAAAAAEEEEIIIIOOOOOOOUUUUUCSZYYYDN"
+    assert SanitizerUtil.translate(strange) == translated
+    assert SanitizerUtil.translate("Érica Zorzi Ferreira") == "Erica Zorzi Ferreira"
+    assert SanitizerUtil.translate("Érica Zorzi Ferreira ") == "Erica Zorzi Ferreira "
+    assert "Érica Zorzi Ferreira" 
+             |> StringUtil.right_spaces(30,false) == "Érica Zorzi Ferreira          "
+    assert "Érica Zorzi Ferreira" 
+             |> StringUtil.left_spaces(30,false) == "          Érica Zorzi Ferreira"
+    assert "Érica Zorzi Ferreira" 
+             |> StringUtil.right_spaces(30,false) 
+             |> SanitizerUtil.translate() == "Erica Zorzi Ferreira          "
+    assert "Érica Zorzi Ferreira" 
+             |> StringUtil.left_spaces(30,false) 
+             |> SanitizerUtil.translate() == "          Erica Zorzi Ferreira"
+  end
   
  
   test "[validate_email(email)]" do

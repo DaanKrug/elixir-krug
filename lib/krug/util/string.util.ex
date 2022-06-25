@@ -627,6 +627,7 @@ defmodule Krug.StringUtil do
     cond do
       (unsafe) 
         -> string 
+             |> String.graphemes() 
              |> left_spaces2(size)
       (nil == size or !(size > 0)) 
         -> string 
@@ -634,6 +635,7 @@ defmodule Krug.StringUtil do
       true 
         -> string 
              |> empty_if_nil() 
+             |> String.graphemes() 
              |> left_spaces2(size)
     end
   end
@@ -706,6 +708,8 @@ defmodule Krug.StringUtil do
     cond do
       (unsafe) 
         -> string 
+             |> String.graphemes() 
+             |> Enum.reverse()
              |> right_spaces2(size)
       (nil == size or !(size > 0)) 
         -> string 
@@ -713,6 +717,8 @@ defmodule Krug.StringUtil do
       true 
         -> string 
              |> empty_if_nil() 
+             |> String.graphemes() 
+             |> Enum.reverse()
              |> right_spaces2(size)
     end
   end
@@ -1091,20 +1097,31 @@ defmodule Krug.StringUtil do
   end
    
   
- 
-  defp left_spaces2(string,size) do
+  
+  defp left_spaces2(graphemes,size) do
     cond do
-      (String.length(string) >= size) -> string |> slice(0,size - 1)
-      true -> [" ",string] |> IO.iodata_to_binary() |> left_spaces2(size)
+      (length(graphemes) < size) 
+        -> [" " | graphemes]
+             |> left_spaces2(size)
+      true 
+      	-> graphemes
+      	     |> Enum.slice(0,size)
+      	     |> Enum.join()
     end
-  end 
+  end
  
  
  
-  defp right_spaces2(string,size) do
+  defp right_spaces2(graphemes,size) do
     cond do
-      (String.length(string) >= size) -> string |> slice(0,size - 1)
-      true -> [string," "] |> IO.iodata_to_binary() |> right_spaces2(size)
+      (length(graphemes) < size) 
+        -> [" " | graphemes]
+             |> right_spaces2(size)
+      true 
+      	-> graphemes
+      	     |> Enum.reverse()
+      	     |> Enum.slice(0,size)
+      	     |> Enum.join()
     end
   end
    
