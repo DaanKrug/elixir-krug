@@ -109,6 +109,18 @@ defmodule Krug.ResultSetHandler do
   
   
   defp get_column_values_concat(string,resultset,row,col) do
+    cond do
+      (row >= resultset.num_rows)
+        -> string
+      true
+        -> string
+             |> get_column_values_concat2(resultset,row,col)
+    end
+  end
+  
+  
+  
+  defp get_column_values_concat2(string,resultset,row,col) do
     value = get_column_value_use_nil(resultset,row,col)
     cond do
       (nil == value) 
