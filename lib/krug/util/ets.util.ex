@@ -73,10 +73,10 @@ defmodule Krug.EtsUtil do
   :echo
   ```
   """
-  def new(ets_key,visibility \\ "public") do
+  def new(ets_key,visibility \\ "public",read_concurrency \\ true) do
     cond do
       (ets_table_exists(ets_key)) -> ets_key
-      true -> :ets.new(ets_key,get_ets_options(visibility))
+      true -> :ets.new(ets_key,get_ets_options(visibility,read_concurrency))
     end
   end
   
@@ -248,11 +248,14 @@ defmodule Krug.EtsUtil do
 
 
 
-  defp get_ets_options(visibility) do
+  defp get_ets_options(visibility,read_concurrency) do
     cond do
-      (visibility == "protected") -> [:set, :protected, :named_table, {:read_concurrency, true}]
-      (visibility == "private") -> [:set, :private, :named_table, {:read_concurrency, true}]
-      true -> [:set, :public, :named_table, {:read_concurrency, true}]
+      (visibility == "protected") 
+        -> [:set, :protected, :named_table, {:read_concurrency, read_concurrency}]
+      (visibility == "private") 
+        -> [:set, :private, :named_table, {:read_concurrency, read_concurrency}]
+      true 
+        -> [:set, :public, :named_table, {:read_concurrency, read_concurrency}]
     end
   end
 

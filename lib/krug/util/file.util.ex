@@ -209,7 +209,7 @@ defmodule Krug.FileUtil do
   
   Accept only file extensions: 
   ```elixir
-  ["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json","ret",
+  ["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json","ret","csv",
      "pdf","ppt","pptx","doc","docx","xls","xlsx","php","erl","gif","jpeg","jpg","png","bmp"]
   ```
   will fail for other file extensions.
@@ -443,7 +443,7 @@ defmodule Krug.FileUtil do
   
   
   defp valid_extensions() do
-    ["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json","ret",
+    ["sql","txt","html","xml","webmanifest","ts","js","ex","exs","sh","json","ret","csv",
      "pdf","ppt","pptx","doc","docx","xls","xlsx","php","erl","gif","jpeg","jpg","png","bmp"]
   end
   
