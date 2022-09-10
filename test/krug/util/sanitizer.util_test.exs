@@ -195,15 +195,37 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize("echo script> echo") == nil
     assert SanitizerUtil.sanitize("echo script > echo") == nil
     assert SanitizerUtil.sanitize("echoscript>echo") == nil
+    assert SanitizerUtil.sanitize("echo </script echo") == nil
+    assert SanitizerUtil.sanitize("echo < /script echo") == nil
+    assert SanitizerUtil.sanitize("echo </ script echo") == nil
+    assert SanitizerUtil.sanitize("echo < / script echo") == nil
     assert SanitizerUtil.sanitize("echoscriptecho") == "echoscriptecho"
     assert SanitizerUtil.sanitize("echo <      ? echo") == nil
     assert SanitizerUtil.sanitize("echo <? echo") == nil
     assert SanitizerUtil.sanitize("echo ?      > echo") == nil
     assert SanitizerUtil.sanitize("echo ?> echo") == nil
-    assert SanitizerUtil.sanitize("echo <      % echo") == nil
-    assert SanitizerUtil.sanitize("echo <% echo") == nil
-    assert SanitizerUtil.sanitize("echo %      > echo") == nil
-    assert SanitizerUtil.sanitize("echo %> echo") == nil
+    assert SanitizerUtil.sanitize("echo ../ echo") == nil
+    assert SanitizerUtil.sanitize("echo onerror= echo") == nil
+    assert SanitizerUtil.sanitize("echo onerror = echo") == nil
+    assert SanitizerUtil.sanitize("echo onclick= echo") == nil
+    assert SanitizerUtil.sanitize("echo onclick = echo") == nil
+    assert SanitizerUtil.sanitize("echo onload= echo") == nil
+    assert SanitizerUtil.sanitize("echo onload = echo") == nil
+    assert SanitizerUtil.sanitize("echo alert( echo") == nil
+    assert SanitizerUtil.sanitize("echo alert ( echo") == nil
+    assert SanitizerUtil.sanitize("echo prompt( echo") == nil
+    assert SanitizerUtil.sanitize("echo prompt ( echo") == nil
+    assert SanitizerUtil.sanitize("echo eval( echo") == nil
+    assert SanitizerUtil.sanitize("echo eval ( echo") == nil
+    assert SanitizerUtil.sanitize("echo settimeout( echo") == nil
+    assert SanitizerUtil.sanitize("echo settimeout ( echo") == nil
+    assert SanitizerUtil.sanitize("echo setinterval( echo") == nil
+    assert SanitizerUtil.sanitize("echo setinterval ( echo") == nil
+    assert SanitizerUtil.sanitize("echo innerhtml= echo") == nil
+    assert SanitizerUtil.sanitize("echo innerhtml = echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa %A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa%A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa% A echo") == "echo aaa% A echo"
   end
   
   test "[sanitize_all(input,is_numeric,sanitize_input,max_size,valid_chars)]" do
@@ -239,11 +261,21 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize_sql("echo distinct( echo") == nil
     assert SanitizerUtil.sanitize_sql("echo coalesce( echo") == nil
     assert SanitizerUtil.sanitize_sql("echo concat( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo min ( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo max ( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo avg ( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo sum ( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo distinct ( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo coalesce ( echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo concat ( echo") == nil
     assert SanitizerUtil.sanitize_sql("echo group_concat( echo") == nil
     assert SanitizerUtil.sanitize_sql("echo grant echo") == nil
     assert SanitizerUtil.sanitize_sql("echo revoke echo") == nil
     assert SanitizerUtil.sanitize_sql("echo commit echo") == nil
     assert SanitizerUtil.sanitize_sql("echo rollback echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo aaa %A echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo aaa%A echo") == nil
+    assert SanitizerUtil.sanitize_sql("echo aaa% A echo") == nil
   end
   
   test "[sanitize_filename(name,max_size)]" do

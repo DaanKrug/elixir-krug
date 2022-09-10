@@ -14,15 +14,34 @@ defmodule Krug.SanitizerUtil do
   @forbidden_sql [
     "--","insert ","select ","delete ","drop ","truncate ","alter ",
     "update ","cascade ","order by ","group by ","union ",
-    "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
-    "distinct(","concat(","group_concat(","grant ",
-    "revoke ","commit ","rollback "
+    "having ","join ","limit ",
+    "min(","min (",
+    "max(","max (",
+    "avg(","avg (",
+    "sum(","sum (",
+    "coalesce(","coalesce (",
+    "distinct(","distinct (",
+    "concat(","concat (",
+    "group_concat(","group_concat (",
+    "grant ","revoke ","commit ","rollback ",
+    "../","%"
   ]
   
   @forbidden [
     "< script","<script","script>","script >",
+    "</script","< /script","</ script", "< / script",
+    "<body","< body",
     "< ?","<?","? >","?>",
-    "< %","<%","% >","%>"
+    "../","%",
+    "onerror=","onerror =",
+    "onclick=","onclick =",
+    "onload=","onload =",
+    "alert(","alert (",
+    "prompt(","prompt (",
+    "eval(","eval (",
+    "settimeout(","settimeout (",
+    "setinterval(","setinterval (",
+    "innerhtml=","innerhtml ="
   ]
   
   @strange_chars [
@@ -60,6 +79,13 @@ defmodule Krug.SanitizerUtil do
     "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
     "0","1","2","3","4","5","6","7","8","9",
     "(",")","*","-","+","%","@","_",".",",","$",":"," ","/","º","ª","?","!"
+  ]
+  
+  @alpha_nums_random [
+    "A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+    "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z",
+    "0","1","2","3","4","5","6","7","8","9",
+    "(",")","+","@","_",".",",","$",":","/","?","!"
   ]
   
   @nums [
@@ -336,7 +362,7 @@ defmodule Krug.SanitizerUtil do
       (size > 0) -> size
       true -> 10
     end
-    generate_random_seq(size,0,@alpha_nums,@alpha_nums |> length(),[])
+    generate_random_seq(size,0,@alpha_nums_random,@alpha_nums_random |> length(),[])
   end
   
   
@@ -487,9 +513,21 @@ defmodule Krug.SanitizerUtil do
   ```elixir
     [
       "< script","<script","script>","script >",
+      "</script","< /script","</ script", "< / script",
+      "<body","< body",
       "< ?","<?","? >","?>",
-      "< %","<%","% >","%>"
+      "../","%",
+      "onerror=","onerror =",
+      "onclick=","onclick =",
+      "onload=","onload =",
+      "alert(","alert (",
+      "prompt(","prompt (",
+      "eval(","eval (",
+      "settimeout(","settimeout (",
+      "setinterval(","setinterval (",
+      "innerhtml=","innerhtml ="
     ]
+    # % except when is followed by a whitespace, for example '10% '
   ```  
     
   If forbidden content are finded, return nil. Otherwise return received value 
@@ -536,9 +574,15 @@ defmodule Krug.SanitizerUtil do
               |> StringUtil.replace("xstrike ","like ",true)
               |> StringUtil.replace("quaspa","'",true)
               |> StringUtil.replace("  "," ",true)
+    forbidden = input
+                  |> String.downcase()
+                  |> StringUtil.replace("% "," ",true)
+                  |> StringUtil.contains_one_element_of_array(@forbidden,true)
     cond do
-      (StringUtil.contains_one_element_of_array(input,@forbidden,true)) -> nil
-      true -> input
+      (forbidden) 
+        -> nil
+      true 
+        -> input
     end
   end
   
@@ -554,9 +598,17 @@ defmodule Krug.SanitizerUtil do
     [
       "--","insert ","select ","delete ","drop ","truncate ","alter ",
       "update ","cascade ","order by ","group by ","union ",
-      "having ","join ","limit ","min(","max(","avg(","sum(","coalesce(",
-      "distinct(","concat(","group_concat(","grant ",
-      "revoke ","commit ","rollback "
+      "having ","join ","limit ",
+      "min(","min (",
+      "max(","max (",
+      "avg(","avg (",
+      "sum(","sum (",
+      "coalesce(","coalesce (",
+      "distinct(","distinct (",
+      "concat(","concat (",
+      "group_concat(","group_concat (",
+      "grant ","revoke ","commit ","rollback ",
+      "../","%"
     ]
   ```
   
@@ -591,10 +643,15 @@ defmodule Krug.SanitizerUtil do
   """
   @doc since: "0.4.15"
   def sanitize_sql(input) do
-    input2 = input |> String.downcase() |> StringUtil.replace("  "," ",true)
+    forbidden = input 
+                  |> String.downcase() 
+                  |> StringUtil.replace("  "," ",true)
+                  |> StringUtil.contains_one_element_of_array(@forbidden_sql,true)
     cond do
-      (StringUtil.contains_one_element_of_array(input2,@forbidden_sql,true)) -> nil
-      true -> input
+      (forbidden) 
+        -> nil
+      true 
+        -> input
     end
   end
   
@@ -746,13 +803,19 @@ defmodule Krug.SanitizerUtil do
   ```
   """
   def sanitize_all(input,is_numeric,sanitize_input,max_size,valid_chars) do
+    forbidden = "#{input}"
+                  |> String.downcase()
+                  |> StringUtil.contains_one_element_of_array(@forbidden,true)
     input = StringUtil.replace(input,"  "," ")
-    forbidden = StringUtil.contains_one_element_of_array(input,@forbidden,true)
     cond do
-      (is_numeric and forbidden) -> "0"
-      (forbidden) -> ""
-      (sanitize_input) -> sanitize_input(input,is_numeric,max_size,valid_chars)
-      true -> StringUtil.trim(input)
+      (is_numeric and forbidden) 
+        -> "0"
+      (forbidden) 
+        -> ""
+      (sanitize_input) 
+        -> sanitize_input(input,is_numeric,max_size,valid_chars)
+      true 
+        -> StringUtil.trim(input)
     end
   end
   
@@ -995,8 +1058,11 @@ defmodule Krug.SanitizerUtil do
   
   defp generate_random_seq(size,count,arr,arr_length,seq_arr) do
     cond do
-      (count >= size) -> seq_arr |> IO.iodata_to_binary()
-      true -> generate_random_seq2(size,count,arr,arr_length,seq_arr)
+      (count >= size) 
+        -> seq_arr 
+             |> IO.iodata_to_binary()
+      true 
+        -> generate_random_seq2(size,count,arr,arr_length,seq_arr)
     end
   end
   
