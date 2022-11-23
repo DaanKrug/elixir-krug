@@ -273,9 +273,6 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize_sql("echo revoke echo") == nil
     assert SanitizerUtil.sanitize_sql("echo commit echo") == nil
     assert SanitizerUtil.sanitize_sql("echo rollback echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo aaa %A echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo aaa%A echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo aaa% A echo") == nil
   end
   
   test "[sanitize_filename(name,max_size)]" do

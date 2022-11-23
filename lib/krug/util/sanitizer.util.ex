@@ -24,7 +24,7 @@ defmodule Krug.SanitizerUtil do
     "concat(","concat (",
     "group_concat(","group_concat (",
     "grant ","revoke ","commit ","rollback ",
-    "../","%"
+    "../"
   ]
   
   @forbidden [
