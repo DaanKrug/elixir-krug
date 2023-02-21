@@ -223,8 +223,13 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize("echo setinterval ( echo") == nil
     assert SanitizerUtil.sanitize("echo innerhtml= echo") == nil
     assert SanitizerUtil.sanitize("echo innerhtml = echo") == nil
-    assert SanitizerUtil.sanitize("echo aaa %A echo") == nil
-    assert SanitizerUtil.sanitize("echo aaa%A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa < %A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa <%A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa <% A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa %>A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa%>A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa% >A echo") == nil
+    assert SanitizerUtil.sanitize("echo aaa % >A echo") == nil
     assert SanitizerUtil.sanitize("echo aaa% A echo") == "echo aaa% A echo"
   end
   

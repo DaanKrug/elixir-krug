@@ -32,7 +32,7 @@ defmodule Krug.SanitizerUtil do
     "</script","< /script","</ script", "< / script",
     "<body","< body",
     "< ?","<?","? >","?>",
-    "../","%",
+    "../","<%","< %","%>","% >",
     "onerror=","onerror =",
     "onclick=","onclick =",
     "onload=","onload =",
@@ -576,7 +576,6 @@ defmodule Krug.SanitizerUtil do
               |> StringUtil.replace("  "," ",true)
     forbidden = input
                   |> String.downcase()
-                  |> StringUtil.replace("% "," ",true)
                   |> StringUtil.contains_one_element_of_array(@forbidden,true)
     cond do
       (forbidden) 
