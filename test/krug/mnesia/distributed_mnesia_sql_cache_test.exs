@@ -7,7 +7,7 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
   
   test "[init_cluster|stop]" do
     cluster_cookie = "my_app_mnesia_cookie_5435434876876"
-    cluster_name = "my_test_app"
+    cluster_name = "my_test_app_pp"
     cluster_ips = "127.0.0.1X "
     ips_separator = "X" 
     tables = [
@@ -16,11 +16,9 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
       :other_table
     ]  
     
-    System.cmd("epmd", ["-daemon"])
-    :net_kernel.start(
-      "#{cluster_name |> String.to_atom()}@127.0.0.1", 
-      :longnames
-    )
+    "#{cluster_name}@127.0.0.1"
+      |> String.to_atom()
+      |> Node.start()
     
     cluster_cookie
       |> String.to_atom()
