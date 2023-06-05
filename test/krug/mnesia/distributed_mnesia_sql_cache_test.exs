@@ -6,24 +6,25 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
   alias Krug.DistributedMnesiaSqlCache
   
   test "[init_cluster|stop]" do
-    cluster_cookie = "my_app_mnesia_cookie_5435434876876"
-    cluster_name = "my_test_app_pp"
-    cluster_ips = "127.0.0.1X "
+    cluster_cookie = "my_app_mnesia"
+    cluster_name = "my_test_app"
+    cluster_ips = "192.168.1.12X "
     ips_separator = "X" 
     tables = [
       :users,
       :log,
       :other_table
     ]  
-    
-    "#{cluster_name}@127.0.0.1"
+    my_ip = DistributedMnesiaSqlCache.get_local_wlan_ip()
+    node_name = "#{cluster_name}@#{my_ip}" 
+                  |> String.to_atom()
+    node = :net_kernel.start([node_name, :longnames])
+    ok = cluster_cookie
       |> String.to_atom()
-      |> Node.start()
-    
-    cluster_cookie
-      |> String.to_atom()
-      |> Node.set_cookie()  
-  	:timer.sleep(5000) 
+      |> Node.set_cookie() 
+      
+  	assert :ok == node |> Tuple.to_list() |> hd()
+  	
     created = cluster_name
                 |> DistributedMnesiaSqlCache.init_cluster(cluster_ips,ips_separator,true,tables)
     

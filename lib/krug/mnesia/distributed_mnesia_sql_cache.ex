@@ -11,6 +11,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   require Logger
   alias Krug.StringUtil
+  alias Krug.MapUtil
   
   @ip_regexp ~r/^\d+\.\d+\.\d+\.\d+$/
   
@@ -87,8 +88,10 @@ defmodule Krug.DistributedMnesiaSqlCache do
       
       # set cookie and cluster name to allow remote connection
       # to permit the cluster formation
-      "{cluster_name |> String.to_atom()}@localhost"
+      "{cluster_name}@127.0.0.1"
+        |> String.to_atom()
         |> Node.start()
+      
       cluster_cookie
         |> String.to_atom()
         |> Node.set_cookie()
@@ -106,25 +109,22 @@ defmodule Krug.DistributedMnesiaSqlCache do
   ```
   """
   def init_cluster(cluster_name,cluster_ips,ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
-    cluster_ips
-      |> StringUtil.trim()
-      |> StringUtil.split(ips_separator)
-      |> Enum.filter(
-           fn 
-             ip -> String.match?(ip,@ip_regexp) 
-           end
-         )
-      |> Enum.each(
-           fn 
-             ip ->
-               node = "#{cluster_name}@#{ip}"
-                        |> String.to_atom()
-               Logger.info("Trying to connect to mnesia node #{node}")
-               Node.connect(node)
-           end
-         )
-    disc_copies
-      |> start(tables)
+    cluster_ips = cluster_ips
+                    |> StringUtil.trim()
+                    |> StringUtil.split(ips_separator)
+                    |> Enum.filter(
+                         fn 
+                           ip -> String.match?(ip,@ip_regexp) 
+                         end
+                       )
+    connected_nodes = connect_nodes([],cluster_name,cluster_ips)
+    cond do
+      (Enum.empty?(connected_nodes))
+        -> false
+      true
+        -> disc_copies
+             |> start(tables,connected_nodes)
+    end
   end
   
   
@@ -206,6 +206,19 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   
+  @doc """
+  Provides a way to obtain the machine ip to start the local machine mnesia node.
+  """
+  def get_local_wlan_ip() do
+    :inet.getifaddrs()
+      |> Tuple.to_list()
+      |> tl()
+      |> hd()
+      |> filter_local_wlan_ip()
+  end
+  
+  
+  
   ##########################################
   # Private functions
   ##########################################
@@ -213,10 +226,42 @@ defmodule Krug.DistributedMnesiaSqlCache do
   ##########################################
   ### init functions
   ########################################## 
-  defp start(disc_copies,tables) do
+  defp connect_nodes(connected_nodes,cluster_name,cluster_ips) do
+    cond do
+      (Enum.empty?(cluster_ips))
+        -> connected_nodes
+      true 
+        -> connected_nodes
+             |> connect_nodes2(cluster_name,cluster_ips)
+    end
+  end
+  
+  
+  
+  defp connect_nodes2(connected_nodes,cluster_name,cluster_ips) do
+    "#{cluster_name}@#{cluster_ips |> hd()}"
+      |> String.to_atom()
+      |> connect_nodes3(connected_nodes)
+      |> connect_nodes(cluster_name,cluster_ips |> tl())
+  end
+  
+  
+  
+  defp connect_nodes3(node,connected_nodes) do
+    Logger.info("Trying to connect to mnesia node #{node}")
+    cond do
+      (:net_kernel.connect_node(node))
+        -> [node | connected_nodes]
+      true
+        -> connected_nodes
+    end
+  end
+  
+  
+  defp start(disc_copies,tables,connected_nodes) do
     :mnesia.start()
     :extra_db_nodes
-      |> :mnesia.change_config(Node.list())
+      |> :mnesia.change_config(connected_nodes)
     cond do
       (disc_copies)
         -> tables
@@ -377,6 +422,54 @@ defmodule Krug.DistributedMnesiaSqlCache do
     keys
       |> tl()
       |> remove_all_table_cached_results(table_name)
+  end
+
+
+
+  ########################################## 
+  ### clear cache functions
+  ########################################## 
+  defp filter_local_wlan_ip(ips_list, local_ip \\ nil) do
+    cond do
+      (Enum.empty?(ips_list))
+        -> local_ip
+      true
+        -> ips_list
+             |> filter_local_wlan_ip2()
+    end
+  end
+
+
+  
+  defp filter_local_wlan_ip2(ips_list) do
+    list = ips_list 
+             |> hd()
+             |> Tuple.to_list()
+    cond do
+      (String.starts_with?("#{list |> hd()}","wl"))
+        -> filter_local_wlan_ip([], list |> extract_local_ip())
+      true
+        -> ips_list 
+             |> tl() 
+             |> filter_local_wlan_ip()
+    end
+  end
+  
+
+  
+  defp extract_local_ip(list) do
+    data = list
+             |> tl() 
+             |> hd()
+             |> Enum.filter(
+                  fn({k,v}) ->
+                    (k == :addr and :inet.is_ipv4_address(v))
+                  end
+                )
+    data 
+      |> Enum.into(%{})
+      |> MapUtil.get(:addr)
+      |> :inet.ntoa()
   end
 
 
