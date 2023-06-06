@@ -75,32 +75,16 @@ defmodule Krug.DistributedMnesiaSqlCache do
     end
 
     def run(_opts) do
-      cluster_cookie = "my_app_mnesia_cookie_5435434876876"
-      cluster_name = "my_test_app"
-      cluster_ips = "10.0.0.2!10.0.0.135!10.0.0.241!10.0.0.127"
-      ips_separator = "!"
-      
+      cluster_cookie = "echo"
+      cluster_name = "echo"
+      cluster_ips = "192.168.1.12X "
+      ips_separator = "X" 
       tables = [
-      	:users,
-      	:log,
-      	:other_table
-      ]
-      
-      # set cookie and cluster name to allow remote connection
-      # to permit the cluster formation
-      "{cluster_name}@127.0.0.1"
-        |> String.to_atom()
-        |> Node.start()
-      
-      cluster_cookie
-        |> String.to_atom()
-        |> Node.set_cookie()
-      
-      # wait X seconds before start - it will try improve that all
-      # cluster machines will be with the application deployed before the first 
-      # machine start the connection to anothers.
-  	  :timer.sleep(5000) 
-      
+        :users,
+        :log,
+        :other_table
+      ]  
+    
       cluster_name
         |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,tables)
     end
@@ -110,9 +94,10 @@ defmodule Krug.DistributedMnesiaSqlCache do
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
                    ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
+    local_node = "#{cluster_name}@#{get_local_wlan_ip()}" 
+                   |> String.to_atom()
     [
-      "#{cluster_name}@#{get_local_wlan_ip()}" 
-        |> String.to_atom(),
+      local_node,
       :longnames
     ]
       |> :net_kernel.start()
@@ -127,14 +112,14 @@ defmodule Krug.DistributedMnesiaSqlCache do
                            ip -> String.match?(ip,@ip_regexp) 
                          end
                        )
-    connected_nodes = connect_nodes([],cluster_name,cluster_ips)
-    # ["connected_nodes => ",connected_nodes] |> IO.inspect()
+    connected_nodes = [local_node] 
+                        |> connect_nodes(cluster_name,cluster_ips)
     cond do
       (Enum.empty?(connected_nodes))
         -> false
       true
         -> disc_copies
-             |> start(tables,connected_nodes)
+             |> start_mnesia(tables,connected_nodes)
     end
   end
   
@@ -246,7 +231,6 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   defp connect_nodes3(node,connected_nodes) do
-    # Logger.info("Trying to connect to mnesia node #{node}")
     cond do
       (:net_kernel.connect_node(node))
         -> [node | connected_nodes]
@@ -256,11 +240,13 @@ defmodule Krug.DistributedMnesiaSqlCache do
   end
   
   
-  defp start(disc_copies,tables,connected_nodes) do
+  defp start_mnesia(disc_copies,tables,connected_nodes) do
+    :mnesia.stop()
+    System.cmd("epmd", ["-daemon"])
+    [node()]
+      |> :mnesia.create_schema()
     :mnesia.start()
-    Node.list() |> IO.inspect()
-    connected_nodes |> IO.inspect()
-    :extra_db_nodes
+    :extra_db_nodes 
       |> :mnesia.change_config(connected_nodes)
     cond do
       (disc_copies)
@@ -324,13 +310,13 @@ defmodule Krug.DistributedMnesiaSqlCache do
 
 
   
-  defp config_tables5({:aborted, {:already_exists, _}},_mode,_table) do
+  defp config_tables5({:aborted, {:already_exists,_}},_mode,_table) do
     true
   end
 
 
   
-  defp config_tables5({:atomic, :ok},mode,table) do
+  defp config_tables5({:atomic,:ok},mode,table) do
     table
       |> :mnesia.add_table_copy(node(),mode)
       |> config_tables6()
@@ -338,13 +324,19 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   
-  defp config_tables6({:atomic, :ok}) do
+  defp config_tables6({:atomic,:ok}) do
     true
   end
   
   
   
-  defp config_tables6({:aborted, _}) do
+  defp config_tables6({:aborted,{:already_exists,_,_}}) do
+    true
+  end
+  
+  
+  
+  defp config_tables6({:aborted,_}) do
     false
   end
 
