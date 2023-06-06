@@ -102,13 +102,23 @@ defmodule Krug.DistributedMnesiaSqlCache do
   	  :timer.sleep(5000) 
       
       cluster_name
-        |> DistributedMnesiaSqlCache.init_cluster(cluster_ips,ips_separator,true,tables)
+        |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,tables)
     end
   
   end
   ```
   """
-  def init_cluster(cluster_name,cluster_ips,ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
+  def init_cluster(cluster_name,cluster_cookie,cluster_ips,
+                   ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
+    [
+      "#{cluster_name}@#{get_local_wlan_ip()}" 
+        |> String.to_atom(),
+      :longnames
+    ]
+      |> :net_kernel.start()
+    cluster_cookie
+      |> String.to_atom()
+      |> :erlang.set_cookie() 
     cluster_ips = cluster_ips
                     |> StringUtil.trim()
                     |> StringUtil.split(ips_separator)
@@ -118,6 +128,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
                          end
                        )
     connected_nodes = connect_nodes([],cluster_name,cluster_ips)
+    # ["connected_nodes => ",connected_nodes] |> IO.inspect()
     cond do
       (Enum.empty?(connected_nodes))
         -> false
@@ -206,19 +217,6 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   
-  @doc """
-  Provides a way to obtain the machine ip to start the local machine mnesia node.
-  """
-  def get_local_wlan_ip() do
-    :inet.getifaddrs()
-      |> Tuple.to_list()
-      |> tl()
-      |> hd()
-      |> filter_local_wlan_ip()
-  end
-  
-  
-  
   ##########################################
   # Private functions
   ##########################################
@@ -248,7 +246,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   defp connect_nodes3(node,connected_nodes) do
-    Logger.info("Trying to connect to mnesia node #{node}")
+    # Logger.info("Trying to connect to mnesia node #{node}")
     cond do
       (:net_kernel.connect_node(node))
         -> [node | connected_nodes]
@@ -260,6 +258,8 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   defp start(disc_copies,tables,connected_nodes) do
     :mnesia.start()
+    Node.list() |> IO.inspect()
+    connected_nodes |> IO.inspect()
     :extra_db_nodes
       |> :mnesia.change_config(connected_nodes)
     cond do
@@ -427,8 +427,18 @@ defmodule Krug.DistributedMnesiaSqlCache do
 
 
   ########################################## 
-  ### clear cache functions
+  ### IP functions
   ########################################## 
+  defp get_local_wlan_ip() do
+    :inet.getifaddrs()
+      |> Tuple.to_list()
+      |> tl()
+      |> hd()
+      |> filter_local_wlan_ip()
+  end
+  
+  
+  
   defp filter_local_wlan_ip(ips_list, local_ip \\ nil) do
     cond do
       (Enum.empty?(ips_list))
