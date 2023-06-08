@@ -10,14 +10,20 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
     cluster_name = "echo"
     cluster_ips = "192.168.1.12X "
     ips_separator = "X" 
-    tables = [
+    table_names = [
       :users,
       :log,
       :other_table
     ]  
     
     created = cluster_name
-                |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,tables)
+                |> DistributedMnesiaSqlCache.init_cluster(
+                     cluster_cookie,
+                     cluster_ips,
+                     ips_separator,
+                     true,
+                     table_names
+                   )
     
     assert created == true
     

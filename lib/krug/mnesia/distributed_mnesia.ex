@@ -11,23 +11,186 @@ defmodule Krug.DistributedMnesia do
   
   
   alias Krug.MapUtil
+  alias Krug.NetworkUtil
+  alias Krug.MnesiaUtil
+  alias Krug.ClusterUtil
   
   
   
   @doc """
-  Start the mnesia cluster. To be used on application start.
+  Start the distributed mnesia cluster. To be used on application start.
   
-  disc_copies: true for ":disc_copies", false for ":ram_copies" (only ram).
+  ## Example
+  
+  ```elixir
+  defmodule <Your_App_Main_Module_Name>.Application do
+  
+    @moduledoc false
+  
+    use Application
+  
+    alias Krug.DistributedMnesia
+
+
+    def start(_type, _args) do
+      Supervisor.start_link(children(), opts())
+    end
+  
+    defp children() do
+  	  [
+  	    ...
+  	    <Your_App_Main_Module_Name>.DistributedMnesiaTaskStarter, # calls Krug.DistributedMnesia.init_cluster(...)
+  	    ...
+  	  ]
+    end
+  
+    defp opts() do 
+  	  [strategy: :one_for_one, name: <Your_App_Main_Module_Name>.Supervisor]
+    end 
+    
+  end
+  ```
+  
+  ```elixir
+  defmodule <Your_App_Main_Module_Name>.DistributedMnesiaConfigTaskStarter do
+    def child_spec(opts) do
+      %{id: __MODULE__,start: {__MODULE__, :start_link, [opts]}}
+    end
+  
+    def start_link(opts) do
+      Supervisor.start_link([{<Your_App_Main_Module_Name>.DistributedMnesiaConfigTask,opts}], strategy: :one_for_one)
+    end
+  end
+  ```
+  
+  ```elixir
+  defmodule <Your_App_Main_Module_Name>.DistributedMnesiaConfigTask do
+ 
+    use Task
+    alias Krug.DistributedMnesia
+ 
+    def start_link(opts) do
+      Task.start_link(__MODULE__, :run, [opts])
+    end
+
+    def run(_opts) do
+      cluster_cookie = "echo"
+      cluster_name = "echo"
+      cluster_ips = "192.168.1.12X "
+      ips_separator = "X" 
+      tables = [
+        %{
+           table_name: :users, 
+           table_attributes: [:id, :name, :email, :last_access] 
+        },
+        %{
+           table_name: log, 
+           table_attributes: [:id, :user_id, :action, :date_time] 
+        },
+      ]  
+    
+      cluster_name
+        |> DistributedMnesia.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,tables)
+    end
+  
+  end
+  ```
+  
+  disc_copies: true for ":disc_copies" (ram + disc), false for ":ram_copies" (only ram).
   
   tables: list of map table configurations
   ```elixir
-  %{table_name: "users", table_attributes: [:id, :name, :email]}
+  %{
+    table_name: :users, # atom
+    table_attributes: [:id, :name, :email] # atom list | the first element is the "id_row" value/column
+  }
   ```
   .
   
-  connected_nodes: list (of atom) nodes already connected in a cluster.
+  connected_nodes: list (of atom) nodes already connected in a erlang cluster.
   """
-  def start_mnesia(disc_copies,tables,connected_nodes) do
+  def init_cluster(cluster_name,cluster_cookie,cluster_ips,
+                   ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
+    local_node = cluster_name
+                   |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
+    cluster_ips = cluster_ips
+                    |> NetworkUtil.extract_valid_ip_v4_addresses(ips_separator)
+    connected_nodes = [local_node] 
+                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips)                 
+    cond do
+      (Enum.empty?(connected_nodes))
+        -> false
+      true
+        -> disc_copies
+             |> start_mnesia(
+                  tables,
+                  connected_nodes
+                )
+    end
+  end
+  
+  
+  
+  @doc """
+  Stores an object "data_row" identified by "id_row" on "table_name". 
+  Return true or false.
+  
+  Requires mnesia already be started. 
+  
+  If you wish you application be able to scalabity then should be used
+  ```elixir
+  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,tables)
+  ```
+  function on application startup.
+  """
+  def store(table_name,id_row,data_row) do
+    table_name
+      |> MnesiaUtil.put_cache(id_row,data_row)
+  end
+  
+  
+  
+  @doc """
+  Retrieves an object identified by "id_row" from "table_name". 
+  Return the registry entry or nil.
+  
+  Requires mnesia already be started. 
+  
+  If you wish you application be able to scalabity then should be used
+  ```elixir
+  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,tables)
+  ```
+  function on application startup.
+  """
+  def load(table_name,id_row) do
+    table_name
+      |> MnesiaUtil.load_from_cache(id_row)
+  end
+  
+  
+  
+  @doc """
+  Removes all object entries from "table_name". Return true or false.
+  
+  Requires mnesia already be started. 
+  
+  If you wish you application be able to scalabity then should be used
+  ```elixir
+  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,tables)
+  ```
+  function on application startup.
+  """
+  def clear(table_name) do
+    table_name
+      |> MnesiaUtil.clear_cache()
+  end
+
+
+
+  #####################################
+  #  Private functions
+  #####################################
+  defp start_mnesia(disc_copies,tables,connected_nodes) do
     :mnesia.stop()
     System.cmd("epmd", ["-daemon"])
     [node()]
@@ -44,8 +207,8 @@ defmodule Krug.DistributedMnesia do
              |> config_tables(:ram_copies)
     end 
   end
-
-
+  
+  
   
   defp config_tables(tables,mode) do
     :schema
@@ -107,7 +270,7 @@ defmodule Krug.DistributedMnesia do
 
 
   
-  defp config_tables5({:atomic,:ok},mode,_table_name) do
+  defp config_tables5({:atomic,:ok},mode,table_name) do
     table_name
       |> :mnesia.add_table_copy(node(),mode)
       |> config_tables6()

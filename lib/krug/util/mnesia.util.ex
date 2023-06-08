@@ -46,7 +46,7 @@ defmodule Krug.MnesiaUtil do
     end
     read_data
       |> :mnesia.transaction()
-      |> load_from_cache_result(table_name,id)
+      |> load_from_cache_result(table_name,id_row)
   end
   
   

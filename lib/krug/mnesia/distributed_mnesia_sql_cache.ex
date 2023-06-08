@@ -10,10 +10,6 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   
-  #require Logger
-  alias Krug.NetworkUtil
-  alias Krug.MnesiaUtil
-  alias Krug.ClusterUtil
   alias Krug.DistributedMnesia
   
   
@@ -79,38 +75,31 @@ defmodule Krug.DistributedMnesiaSqlCache do
       cluster_name = "echo"
       cluster_ips = "192.168.1.12X "
       ips_separator = "X" 
-      tables = [
+      table_names = [
         :users,
         :log,
         :other_table
       ]  
     
       cluster_name
-        |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,tables)
+        |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,table_names)
     end
   
   end
   ```
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
-                   ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
-    local_node = cluster_name
-                   |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
-    cluster_ips = cluster_ips
-                    |> NetworkUtil.extract_valid_ip_addresses(ips_separator)
-    connected_nodes = [local_node] 
-                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips)
-                        
-                        
-                        
-    #  [:id, :resultset]                  
-    cond do
-      (Enum.empty?(connected_nodes))
-        -> false
-      true
-        -> disc_copies
-             |> DistributedMnesia.start_mnesia(tables,connected_nodes)
-    end
+                   ips_separator \\ "|",disc_copies \\ false,table_names \\ []) do
+    tables = table_names 
+               |> prepare_tables()
+    cluster_name
+      |> DistributedMnesia.init_cluster(
+           cluster_cookie,
+           cluster_ips,
+           ips_separator,
+           disc_copies,
+           tables
+         ) 
   end
   
   
@@ -122,13 +111,13 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   If you wish you application be able to scalabity then should be used
   ```elixir
-  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,tables)
+  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,table_names)
   ```
   function on application startup.
   """
   def put_cache(table_name,normalized_sql,params,resultset) do
     table_name
-      |> MnesiaUtil.put_cache({normalized_sql,params},resultset)
+      |> DistributedMnesia.store({normalized_sql,params},resultset)
   end
   
   
@@ -140,13 +129,13 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   If you wish you application be able to scalabity then should be used
   ```elixir
-  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,tables)
+  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,table_names)
   ```
   function on application startup.
   """
   def load_from_cache(table_name,normalized_sql,params) do
     table_name
-      |> MnesiaUtil.load_from_cache({normalized_sql,params})
+      |> DistributedMnesia.load({normalized_sql,params})
   end
   
   
@@ -158,14 +147,46 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   If you wish you application be able to scalabity then should be used
   ```elixir
-  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,tables)
+  init_cluster(cluster_name,cluster_ips,ips_separator,disc_copies,table_names)
   ```
   function on application startup.
   """
   def clear_cache(table_name) do
     table_name
-      |> MnesiaUtil.clear_cache()
+      |> DistributedMnesia.clear()
   end
+
+
+
+  #####################################
+  #  Private functions
+  #####################################
+  defp prepare_tables(table_names,tables \\ []) do
+    cond do
+      (Enum.empty?(table_names))
+        -> tables
+      true
+        -> table_names
+             |> prepare_tables2(tables)
+    end
+  end
+
+
+  
+  defp prepare_tables2(table_names,tables) do
+    table_names
+      |> tl()
+      |> prepare_tables(
+           [
+             %{
+                table_name: table_names |> hd(), 
+                table_attributes: [:id, :resultset] 
+             }
+             | tables
+           ]
+         )
+  end
+
 
   
 end
