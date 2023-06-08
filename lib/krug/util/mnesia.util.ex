@@ -5,6 +5,38 @@ defmodule Krug.MnesiaUtil do
   """
   @moduledoc since: "1.1.17"
   
+  
+    
+  @doc """
+  Provides encapsulated behaviour for data storage
+  using transaction for call
+  ```elixir
+  data = [table_name | [id_row | data_row]]
+  data = data |> List.to_tuple() # result in {table_name,id_row,data_row[0] ... data_row[n]}
+  :mnesia.write(data)
+  ```
+  
+  Works in key value storage style, where "id_row" is the key, and "data_row"
+  the value. Both values could be of any data type. "table_name" should be an atom.
+  This run fine for normal mnesia usage way (storing objects as in database row).
+  
+  Return true or false.
+  
+  Requires mnesia already be started. 
+  """
+  def store(table_name,id_row,data_row) do
+    write_data = fn ->
+      [table_name | [id_row | data_row]]
+        |> List.to_tuple()
+        |> :mnesia.write()
+    end
+    write_data
+      |> :mnesia.transaction()
+      |> put_cache_result()
+  end
+  
+  
+  
   @doc """
   Provides encapsulated behaviour for data storage
   using transaction for call
@@ -14,6 +46,9 @@ defmodule Krug.MnesiaUtil do
   
   Works in key value storage style, where "id_row" is the key, and "data_row"
   the value. Both values could be of any data type. "table_name" should be an atom.
+  This is intended to be more key-value object storage (like Redis), where
+  "data_row" could be anything from a simple string to a list, a map, a sql
+  resultset, and many others.
   
   Return true or false.
   
@@ -46,7 +81,7 @@ defmodule Krug.MnesiaUtil do
     end
     read_data
       |> :mnesia.transaction()
-      |> load_from_cache_result(table_name,id_row)
+      |> load_from_cache_result()
   end
   
   
@@ -61,6 +96,7 @@ defmodule Krug.MnesiaUtil do
     table_name
 	  |> :mnesia.clear_table()
       |> clear_cache_result()
+    true
   end
   
   
@@ -74,7 +110,8 @@ defmodule Krug.MnesiaUtil do
   
   
   
-  defp put_cache_result(_) do
+  defp put_cache_result(error) do
+    error |> IO.inspect()
     false  
   end
   
@@ -83,36 +120,22 @@ defmodule Krug.MnesiaUtil do
   ########################################## 
   ### load functions
   ########################################## 
-  defp load_from_cache_result({:atomic,key_entry_array},table_name,id) do
+  defp load_from_cache_result({:atomic,key_entry_array}) do
     cond do
-      (Enum.empty?(key_entry_array))
-        -> nil
+      (nil == key_entry_array
+        or Enum.empty?(key_entry_array))
+          -> nil
       true
         -> key_entry_array
              |> hd()
-             |> load_from_cache_result2(table_name,id)
     end
   end
   
   
   
-  defp load_from_cache_result(_,_table_name,_id) do
+  defp load_from_cache_result(_) do
     nil
   end
-  
-  
-  
-  defp load_from_cache_result2(key_entry,table_name,id) do
-    {table_name_entry,id_entry,resultset} = key_entry
-    cond do
-      (nil == resultset
-        or table_name_entry != table_name
-          or id_entry != id)
-            -> nil
-      true
-        -> resultset
-    end
-  end  
   
   
   

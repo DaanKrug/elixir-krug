@@ -4,7 +4,7 @@ defmodule Krug.DistributedMnesiaTest do
   doctest Krug.DistributedMnesia
   
   alias Krug.DistributedMnesia
-  alias Krug.MapUtil
+  
   
   test "[init_cluster|store_data|stop]" do
     cluster_cookie = "echo"
@@ -13,7 +13,7 @@ defmodule Krug.DistributedMnesiaTest do
     ips_separator = "X" 
     tables = [
       %{
-        table_name: :users, 
+        table_name: :user_x, 
         table_attributes: [:id, :name, :email] 
       }
     ]  
@@ -30,114 +30,239 @@ defmodule Krug.DistributedMnesiaTest do
     assert created == true
     
     objects = [
-      %{
-         id: 203,
-         name: "Johannes Cool",
-         email: "johann@es.not_cool.pt"
-      },
-      %{
-         id: 308,
-         name: "Johannes Not Cool",
-         email: "johann@es.cool.de"
-      },
-      %{
-         id: 568,
-         name: "Johannes Cool",
-         email: "johann@es.cool.de"
-      }
+      [
+         "Johannes Cool",
+         "johann@es.not_cool.pt"
+      ],
+      [
+         "Johannes Not Cool",
+         "johann@es.cool.de"
+      ],
+      [
+         "Johannes Cool",
+         "johann@es.cool.de"
+      ]
     ]
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(0) |> MapUtil.get(:id)
+               :user_x,
+               200
              )
     
     assert result == nil
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(1) |> MapUtil.get(:id)
+               :user_x,
+               300
              )
     
     assert result == nil
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(2) |> MapUtil.get(:id)
+               :user_x,
+               400
              )
     
     assert result == nil
     
     added = DistributedMnesia.store(
-              :users,
-              objects |> Enum.at(0) |> MapUtil.get(:id),
+              :user_x,
+              200,
               objects |> Enum.at(0)
             )
     
     assert added == true
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(0) |> MapUtil.get(:id)
+               :user_x,
+               200
              )
     
-    assert result == %{email: "johann@es.not_cool.pt", id: 203, name: "Johannes Cool"}
+    assert result == {:user_x, 200, "Johannes Cool", "johann@es.not_cool.pt"}
     
     added = DistributedMnesia.store(
-              :users,
-              objects |> Enum.at(1) |> MapUtil.get(:id),
+              :user_x,
+              300,
               objects |> Enum.at(1)
             )
     
     assert added == true
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(1) |> MapUtil.get(:id)
+               :user_x,
+               300
              )
     
-    assert result == %{email: "johann@es.cool.de", id: 308, name: "Johannes Not Cool"}
+    assert result == {:user_x, 300, "Johannes Not Cool", "johann@es.cool.de"}
     
     added = DistributedMnesia.store(
-              :users,
-              objects |> Enum.at(2) |> MapUtil.get(:id),
+              :user_x,
+              400,
               objects |> Enum.at(2)
             )
     
     assert added == true
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(2) |> MapUtil.get(:id)
+               :user_x,
+               400
              )
     
-    assert result == %{email: "johann@es.cool.de", id: 568, name: "Johannes Cool"}
+    assert result == {:user_x, 400, "Johannes Cool", "johann@es.cool.de"}
     
-    cleaned = DistributedMnesia.clear(:users)
+    cleaned = DistributedMnesia.clear(:user_x)
     
     assert cleaned == true
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(0) |> MapUtil.get(:id)
+               :user_x,
+               200
              )
     
     assert result == nil
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(1) |> MapUtil.get(:id)
+               :user_x,
+               300
              )
     
     assert result == nil
     
     result = DistributedMnesia.load(
-               :users,
-               objects |> Enum.at(2) |> MapUtil.get(:id)
+               :user_x,
+               400
              )
     
     assert result == nil
     
+  end
+  
+  
+  
+  test "[init_auto_cluster|store_data|stop]" do
+    cluster_cookie = "echo"
+    cluster_name = "echo"
+    tables = [
+      %{
+        table_name: :user_x, 
+        table_attributes: [:id, :name, :email] 
+      }
+    ]  
+    
+    created = cluster_name
+                |> DistributedMnesia.init_auto_cluster(
+                     cluster_cookie,
+                     true,
+                     tables
+                   )
+    
+    assert created == true
+    
+    objects = [
+      [
+         "Johannes Cool",
+         "johann@es.not_cool.pt"
+      ],
+      [
+         "Johannes Not Cool",
+         "johann@es.cool.de"
+      ],
+      [
+         "Johannes Cool",
+         "johann@es.cool.de"
+      ]
+    ]
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               200
+             )
+    
+    assert result == nil
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               300
+             )
+    
+    assert result == nil
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               400
+             )
+    
+    assert result == nil
+    
+    added = DistributedMnesia.store(
+              :user_x,
+              200,
+              objects |> Enum.at(0)
+            )
+    
+    assert added == true
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               200
+             )
+    
+    assert result == {:user_x, 200, "Johannes Cool", "johann@es.not_cool.pt"}
+    
+    added = DistributedMnesia.store(
+              :user_x,
+              300,
+              objects |> Enum.at(1)
+            )
+    
+    assert added == true
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               300
+             )
+    
+    assert result == {:user_x, 300, "Johannes Not Cool", "johann@es.cool.de"}
+    
+    added = DistributedMnesia.store(
+              :user_x,
+              400,
+              objects |> Enum.at(2)
+            )
+    
+    assert added == true
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               400
+             )
+    
+    assert result == {:user_x, 400, "Johannes Cool", "johann@es.cool.de"}
+    
+    cleaned = DistributedMnesia.clear(:user_x)
+    
+    assert cleaned == true
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               200
+             )
+    
+    assert result == nil
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               300
+             )
+    
+    assert result == nil
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               400
+             )
+    
+    assert result == nil
   end
   
 end

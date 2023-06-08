@@ -7,6 +7,10 @@ defmodule Krug.ClusterUtil do
   
   
   
+  @connection_node_timeout 100
+  
+  
+  
   @doc """
   Connect the local node to a list of other nodes by their IP's "cluster_ips".
   Return a list (of atom) containing the sucessfully connected nodes. 
@@ -36,8 +40,17 @@ defmodule Krug.ClusterUtil do
   
   
   defp connect_nodes3(node,connected_nodes) do
+    task = Task.async(
+      fn ->
+        :net_kernel.connect_node(node)
+      end
+    )
+    %Task{pid: pid} = task
+    :timer.sleep(@connection_node_timeout)
     cond do
-      (:net_kernel.connect_node(node))
+      (Process.alive?(pid))
+        -> connected_nodes
+      (Task.await(task))
         -> [node | connected_nodes]
       true
         -> connected_nodes

@@ -11,6 +11,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   alias Krug.DistributedMnesia
+  alias Krug.MnesiaUtil
   
   
   
@@ -105,6 +106,25 @@ defmodule Krug.DistributedMnesiaSqlCache do
   
   
   @doc """
+  Almost the same that "init_cluster".
+  The diference is that cluster_ips will be calculated
+  to be all range of machine local network
+  according the network mask range (/16 or /24).
+  """
+  def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,table_names \\ []) do
+    tables = table_names 
+               |> prepare_tables()
+    cluster_name
+      |> DistributedMnesia.init_auto_cluster(
+           cluster_cookie,
+           disc_copies,
+           tables
+         ) 
+  end
+  
+  
+  
+  @doc """
   Provides cache functionality to  store SQL queries result. Return true or false.
   
   Requires mnesia already be started. 
@@ -117,7 +137,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   """
   def put_cache(table_name,normalized_sql,params,resultset) do
     table_name
-      |> DistributedMnesia.store({normalized_sql,params},resultset)
+      |> MnesiaUtil.put_cache({normalized_sql,params},resultset)
   end
   
   
@@ -136,6 +156,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   def load_from_cache(table_name,normalized_sql,params) do
     table_name
       |> DistributedMnesia.load({normalized_sql,params})
+      |> load_from_cache_result()
   end
   
   
@@ -185,6 +206,19 @@ defmodule Krug.DistributedMnesiaSqlCache do
              | tables
            ]
          )
+  end
+
+  
+  
+  defp load_from_cache_result(result) do
+    cond do
+      (nil == result)
+        -> nil
+      true
+        -> result
+             |> Tuple.to_list()
+             |> Enum.at(2)
+    end
   end
 
 

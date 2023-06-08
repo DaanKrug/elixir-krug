@@ -132,6 +132,35 @@ defmodule Krug.DistributedMnesia do
   
   
   @doc """
+  Almost the same that "init_cluster".
+  The diference is that cluster_ips will be calculated
+  to be all range of machine local network
+  according the network mask range (/16 or /24).
+  """
+  def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,tables \\ []) do
+    cluster_name
+      |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
+    cluster_ips = NetworkUtil.get_local_wlan_ip_v4()
+                    |> NetworkUtil.generate_ipv4_netmask_16_24_ip_list(
+                         NetworkUtil.get_local_wlan_ip_v4_netmask()
+                       )
+    connected_nodes = [] 
+                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips)                 
+    cond do
+      (Enum.empty?(connected_nodes))
+        -> false
+      true
+        -> disc_copies
+             |> start_mnesia(
+                  tables,
+                  connected_nodes
+                )
+    end
+  end
+  
+  
+  
+  @doc """
   Stores an object "data_row" identified by "id_row" on "table_name". 
   Return true or false.
   
@@ -145,7 +174,7 @@ defmodule Krug.DistributedMnesia do
   """
   def store(table_name,id_row,data_row) do
     table_name
-      |> MnesiaUtil.put_cache(id_row,data_row)
+      |> MnesiaUtil.store(id_row,data_row)
   end
   
   
@@ -193,6 +222,8 @@ defmodule Krug.DistributedMnesia do
   defp start_mnesia(disc_copies,tables,connected_nodes) do
     :mnesia.stop()
     System.cmd("epmd", ["-daemon"])
+    [node()]
+      |> :mnesia.delete_schema()
     [node()]
       |> :mnesia.create_schema()
     :mnesia.start()
@@ -249,10 +280,10 @@ defmodule Krug.DistributedMnesia do
               |> hd()
     table_name = table 
                    |> MapUtil.get(:table_name)
-    table_attibutes = table 
-                        |> MapUtil.get(:table_attibutes)
+    table_attributes = table 
+                         |> MapUtil.get(:table_attributes)
     table_name
-      |> :mnesia.create_table(attributes: table_attibutes)
+      |> :mnesia.create_table(attributes: table_attributes)
       |> config_tables5(mode,table_name)
   end
   

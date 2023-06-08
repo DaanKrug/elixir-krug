@@ -50,8 +50,9 @@ defmodule Krug.NetworkUtil do
   end
   
   
+  
   @doc """
-  Obtains the local machine ipv4 local network
+  Obtains the local machine ipv4 local network IP (i.e: 192.168.1.2 | 172.0.0.2)
   """
   def get_local_wlan_ip_v4() do
     :inet.getifaddrs()
@@ -63,49 +64,169 @@ defmodule Krug.NetworkUtil do
   
   
   
-  defp filter_local_wlan_ip(ips_list, local_ip \\ nil) do
+  @doc """
+  Obtains the local machine ipv4 local netmask (i.e: 255.255.0.0 | 255.255.255.0)
+  """
+  def get_local_wlan_ip_v4_netmask() do
+    :inet.getifaddrs()
+      |> Tuple.to_list()
+      |> tl()
+      |> hd()
+      |> filter_local_wlan_ip(true)
+  end
+  
+  
+  
+  @doc """
+  Based in a IP address and a netmask (subnet /16 or /24),
+  generates a list of IP addresses suposed by in a same network/VPC
+  """
+  def generate_ipv4_netmask_16_24_ip_list(ipv4_address,ipv4_netmask) do
+    netmask_16 = ipv4_netmask
+                   |> StringUtil.split(".")
+                   |> Enum.at(2)
+    cond do
+      (netmask_16 == "0")
+        -> ipv4_address
+             |> StringUtil.split(".")
+             |> Enum.reverse()
+             |> tl()
+             |> tl()
+             |> Enum.reverse()
+             |> generate_ipv4_netmask_16_ip_list()
+      true
+        -> ipv4_address
+             |> StringUtil.split(".")
+             |> Enum.reverse()
+             |> tl()
+             |> Enum.reverse()
+             |> generate_ipv4_netmask_24_ip_list()
+    end
+  end
+  
+  
+  
+  ###########################################
+  # Private functions
+  ###########################################
+  defp filter_local_wlan_ip(ips_list,netmask \\ false,local_ip \\ nil) do
     cond do
       (Enum.empty?(ips_list))
         -> local_ip
       true
         -> ips_list
-             |> filter_local_wlan_ip2()
+             |> filter_local_wlan_ip2(netmask)
     end
   end
 
 
   
-  defp filter_local_wlan_ip2(ips_list) do
+  defp filter_local_wlan_ip2(ips_list,netmask) do
     list = ips_list 
              |> hd()
              |> Tuple.to_list()
     cond do
       (String.starts_with?("#{list |> hd()}","wl"))
-        -> filter_local_wlan_ip([], list |> extract_local_ip())
+        -> filter_local_wlan_ip([],netmask,list |> extract_local_ip(netmask))
       true
         -> ips_list 
              |> tl() 
-             |> filter_local_wlan_ip()
+             |> filter_local_wlan_ip(netmask)
     end
   end
   
 
   
-  defp extract_local_ip(list) do
+  defp extract_local_ip(list,netmask) do
     data = list
              |> tl() 
              |> hd()
              |> Enum.filter(
                   fn({k,v}) ->
-                    (k == :addr and :inet.is_ipv4_address(v))
+                    (!netmask and k == :addr and :inet.is_ipv4_address(v))
+                    or
+                    (netmask and k == :netmask and :inet.is_ipv4_address(v))
                   end
                 )
-    data 
-      |> Enum.into(%{})
-      |> MapUtil.get(:addr)
-      |> :inet.ntoa()
+    cond do
+      (netmask)
+        -> data 
+	         |> Enum.into(%{})
+	         |> MapUtil.get(:netmask)
+	         |> :inet.ntoa()
+      true
+        -> data 
+             |> Enum.into(%{})
+             |> MapUtil.get(:addr)
+             |> :inet.ntoa()
+    end
+  end
+  
+  
+  
+  defp generate_ipv4_netmask_16_ip_list(ipv4_base_array,counter \\ 0,ipv4_array_list \\ []) do
+    cond do
+      (counter > 255)
+        -> ipv4_array_list
+      true
+        -> ipv4_base_array
+             |> generate_ipv4_netmask_16_ip_list(
+                  counter + 1,
+                  ipv4_base_array
+                    |> generate_ipv4_netmask_16_ip_list2(counter,ipv4_array_list)
+                )      
+    end
+  end
+  
+  
+  
+  defp generate_ipv4_netmask_16_ip_list2(ipv4_base_array,counter,ipv4_array_list) do
+    [
+      counter 
+      | ipv4_base_array |> Enum.reverse()
+    ]
+      |> Enum.reverse()
+      |> generate_ipv4_netmask_24_ip_list(0,ipv4_array_list)
+  end
+  
+  
+  
+  defp generate_ipv4_netmask_24_ip_list(ipv4_base_array,counter \\ 0,ipv4_array_list \\ []) do
+    cond do
+      (counter > 255)
+        -> ipv4_array_list
+      true
+        -> ipv4_base_array
+             |> generate_ipv4_netmask_24_ip_list(
+                  counter + 1,
+                  add_ipv4_on_list(ipv4_base_array,ipv4_array_list,counter)
+                )
+    end
+  end
+  
+  
+  
+  defp add_ipv4_on_list(ipv4_base_array,ipv4_array_list,counter) do
+    [
+      add_ipv4_block(ipv4_base_array,counter)
+      | ipv4_array_list
+    ]
+  end
+  
+  
+  
+  defp add_ipv4_block(ipv4_base_array,counter) do
+    [
+      counter 
+      | ipv4_base_array |> Enum.reverse()
+    ] 
+      |> Enum.reverse()
+      |> Enum.join(".")
   end
   
   
   
 end
+
+
+
