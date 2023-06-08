@@ -40,6 +40,7 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
          email: "johann@es.cool.de"
       }
     ]
+    
     added = DistributedMnesiaSqlCache.put_cache(
               :users,
               normalized_sql,
@@ -49,9 +50,25 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
     
     assert added == true
     
-    stopped = DistributedMnesiaSqlCache.shutdown()
+    result = DistributedMnesiaSqlCache.load_from_cache(
+               :users,
+               normalized_sql,
+               params
+             )
     
-    assert stopped == :ok
+    assert result |> length() == 3
+    
+    cleaned = DistributedMnesiaSqlCache.clear_cache(:users)
+    
+    assert cleaned == true
+    
+    result = DistributedMnesiaSqlCache.load_from_cache(
+               :users,
+               normalized_sql,
+               params
+             )
+    
+    assert result == nil
   end
   
 end
