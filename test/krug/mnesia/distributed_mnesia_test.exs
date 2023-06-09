@@ -24,8 +24,11 @@ defmodule Krug.DistributedMnesiaTest do
                      cluster_ips,
                      ips_separator,
                      true,
-                     tables
+                     tables,
+                     100
                    )
+                   
+    ["init_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
     
@@ -153,8 +156,11 @@ defmodule Krug.DistributedMnesiaTest do
                 |> DistributedMnesia.init_auto_cluster(
                      cluster_cookie,
                      true,
-                     tables
+                     tables,
+                     100
                    )
+                   
+    ["init_auto_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
     

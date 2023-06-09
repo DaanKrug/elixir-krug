@@ -90,7 +90,8 @@ defmodule Krug.DistributedMnesiaSqlCache do
   ```
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
-                   ips_separator \\ "|",disc_copies \\ false,table_names \\ []) do
+                   ips_separator \\ "|",disc_copies \\ false,table_names \\ [],
+                   connection_timeout \\ nil) do
     tables = table_names 
                |> prepare_tables()
     cluster_name
@@ -99,7 +100,8 @@ defmodule Krug.DistributedMnesiaSqlCache do
            cluster_ips,
            ips_separator,
            disc_copies,
-           tables
+           tables,
+           connection_timeout
          ) 
   end
   
@@ -111,14 +113,16 @@ defmodule Krug.DistributedMnesiaSqlCache do
   to be all range of machine local network
   according the network mask range (/16 or /24).
   """
-  def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,table_names \\ []) do
+  def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,
+                        table_names \\ [],connection_timeout \\ nil) do
     tables = table_names 
                |> prepare_tables()
     cluster_name
       |> DistributedMnesia.init_auto_cluster(
            cluster_cookie,
            disc_copies,
-           tables
+           tables,
+           connection_timeout
          ) 
   end
   

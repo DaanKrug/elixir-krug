@@ -22,8 +22,11 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
                      cluster_ips,
                      ips_separator,
                      true,
-                     table_names
+                     table_names,
+                     100
                    )
+    
+    ["init_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
     
@@ -92,8 +95,11 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
                 |> DistributedMnesiaSqlCache.init_auto_cluster(
                      cluster_cookie,
                      true,
-                     table_names
+                     table_names,
+                     100
                    )
+    
+    ["init_auto_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
     

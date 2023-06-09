@@ -7,7 +7,7 @@ defmodule Krug.ClusterUtil do
   
   
   
-  @connection_node_timeout 100
+  @connection_node_timeout 500
   
   
   
@@ -15,13 +15,19 @@ defmodule Krug.ClusterUtil do
   Connect the local node to a list of other nodes by their IP's "cluster_ips".
   Return a list (of atom) containing the sucessfully connected nodes. 
   """
-  def connect_nodes(connected_nodes,cluster_name,cluster_ips) do
+  def connect_nodes(connected_nodes,cluster_name,cluster_ips,connection_timeout) do
+    connection_timeout = cond do
+      (nil == connection_timeout)
+        -> @connection_node_timeout
+      true
+        -> connection_timeout
+    end
     cond do
       (Enum.empty?(cluster_ips))
         -> connected_nodes
       true 
         -> connected_nodes
-             |> connect_nodes2(cluster_name,cluster_ips)
+             |> connect_nodes2(cluster_name,cluster_ips,connection_timeout)
     end
   end
   
@@ -30,23 +36,28 @@ defmodule Krug.ClusterUtil do
   ##########################################
   ### init functions
   ########################################## 
-  defp connect_nodes2(connected_nodes,cluster_name,cluster_ips) do
+  defp connect_nodes2(connected_nodes,cluster_name,cluster_ips,connection_timeout) do
     "#{cluster_name}@#{cluster_ips |> hd()}"
       |> String.to_atom()
-      |> connect_nodes3(connected_nodes)
-      |> connect_nodes(cluster_name,cluster_ips |> tl())
+      |> connect_nodes3(connected_nodes,connection_timeout)
+      |> connect_nodes(
+           cluster_name,
+           cluster_ips |> tl(),
+           connection_timeout
+         )
   end
   
   
   
-  defp connect_nodes3(node,connected_nodes) do
+  defp connect_nodes3(node,connected_nodes,connection_timeout) do
     task = Task.async(
       fn ->
         :net_kernel.connect_node(node)
       end
     )
     %Task{pid: pid} = task
-    :timer.sleep(@connection_node_timeout)
+    connection_timeout
+      |> :timer.sleep()
     cond do
       (Process.alive?(pid))
         -> connected_nodes

@@ -6,7 +6,7 @@ defmodule Krug.MixProject do
   def project do
     [
       app: :krug,
-      version: "1.1.17",
+      version: "1.1.24",
       elixir: "~> 1.13",
       source_url: @project_url,
       homepage_url: @project_url,
@@ -16,13 +16,14 @@ defmodule Krug.MixProject do
       aliases: aliases(),
       package: package(),
       docs: [main: "readme", extras: ["README.md"]],
-      deps: deps()
+      deps: deps(),
+      xref: [exclude: [:mnesia]]
     ]
   end
 
   def application do
     [
-      extra_applications: [:logger,:mnesia]
+      extra_applications: [:logger]
     ]
   end
 

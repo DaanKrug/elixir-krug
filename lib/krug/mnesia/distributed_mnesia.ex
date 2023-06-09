@@ -110,13 +110,13 @@ defmodule Krug.DistributedMnesia do
   connected_nodes: list (of atom) nodes already connected in a erlang cluster.
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
-                   ips_separator \\ "|",disc_copies \\ false,tables \\ []) do
+                   ips_separator \\ "|",disc_copies \\ false,tables \\ [],connection_timeout \\ nil) do
     local_node = cluster_name
                    |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
     cluster_ips = cluster_ips
                     |> NetworkUtil.extract_valid_ip_v4_addresses(ips_separator)
     connected_nodes = [local_node] 
-                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips)                 
+                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,connection_timeout)                 
     cond do
       (Enum.empty?(connected_nodes))
         -> false
@@ -137,7 +137,8 @@ defmodule Krug.DistributedMnesia do
   to be all range of machine local network
   according the network mask range (/16 or /24).
   """
-  def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,tables \\ []) do
+  def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,tables \\ [], 
+                        connection_timeout \\ nil) do
     cluster_name
       |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
     cluster_ips = NetworkUtil.get_local_wlan_ip_v4()
@@ -145,7 +146,7 @@ defmodule Krug.DistributedMnesia do
                          NetworkUtil.get_local_wlan_ip_v4_netmask()
                        )
     connected_nodes = [] 
-                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips)                 
+                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,connection_timeout)                 
     cond do
       (Enum.empty?(connected_nodes))
         -> false
@@ -220,16 +221,11 @@ defmodule Krug.DistributedMnesia do
   #  Private functions
   #####################################
   defp start_mnesia(disc_copies,tables,connected_nodes) do
-    :mnesia.stop()
     System.cmd("epmd", ["-daemon"])
-    [node()]
-      |> :mnesia.delete_schema()
-    [node()]
-      |> :mnesia.create_schema()
     :mnesia.start()
     :extra_db_nodes 
       |> :mnesia.change_config(connected_nodes)
-    cond do
+    configured_tables = cond do
       (disc_copies)
         -> tables
              |> config_tables(:disc_copies)
@@ -237,6 +233,13 @@ defmodule Krug.DistributedMnesia do
         -> tables
              |> config_tables(:ram_copies)
     end 
+    cond do
+      (!configured_tables)
+        -> false
+      true
+        -> tables
+             |> replicate_tables(connected_nodes)
+    end
   end
   
   
@@ -295,8 +298,10 @@ defmodule Krug.DistributedMnesia do
 
 
   
-  defp config_tables5({:aborted, {:already_exists,_}},_mode,_table_name) do
-    true
+  defp config_tables5({:aborted, {:already_exists,_}},mode,table_name) do
+    table_name
+      |> :mnesia.add_table_copy(node(),mode)
+      |> config_tables6()
   end
 
 
@@ -326,6 +331,49 @@ defmodule Krug.DistributedMnesia do
   end
 
 
+  
+  defp replicate_tables(tables,connected_nodes) do
+    table_names = tables
+			        |> Enum.map(
+			             fn(table) ->
+			               table
+			                 |> MapUtil.get(:table_name)
+			             end
+			           )
+    table_names
+      |> :mnesia.wait_for_tables(500)
+    table_names
+      |> Enum.map(
+           fn(table_name) ->
+             table_name
+               |> replicate_table_on_nodes(connected_nodes)
+           end
+         )
+    true
+  end
+  
+  
+  
+  defp replicate_table_on_nodes(table_name,connected_nodes) do
+    cond do
+      (Enum.empty?(connected_nodes))
+        -> :ok
+      true
+        -> table_name 
+             |> replicate_table_on_nodes2(connected_nodes)
+    end
+  end
+  
+  
+  
+  defp replicate_table_on_nodes2(table_name,connected_nodes) do
+    table_name
+      |> :mnesia.add_table_copy(connected_nodes |> hd(),:ram_copies)
+    table_name
+      |> replicate_table_on_nodes(connected_nodes |> tl())
+  end
+  
+  
   
 end
 
