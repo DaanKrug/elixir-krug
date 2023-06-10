@@ -26,9 +26,14 @@ defmodule Krug.MnesiaUtil do
   """
   def store(table_name,id_row,data_row) do
     write_data = fn ->
-      [table_name | [id_row | data_row]]
-        |> List.to_tuple()
-        |> :mnesia.write()
+      cond do
+        (!mnesia_started())
+          -> false
+        true
+          -> [table_name | [id_row | data_row]]
+               |> List.to_tuple()
+               |> :mnesia.write()
+      end
     end
     write_data
       |> :mnesia.transaction()
@@ -56,7 +61,12 @@ defmodule Krug.MnesiaUtil do
   """
   def put_cache(table_name,id_row,data_row) do
     write_data = fn ->
-      :mnesia.write({table_name,id_row,data_row})
+      cond do
+        (!mnesia_started())
+          -> false
+        true
+          -> :mnesia.write({table_name,id_row,data_row})
+      end
     end
     write_data
       |> :mnesia.transaction()
@@ -77,7 +87,12 @@ defmodule Krug.MnesiaUtil do
   """
   def load_from_cache(table_name,id_row) do
     read_data = fn ->
-      :mnesia.read({table_name,id_row})
+      cond do
+        (!mnesia_started())
+          -> nil
+        true
+          -> :mnesia.read({table_name,id_row})
+      end
     end
     read_data
       |> :mnesia.transaction()
@@ -93,10 +108,14 @@ defmodule Krug.MnesiaUtil do
   Requires mnesia already be started. 
   """
   def clear_cache(table_name) do
-    table_name
-	  |> :mnesia.clear_table()
-      |> clear_cache_result()
-    true
+    cond do
+      (!mnesia_started())
+        -> false
+      true
+        -> table_name
+	         |> :mnesia.clear_table()
+             |> clear_cache_result()
+    end
   end
   
   
@@ -114,8 +133,13 @@ defmodule Krug.MnesiaUtil do
   @doc since: "1.1.25"
   def load_last(table_name) do
     read_data = fn ->
-      table_name
-        |> :mnesia.last()
+      cond do
+        (!mnesia_started())
+          -> nil
+        true
+          -> table_name
+               |> :mnesia.last()
+      end
     end
     read_data
       |> :mnesia.transaction()
@@ -136,8 +160,13 @@ defmodule Krug.MnesiaUtil do
   @doc since: "1.1.25"
   def load_first(table_name) do
     read_data = fn ->
-      table_name
-        |> :mnesia.first()
+      cond do
+        (!mnesia_started())
+          -> nil
+        true
+          -> table_name
+               |> :mnesia.first()
+      end
     end
     read_data
       |> :mnesia.transaction()
@@ -147,16 +176,16 @@ defmodule Krug.MnesiaUtil do
   
   @doc """
   Executes a "select" operation against a "table_name" filtering by
-  "match_spec" and "limit"
+  "map_pattern"
   
   Requires mnesia already be started. 
   """
   @doc since: "1.1.25"
   def select(table_name,map_pattern) do
-    count = table_name 
-              |> :mnesia.table_info(:size)
     cond do
-      (count == 0)
+      (!mnesia_started())
+        -> []
+      (table_name |> :mnesia.table_info(:size) == 0)
         -> []
       true
         -> table_name
@@ -173,8 +202,13 @@ defmodule Krug.MnesiaUtil do
   """
   @doc since: "1.1.25"
   def count(table_name) do
-    table_name 
-      |> :mnesia.table_info(:size)
+    cond do
+      (!mnesia_started())
+        -> nil
+      true
+          -> table_name
+               |> :mnesia.table_info(:size)
+    end
   end
   
   
@@ -192,8 +226,13 @@ defmodule Krug.MnesiaUtil do
   @doc since: "1.1.25"
   def delete(table_name,id_row) do
     delete_data = fn ->
-      table_name
-        |> :mnesia.delete(id_row,:write)
+      cond do
+        (!mnesia_started())
+          -> false
+        true
+          -> table_name
+               |> :mnesia.delete(id_row,:write)
+      end
     end
     delete_data
       |> :mnesia.transaction()
@@ -284,6 +323,18 @@ defmodule Krug.MnesiaUtil do
     []
   end
   
+
+  
+  ###################
+  # Utilitaries
+  ###################
+  defp mnesia_started() do
+    nodes = :running_db_nodes
+              |> :mnesia.system_info()
+              |> length()
+    nodes > 0
+  end
+
   
   
 end

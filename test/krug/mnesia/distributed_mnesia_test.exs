@@ -5,6 +5,39 @@ defmodule Krug.DistributedMnesiaTest do
   
   alias Krug.DistributedMnesia
   
+  test "[mnesia not started]" do
+    :mnesia.stop()
+    
+    objects = [
+      [
+         "Johannes Cool",
+         "johann@es.not_cool.pt"
+      ],
+      [
+         "Johannes Not Cool",
+         "johann@es.cool.de"
+      ],
+      [
+         "Johannes Cool",
+         "johann@es.cool.de"
+      ]
+    ]
+    
+    added = DistributedMnesia.store(
+              :user_x,
+              300,
+              objects |> Enum.at(1)
+            )
+    
+    assert added == false
+    
+    result = DistributedMnesia.load(
+               :user_x,
+               300
+             )
+    
+    assert result == nil
+  end
   
   test "[init_cluster|store|stop|clear|load|select|delete]" do
     cluster_cookie = "echo"

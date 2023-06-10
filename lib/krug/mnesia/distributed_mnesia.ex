@@ -599,6 +599,8 @@ defmodule Krug.DistributedMnesia do
     total = table_name
               |> count()
     cond do
+      (nil == total)
+        -> true
       (total <= amount_to_keep)
         -> true
       true
