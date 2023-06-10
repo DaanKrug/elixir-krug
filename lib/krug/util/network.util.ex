@@ -9,6 +9,7 @@ defmodule Krug.NetworkUtil do
   
   alias Krug.StringUtil
   alias Krug.MapUtil
+  alias Krug.NumberUtil
   
   
   
@@ -91,20 +92,22 @@ defmodule Krug.NetworkUtil do
     netmask_16 = ipv4_netmask
                    |> StringUtil.split(".")
                    |> Enum.at(2)
+    ip_array = ipv4_address
+                 |> StringUtil.split(".")
+                 |> Enum.reverse()
+                 |> tl()
     cond do
       (netmask_16 == "0")
-        -> ipv4_address
-             |> StringUtil.split(".")
-             |> Enum.reverse()
-             |> tl()
+        -> ip_array
              |> tl()
              |> Enum.reverse()
-             |> generate_ipv4_netmask_16_ip_list()
+             |> generate_ipv4_netmask_16_ip_list(
+                  ip_array
+                    |> hd()
+                    |> netmask_16_calculate_start_range()
+                )
       true
-        -> ipv4_address
-             |> StringUtil.split(".")
-             |> Enum.reverse()
-             |> tl()
+        -> ip_array
              |> Enum.reverse()
              |> generate_ipv4_netmask_24_ip_list()
     end
@@ -115,6 +118,19 @@ defmodule Krug.NetworkUtil do
   ###########################################
   # Private functions
   ###########################################
+  defp netmask_16_calculate_start_range(ip_third_position) do
+    ip_third_position = ip_third_position
+                         |> NumberUtil.to_integer()
+    cond do
+      (ip_third_position > 10)
+        -> ip_third_position - 11
+      true
+        -> 0
+    end
+  end
+  
+  
+  
   defp filter_local_wlan_ip(ips_list,netmask \\ false,local_ip \\ nil) do
     cond do
       (Enum.empty?(ips_list))
@@ -170,16 +186,17 @@ defmodule Krug.NetworkUtil do
   
   
   
-  defp generate_ipv4_netmask_16_ip_list(ipv4_base_array,counter \\ 0,ipv4_array_list \\ []) do
+  defp generate_ipv4_netmask_16_ip_list(ipv4_base_array,start_position,counter \\ 0,ipv4_array_list \\ []) do
     cond do
-      (counter > 255)
+      (counter > 20)
         -> ipv4_array_list
       true
         -> ipv4_base_array
              |> generate_ipv4_netmask_16_ip_list(
+                  start_position,
                   counter + 1,
                   ipv4_base_array
-                    |> generate_ipv4_netmask_16_ip_list2(counter,ipv4_array_list)
+                    |> generate_ipv4_netmask_16_ip_list2(start_position + counter,ipv4_array_list)
                 )      
     end
   end

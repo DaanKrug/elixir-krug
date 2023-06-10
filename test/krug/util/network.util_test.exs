@@ -14,7 +14,12 @@ defmodule Krug.NetworkUtilTest do
     ipv4_address = "192.168.10.200"
     ipv4_netmask = "255.255.0.0"
     ip_list = NetworkUtil.generate_ipv4_netmask_16_24_ip_list(ipv4_address,ipv4_netmask)
-    assert ip_list |> length() == (256 * 256)
+    assert ip_list |> length() == (256 * 21)
+    
+    ipv4_address = "192.168.42.200"
+    ipv4_netmask = "255.255.0.0"
+    ip_list = NetworkUtil.generate_ipv4_netmask_16_24_ip_list(ipv4_address,ipv4_netmask)
+    assert ip_list |> length() == (256 * 21)
   end
   
 end
