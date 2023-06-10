@@ -27,10 +27,12 @@ defmodule Krug.DistributedMnesiaTest do
                      tables,
                      100
                    )
-                   
-    ["init_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
+    
+    cleaned = DistributedMnesia.clear(:user_x)
+    
+    assert cleaned == true
     
     objects = [
       [
@@ -112,6 +114,65 @@ defmodule Krug.DistributedMnesiaTest do
              )
     
     assert result == {:user_x, 400, "Johannes Cool", "johann@es.cool.de"}
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 3
+    
+    array_params = [
+      {
+        {:user_x,:"$1",:"$2",:"$3"},# table definition
+        [
+          {:"==",:"$2","Johannes Cool"}
+        ], #conditions - :name = "Johannes Cool"
+        [:"$$"] 
+      }
+    ]
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+                       [200, "Johannes Cool", "johann@es.not_cool.pt"], 
+                       [400, "Johannes Cool", "johann@es.cool.de"]
+                     ]
+                     
+    array_params = [
+      {
+        {:user_x,:"$1",:"$2",:"$3"},# table definition
+        [
+          {:"==",:"$3","johann@es.cool.de"}
+        ], #conditions - :email = "johann@es.cool.de"
+        [:"$$"] 
+      }
+    ]
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+                       [300, "Johannes Not Cool", "johann@es.cool.de"], 
+                       [400, "Johannes Cool", "johann@es.cool.de"]
+                     ]
+                     
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 3
+    
+    deleted = :user_x |> DistributedMnesia.delete(300)
+    
+    assert deleted == true
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 2
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+                       [400, "Johannes Cool", "johann@es.cool.de"]
+                     ]
     
     cleaned = DistributedMnesia.clear(:user_x)
     
@@ -159,10 +220,12 @@ defmodule Krug.DistributedMnesiaTest do
                      tables,
                      100
                    )
-                   
-    ["init_auto_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
+    
+    cleaned = DistributedMnesia.clear(:user_x)
+    
+    assert cleaned == true
     
     objects = [
       [
@@ -245,6 +308,84 @@ defmodule Krug.DistributedMnesiaTest do
     
     assert result == {:user_x, 400, "Johannes Cool", "johann@es.cool.de"}
     
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 3
+    
+    array_params = [
+      {
+        {:user_x,:"$1",:"$2",:"$3"},# table definition
+        [
+          {:"==",:"$2","Johannes Cool"}
+        ], #conditions - :name = "Johannes Cool"
+        [:"$$"] 
+      }
+    ]
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+                       [200, "Johannes Cool", "johann@es.not_cool.pt"], 
+                       [400, "Johannes Cool", "johann@es.cool.de"]
+                     ]
+                     
+    array_params = [
+      {
+        {:user_x,:"$1",:"$2",:"$3"},# table definition
+        [
+          {:"==",:"$3","johann@es.cool.de"}
+        ], #conditions - :email = "johann@es.cool.de"
+        [:"$$"] 
+      }
+    ]
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+                       [300, "Johannes Not Cool", "johann@es.cool.de"], 
+                       [400, "Johannes Cool", "johann@es.cool.de"]
+                     ]
+                     
+    array_params2 = [
+      {
+        {:distributed_mnesia_metadata_table,:"$1",:"$2",:"$3",:"$4"},# table definition
+        [
+          {:"==",:"$2",:user_x}
+        ], 
+        [[:"$1",:"$2",:"$3"]] 
+      }
+    ]
+    
+    result = :distributed_mnesia_metadata_table 
+               |> DistributedMnesia.select(array_params2)
+    
+    assert result == [
+                       ["user_x_400", :user_x, 400], 
+                       ["user_x_200", :user_x, 200], 
+                       ["user_x_300", :user_x, 300]
+                     ]
+                     
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 3
+    
+    deleted = :user_x |> DistributedMnesia.delete(300)
+    
+    assert deleted == true
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 2
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+                       [400, "Johannes Cool", "johann@es.cool.de"]
+                     ]
+    
     cleaned = DistributedMnesia.clear(:user_x)
     
     assert cleaned == true
@@ -255,6 +396,11 @@ defmodule Krug.DistributedMnesiaTest do
              )
     
     assert result == nil
+    
+    result = :distributed_mnesia_metadata_table 
+               |> DistributedMnesia.select(array_params2)
+    
+    assert result == []
     
     result = DistributedMnesia.load(
                :user_x,

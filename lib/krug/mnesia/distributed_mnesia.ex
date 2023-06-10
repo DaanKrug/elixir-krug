@@ -10,10 +10,15 @@ defmodule Krug.DistributedMnesia do
   
   
   
+  @metadata_table :distributed_mnesia_metadata_table
+  
+  
+  
   alias Krug.MapUtil
   alias Krug.NetworkUtil
   alias Krug.MnesiaUtil
   alias Krug.ClusterUtil
+  alias Krug.DateUtil
   
   
   
@@ -174,8 +179,16 @@ defmodule Krug.DistributedMnesia do
   function on application startup.
   """
   def store(table_name,id_row,data_row) do
-    table_name
-      |> MnesiaUtil.store(id_row,data_row)
+    stored = table_name
+               |> MnesiaUtil.store(id_row,data_row)
+    cond do
+      (stored)
+        -> table_name
+             |> set_updated_at(id_row)
+      true
+        -> :ok
+    end 
+    stored
   end
   
   
@@ -212,11 +225,115 @@ defmodule Krug.DistributedMnesia do
   """
   def clear(table_name) do
     table_name
+      |> remove_all_updated_at()
+    table_name
       |> MnesiaUtil.clear_cache()
   end
 
 
 
+  @doc """
+  Get the last element in a table "table_name". Return the stored value or nil.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def load_last(table_name) do
+    table_name
+      |> MnesiaUtil.load_last()
+  end
+  
+  
+  
+  @doc """
+  Get the first element in a table "table_name". Return the stored value or nil.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def load_first(table_name) do
+    table_name
+      |> MnesiaUtil.load_first()
+  end
+  
+  
+  
+  @doc """
+  Executes a "select" operation against a "table_name" filtering by
+  "array_params"
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def select(table_name,array_params) do
+    table_name
+      |> MnesiaUtil.select(array_params)
+  end
+  
+  
+  
+  @doc """
+  Executes a "count" operation against a "table_name".
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def count(table_name) do
+    table_name
+      |> MnesiaUtil.count()
+  end
+  
+  
+  
+  @doc """
+  Delete a row identified by "id_row" in a table 
+  "table_name". Return true or false.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def delete(table_name,id_row) do
+    total = table_name
+              |> MnesiaUtil.count()
+    table_name
+      |> MnesiaUtil.delete(id_row)
+    total_after_delete = table_name
+                           |> MnesiaUtil.count()
+    deleted = total_after_delete < total
+    cond do
+      (deleted)
+        -> table_name
+             |> remove_updated_at(id_row)
+      true
+        -> :ok
+    end 
+    deleted
+  end
+  
+  
+  
+  @doc """
+  Set last updated time of an entry on "table_name".
+  Stores this data on metadata control table. Return true or false.
+  
+  Used by internal controls, and also exposes a way to other modules
+  change this values (for example if you are caching something and needs
+  to delete the oldest used objects - setting new value for updated_at each time
+  that the object is used "loaded").
+  """
+  def set_updated_at(table_name,id_row) do
+    id_row2 = "#{table_name}_#{id_row}"
+    data_row = [
+      table_name,
+      id_row,
+      DateUtil.get_date_time_now_millis()
+    ]
+    @metadata_table
+      |> MnesiaUtil.store(id_row2,data_row)
+  end
+  
+  
+  
   #####################################
   #  Private functions
   #####################################
@@ -228,9 +345,11 @@ defmodule Krug.DistributedMnesia do
     configured_tables = cond do
       (disc_copies)
         -> tables
+             |> add_metadata_table()
              |> config_tables(:disc_copies)
       true
         -> tables
+             |> add_metadata_table()
              |> config_tables(:ram_copies)
     end 
     cond do
@@ -286,47 +405,60 @@ defmodule Krug.DistributedMnesia do
     table_attributes = table 
                          |> MapUtil.get(:table_attributes)
     table_name
-      |> :mnesia.create_table(attributes: table_attributes)
-      |> config_tables5(mode,table_name)
+      |> :mnesia.create_table(
+           [
+             attributes: table_attributes,
+             type: :set
+           ]
+         )
+      |> config_tables5(mode,table_name,table_attributes |> hd())
   end
   
   
   
-  defp config_tables5({:aborted, {:node_not_running, _}},_mode,_table_name) do
+  defp config_tables5({:aborted, {:node_not_running, _}},_mode,_table_name,_table_index) do
     false
   end
 
 
   
-  defp config_tables5({:aborted, {:already_exists,_}},mode,table_name) do
+  defp config_tables5({:aborted, {:already_exists,_}},mode,table_name,table_index) do
     table_name
-      |> :mnesia.add_table_copy(node(),mode)
-      |> config_tables6()
+      |> config_tables6(table_index,mode)
   end
 
 
   
-  defp config_tables5({:atomic,:ok},mode,table_name) do
+  defp config_tables5({:atomic,:ok},mode,table_name,table_index) do
     table_name
-      |> :mnesia.add_table_copy(node(),mode)
-      |> config_tables6()
+      |> config_tables6(table_index,mode)
   end
   
   
   
-  defp config_tables6({:atomic,:ok}) do
+  defp config_tables6(table_name,table_index,mode) do
+    table_name
+      |> :mnesia.add_table_index(table_index)
+    table_name
+      |> :mnesia.add_table_copy(node(),mode)
+      |> config_tables7()
+  end
+  
+  
+  
+  defp config_tables7({:atomic,:ok}) do
     true
   end
   
   
   
-  defp config_tables6({:aborted,{:already_exists,_,_}}) do
+  defp config_tables7({:aborted,{:already_exists,_,_}}) do
     true
   end
   
   
   
-  defp config_tables6({:aborted,_}) do
+  defp config_tables7({:aborted,_}) do
     false
   end
 
@@ -374,6 +506,67 @@ defmodule Krug.DistributedMnesia do
   end
   
   
+  
+  ########################################
+  # Metadata functions
+  ########################################
+  defp add_metadata_table(tables) do
+    [
+      %{
+         table_name: @metadata_table, 
+         table_attributes: [:id,:object_table,:object_id,:updated_at] 
+      }
+      | tables  
+    ]
+  end
+  
+
+  
+  defp remove_updated_at(table_name,id_row) do
+    @metadata_table
+      |> MnesiaUtil.delete("#{table_name}_#{id_row}")
+  end
+
+
+
+  defp remove_all_updated_at(table_name) do
+    array_params = [
+      {
+        {@metadata_table,:"$1",:"$2",:"$3",:"$4"},
+        [
+          {:"==",:"$2",table_name}
+        ],
+        [:"$3"] 
+      }
+    ]
+    id_rows = @metadata_table 
+                |> select(array_params)
+    table_name
+      |> remove_all_updated_at2(id_rows)
+  end
+
+
+
+  defp remove_all_updated_at2(table_name,id_rows) do
+    cond do
+      (Enum.empty?(id_rows))
+        -> :ok
+      true
+        -> table_name
+             |> remove_all_updated_at3(id_rows)
+    end
+  end
+  
+
+  
+  defp remove_all_updated_at3(table_name,id_rows) do
+    table_name
+      |> remove_updated_at(id_rows |> hd())
+    table_name
+      |> remove_all_updated_at2(id_rows |> tl())
+  end
+  
+
   
 end
 

@@ -26,8 +26,6 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
                      100
                    )
     
-    ["init_cluster => ",:mnesia.system_info()] |> IO.inspect()
-    
     assert created == true
     
     normalized_sql = "select id,name,email from users where email = ? or name = ? "
@@ -98,8 +96,6 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
                      table_names,
                      100
                    )
-    
-    ["init_auto_cluster => ",:mnesia.system_info()] |> IO.inspect()
     
     assert created == true
     

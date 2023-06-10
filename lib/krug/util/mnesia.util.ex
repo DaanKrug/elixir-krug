@@ -101,6 +101,106 @@ defmodule Krug.MnesiaUtil do
   
   
   
+  @doc """
+  Provides encapsulated behaviour for load the LAST stored key value
+  using transaction for
+  ```elixir
+  :mnesia.last(table_name)
+  ```
+  for an table "table_name". Return the stored value or nil.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def load_last(table_name) do
+    read_data = fn ->
+      table_name
+        |> :mnesia.last()
+    end
+    read_data
+      |> :mnesia.transaction()
+  end
+  
+  
+  
+  @doc """
+  Provides encapsulated behaviour for load the FIRST stored key value
+  using transaction for
+  ```elixir
+  :mnesia.first(table_name)
+  ```
+  for an table "table_name". Return the stored value or nil.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def load_first(table_name) do
+    read_data = fn ->
+      table_name
+        |> :mnesia.first()
+    end
+    read_data
+      |> :mnesia.transaction()
+  end
+  
+  
+  
+  @doc """
+  Executes a "select" operation against a "table_name" filtering by
+  "match_spec" and "limit"
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def select(table_name,map_pattern) do
+    count = table_name 
+              |> :mnesia.table_info(:size)
+    cond do
+      (count == 0)
+        -> []
+      true
+        -> table_name
+             |> select2(map_pattern)
+    end
+  end
+  
+  
+  
+  @doc """
+  Executes a "count" operation against a "table_name".
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def count(table_name) do
+    table_name 
+      |> :mnesia.table_info(:size)
+  end
+  
+  
+  
+  @doc """
+  Provides encapsulated behaviour for delete stored key value
+  using transaction for
+  ```elixir
+  :mnesia.delete(table_name,id_row,:write)
+  ```
+  for an table "table_name". Return :ok.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.25"
+  def delete(table_name,id_row) do
+    delete_data = fn ->
+      table_name
+        |> :mnesia.delete(id_row,:write)
+    end
+    delete_data
+      |> :mnesia.transaction()
+  end
+  
+  
+  
   ##########################################
   ### store functions
   ########################################## 
@@ -111,7 +211,6 @@ defmodule Krug.MnesiaUtil do
   
   
   defp put_cache_result(error) do
-    error |> IO.inspect()
     false  
   end
   
@@ -152,7 +251,40 @@ defmodule Krug.MnesiaUtil do
     false
   end
 
+  
+  
+  ###########################################
+  # Select operations
+  ###########################################
+  defp select2(table_name,array_params) do
+    read_data = fn ->
+      table_name
+        |> :mnesia.select(array_params)
+    end
+    read_data
+      |> :mnesia.transaction()
+      |> select_result()
+  end
 
+
+
+  defp select_result({:atomic,match_array}) do
+    match_array
+  end
+  
+  
+  
+  defp select_result({[match],_continuation}) do
+    [match]
+  end
+  
+  
+  
+  defp select_result(:"$_end_of_table") do
+    []
+  end
+  
+  
   
 end
 
