@@ -7,7 +7,7 @@ defmodule Krug.ClusterUtil do
   
   
   
-  @connection_node_timeout 500
+  @connection_node_timeout 100
   
   
   
@@ -22,13 +22,16 @@ defmodule Krug.ClusterUtil do
       true
         -> connection_timeout
     end
-    cond do
-      (Enum.empty?(cluster_ips))
-        -> connected_nodes
-      true 
-        -> connected_nodes
-             |> connect_nodes2(cluster_name,cluster_ips,connection_timeout)
-    end
+    cluster_nodes = cluster_ips 
+                      |> Enum.map(
+                           fn(cluster_ip) ->
+                             "#{cluster_name}@#{cluster_ip}"
+                               |> String.to_atom()
+                           end
+                         )
+                      |> Enum.chunk_every(25)
+    connected_nodes
+      |> connect_nodes2(cluster_nodes,connection_timeout)
   end
   
   
@@ -36,40 +39,100 @@ defmodule Krug.ClusterUtil do
   ##########################################
   ### init functions
   ########################################## 
-  defp connect_nodes2(connected_nodes,cluster_name,cluster_ips,connection_timeout) do
-    "#{cluster_name}@#{cluster_ips |> hd()}"
-      |> String.to_atom()
-      |> connect_nodes3(connected_nodes,connection_timeout)
-      |> connect_nodes(
-           cluster_name,
-           cluster_ips |> tl(),
+  def connect_nodes2(connected_nodes,cluster_nodes,connection_timeout) do
+    cond do
+      (Enum.empty?(cluster_nodes))
+        -> connected_nodes
+      true 
+        -> connected_nodes
+             |> connect_nodes3(cluster_nodes,connection_timeout)
+    end
+  end
+  
+  
+  
+  defp connect_nodes3(connected_nodes,cluster_nodes,connection_timeout) do
+    cluster_nodes
+      |> hd()
+      |> connect_nodes4(connected_nodes,connection_timeout)
+      |> connect_nodes2(
+           cluster_nodes |> tl(),
            connection_timeout
          )
   end
   
   
   
-  defp connect_nodes3(node,connected_nodes,connection_timeout) do
-    task = Task.async(
-      fn ->
-        :net_kernel.connect_node(node)
-      end
-    )
-    %Task{pid: pid} = task
+  defp connect_nodes4(nodes,connected_nodes,connection_timeout) do
+    task_nodes = nodes
+                   |> enqueue_connection_tasks()
     connection_timeout
       |> :timer.sleep()
+    connected_nodes
+      |> verify_connected_nodes(task_nodes)
+  end
+  
+  
+  
+  defp verify_connected_nodes(connected_nodes,task_nodes) do
     cond do
-      (Process.alive?(pid))
+      (Enum.empty?(task_nodes))
         -> connected_nodes
-      (Task.await(task))
-        -> [node | connected_nodes]
       true
         -> connected_nodes
+             |> verify_connected_nodes2(task_nodes)
     end
   end
   
+  
+  
+  defp verify_connected_nodes2(connected_nodes,task_nodes) do
+    [task,node] = task_nodes
+                    |> hd()
+    %Task{pid: pid} = task
+    cond do
+      (Process.alive?(pid))
+        -> connected_nodes
+             |> verify_connected_nodes(task_nodes |> tl())
+      (Task.await(task))
+        -> [node | connected_nodes]
+             |> verify_connected_nodes(task_nodes |> tl())
+      true
+        -> connected_nodes
+             |> verify_connected_nodes(task_nodes |> tl())
+    end
+  end
 
 
+
+  defp enqueue_connection_tasks(nodes,tasks \\ []) do
+    cond do 
+      (Enum.empty?(nodes))
+        -> tasks
+      true
+        -> nodes
+             |> enqueue_connection_tasks2(tasks)
+    end
+  end
+
+
+  
+  defp enqueue_connection_tasks2(nodes,tasks) do
+    node = nodes
+             |> hd()
+    task = Task.async(
+      fn ->
+        node
+          |> :net_kernel.connect_node()
+      end
+    )
+    nodes
+      |> tl()
+      |> enqueue_connection_tasks([[task,node] | tasks])
+  end
+  
+  
+  
 end
 
 

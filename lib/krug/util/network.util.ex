@@ -80,6 +80,12 @@ defmodule Krug.NetworkUtil do
   @doc """
   Based in a IP address and a netmask (subnet /16 or /24),
   generates a list of IP addresses suposed by in a same network/VPC
+  
+  For subnets /16 will be returned only a limit range of ≃10%
+  of all possible IP's. This will be IP's that are near neighboors
+  of given "ipv4_address". 
+  Example given "ipv4_address" was 192.168.40.120, then
+  the first will be 192.168.30.0 and the last will be 192.168.50.255
   """
   def generate_ipv4_netmask_16_24_ip_list(ipv4_address,ipv4_netmask) do
     netmask_16 = ipv4_netmask
