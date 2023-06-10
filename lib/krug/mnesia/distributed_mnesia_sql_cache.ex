@@ -131,6 +131,9 @@ defmodule Krug.DistributedMnesiaSqlCache do
   @doc """
   Provides cache functionality to  store SQL queries result. Return true or false.
   
+  Keep the "amount_to_keep" most recent created/loaded entries from "table_name" table.
+  All other entries will be removed/deleted. Return true or false.
+  
   Requires mnesia already be started. 
   
   If you wish you application be able to scalabity then should be used
@@ -139,9 +142,12 @@ defmodule Krug.DistributedMnesiaSqlCache do
   ```
   function on application startup.
   """
-  def put_cache(table_name,normalized_sql,params,resultset) do
+  def put_cache(table_name,normalized_sql,params,resultset,amount_to_keep \\ 200) do
+    result = table_name
+               |> MnesiaUtil.put_cache([normalized_sql,params],resultset)
     table_name
-      |> MnesiaUtil.put_cache({normalized_sql,params},resultset)
+      |> DistributedMnesia.keep_only_last_used(amount_to_keep)         
+    result
   end
   
   
@@ -159,7 +165,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   """
   def load_from_cache(table_name,normalized_sql,params) do
     table_name
-      |> DistributedMnesia.load({normalized_sql,params})
+      |> DistributedMnesia.load([normalized_sql,params])
       |> load_from_cache_result()
   end
   

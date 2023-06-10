@@ -210,7 +210,7 @@ defmodule Krug.MnesiaUtil do
   
   
   
-  defp put_cache_result(error) do
+  defp put_cache_result(_error) do
     false  
   end
   

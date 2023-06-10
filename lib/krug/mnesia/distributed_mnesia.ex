@@ -206,8 +206,16 @@ defmodule Krug.DistributedMnesia do
   function on application startup.
   """
   def load(table_name,id_row) do
-    table_name
-      |> MnesiaUtil.load_from_cache(id_row)
+    row_object = table_name
+                   |> MnesiaUtil.load_from_cache(id_row)
+    cond do
+      (nil != row_object)
+        -> table_name
+             |> set_updated_at(id_row)
+      true
+        -> :ok
+    end
+    row_object
   end
   
   
@@ -330,6 +338,25 @@ defmodule Krug.DistributedMnesia do
     ]
     @metadata_table
       |> MnesiaUtil.store(id_row2,data_row)
+  end
+  
+  
+  
+  @doc """
+  Keep the "amount_to_keep" entries from "table_name" table.
+  All other entries will be removed/deleted. Return true or false.
+  
+  Usefull for caching control (limit memory usage and others).
+  With this you could limit each table to keep only the X last
+  recent used (stored/loaded) entries, optimizing the memory
+  usage and getting better caching performance - keeping in cache
+  only the entries that are more often requested.
+  
+  Requires mnesia already be started. 
+  """
+  def keep_only_last_used(table_name,amount_to_keep) do
+    table_name
+      |> keep_only_last_used2(amount_to_keep)
   end
   
   
@@ -566,6 +593,70 @@ defmodule Krug.DistributedMnesia do
       |> remove_all_updated_at2(id_rows |> tl())
   end
   
+
+
+  defp keep_only_last_used2(table_name,amount_to_keep) do
+    total = table_name
+              |> count()
+    cond do
+      (total <= amount_to_keep)
+        -> true
+      true
+        -> table_name
+             |> keep_only_last_used3(amount_to_keep,total)
+    end     
+  end
+  
+  
+  
+  defp keep_only_last_used3(table_name,amount_to_keep,total) do
+    array_params = [
+      {
+        {@metadata_table,:"$1",:"$2",:"$3",:"$4"},
+        [
+          {:"==",:"$2",table_name}
+        ],
+        [:"$$"] 
+      }
+    ]
+    all_rows = @metadata_table 
+                 |> select(array_params)
+    ordered_rows = :lists.sort(
+                     fn(metadata_list_a,metadata_list_b) ->
+                       (metadata_list_a |> Enum.at(3)) <= (metadata_list_b |> Enum.at(3))
+                     end,
+                     all_rows
+                   )
+    ordered_rows
+      |> remove_old_rows(total - amount_to_keep,table_name)
+  end
+  
+  
+  
+  defp remove_old_rows(ordered_rows,total_to_remove,table_name,counter \\ 0) do
+    cond do
+      (counter >= total_to_remove
+        or Enum.empty?(ordered_rows))
+          -> true
+      true
+        -> ordered_rows
+             |> remove_old_rows2(total_to_remove,table_name,counter)
+    end
+  end
+
+
+
+  defp remove_old_rows2(ordered_rows,total_to_remove,table_name,counter) do
+    id_row = ordered_rows
+               |> hd()
+               |> Enum.at(2)
+    table_name
+      |> delete(id_row)          
+    ordered_rows
+      |> tl()
+      |> remove_old_rows(total_to_remove,table_name,counter + 1) 
+  end
+
 
   
 end

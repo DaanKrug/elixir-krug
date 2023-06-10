@@ -6,7 +6,7 @@ defmodule Krug.DistributedMnesiaTest do
   alias Krug.DistributedMnesia
   
   
-  test "[init_cluster|store_data|stop]" do
+  test "[init_cluster|store|stop|clear|load|select|delete]" do
     cluster_cookie = "echo"
     cluster_name = "echo"
     cluster_ips = "192.168.1.12X "
@@ -203,7 +203,7 @@ defmodule Krug.DistributedMnesiaTest do
   
   
   
-  test "[init_auto_cluster|store_data|stop]" do
+  test "[init_auto_cluster|store|stop|clear|load|select|delete]" do
     cluster_cookie = "echo"
     cluster_name = "echo"
     tables = [
@@ -416,5 +416,211 @@ defmodule Krug.DistributedMnesiaTest do
     
     assert result == nil
   end
+  
+  
+  
+  test "[keep_only_last_used|set_updated_at]" do
+    cluster_cookie = "echo"
+    cluster_name = "echo"
+    tables = [
+      %{
+        table_name: :user_x, 
+        table_attributes: [:id, :name, :email] 
+      }
+    ]  
+    
+    created = cluster_name
+                |> DistributedMnesia.init_auto_cluster(
+                     cluster_cookie,
+                     true,
+                     tables,
+                     100
+                   )
+    
+    assert created == true
+    
+    cleaned = DistributedMnesia.clear(:user_x)
+    
+    assert cleaned == true
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 0
+    
+    array_params = [
+      {
+        {:user_x,:"$1",:"$2",:"$3"},# table definition
+        [
+          {:">",:"$1",0}
+        ], #conditions - :id > 0
+        [:"$$"] 
+      }
+    ]
+    
+    result = :distributed_mnesia_metadata_table 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == []
+    
+    object = [
+       "Johannes Cool",
+       "johann@es.not_cool.pt"
+    ]
+    
+    #######################################
+    ## create data
+    #######################################
+    DistributedMnesia.store(:user_x,1,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,2,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,3,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,4,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,5,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,6,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,7,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,8,object)
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 8
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+			            [5, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [6, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [1, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [2, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [8, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [4, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [7, "Johannes Cool", "johann@es.not_cool.pt"],
+			            [3, "Johannes Cool", "johann@es.not_cool.pt"]
+			         ]
+    
+    
+    #######################################
+    ## test keep last 4 - by insertion time
+    #######################################
+    :user_x
+      |> DistributedMnesia.keep_only_last_used(4)
+      
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 4
+    
+    result = :user_x
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [6, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [7, "Johannes Cool", "johann@es.not_cool.pt"]
+		             ]
+    
+    #######################################
+    ## recreate data
+    #######################################
+    cleaned = DistributedMnesia.clear(:user_x)
+    
+    assert cleaned == true
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 0
+    
+    DistributedMnesia.store(:user_x,1,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,2,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,3,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,4,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,5,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,6,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,7,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x,8,object)
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 8
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [6, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [1, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [2, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [4, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
+		             ]
+    
+    #######################################
+    ## update usage time of some entries
+    #######################################
+    :timer.sleep(100)
+    :user_x
+      |> DistributedMnesia.set_updated_at(1)
+    :user_x
+      |> DistributedMnesia.set_updated_at(3)
+    :user_x
+      |> DistributedMnesia.set_updated_at(5)
+    
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 8
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [6, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [1, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [2, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [4, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
+		             ]
+    
+    #######################################
+    ## now should be keep entries with
+    ## ids 1,3,5 and 8
+    #######################################
+    :user_x
+      |> DistributedMnesia.keep_only_last_used(4)
+      
+    total = :user_x |> DistributedMnesia.count()
+    
+    assert total == 4
+    
+    result = :user_x 
+               |> DistributedMnesia.select(array_params)
+    
+    assert result == [
+		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [1, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
+		             ]
+  end
+  
+  
   
 end
