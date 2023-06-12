@@ -240,6 +240,20 @@ defmodule Krug.MnesiaUtil do
   
   
   
+  @doc """
+  Provides a way to check if mnesia already started.
+  Return true or false.
+  """
+  @doc since: "1.1.26"
+  def mnesia_started() do
+    nodes = :running_db_nodes
+              |> :mnesia.system_info()
+              |> length()
+    nodes > 0
+  end
+  
+  
+  
   ##########################################
   ### store functions
   ########################################## 
@@ -324,18 +338,6 @@ defmodule Krug.MnesiaUtil do
   end
   
 
-  
-  ###################
-  # Utilitaries
-  ###################
-  defp mnesia_started() do
-    nodes = :running_db_nodes
-              |> :mnesia.system_info()
-              |> length()
-    nodes > 0
-  end
-
-  
   
 end
 

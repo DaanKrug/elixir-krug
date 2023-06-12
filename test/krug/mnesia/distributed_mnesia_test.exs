@@ -5,8 +5,19 @@ defmodule Krug.DistributedMnesiaTest do
   
   alias Krug.DistributedMnesia
   
-  test "[mnesia not started]" do
+  test "[mnesia not started|add_runtime_table]" do
     :mnesia.stop()
+    
+    runtime_new_table = %{
+      table_name: :user_x_runtime, 
+      table_attributes: [:id, :name, :email] 
+    }
+    
+    # not running
+    created_table_on_runtime = runtime_new_table
+                                 |> DistributedMnesia.add_runtime_table()
+                                 
+    assert created_table_on_runtime == false
     
     objects = [
       [
@@ -452,7 +463,7 @@ defmodule Krug.DistributedMnesiaTest do
   
   
   
-  test "[keep_only_last_used|set_updated_at]" do
+  test "[keep_only_last_used|set_updated_at|add_runtime_table]" do
     cluster_cookie = "echo"
     cluster_name = "echo"
     tables = [
@@ -652,6 +663,69 @@ defmodule Krug.DistributedMnesiaTest do
 		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+		             
+	##########################
+	# run time table tests
+	##########################
+	runtime_new_table = %{
+      table_name: :user_x_runtime, 
+      table_attributes: [:id, :name, :email] 
+    }
+    
+    created_table_on_runtime = runtime_new_table
+                                 |> DistributedMnesia.add_runtime_table()
+                                 
+    assert created_table_on_runtime == true	
+    
+    created_table_on_runtime = runtime_new_table
+                                 |> DistributedMnesia.add_runtime_table()
+                                 
+    assert created_table_on_runtime == true	    
+    
+    DistributedMnesia.store(:user_x_runtime,1,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,2,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,3,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,4,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,5,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,6,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,7,object)
+    :timer.sleep(10)
+    DistributedMnesia.store(:user_x_runtime,8,object)
+    
+    total = :user_x_runtime |> DistributedMnesia.count()
+    
+    assert total == 8
+    
+    array_params2 = [
+      {
+        {:user_x_runtime,:"$1",:"$2",:"$3"},# table definition
+        [
+          {:">",:"$1",0}
+        ], #conditions - :id > 0
+        [:"$$"] 
+      }
+    ]
+    
+    result = :user_x_runtime 
+               |> DistributedMnesia.select(array_params2)
+    
+    assert result == [
+		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [6, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [1, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [2, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [4, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
+		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
+		             ]
+      
   end
   
   

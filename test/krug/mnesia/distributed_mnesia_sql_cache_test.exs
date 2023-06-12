@@ -238,6 +238,8 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
     
     assert result |> length() == 1
     
+    :timer.sleep(100)
+    
     #######
     # add 2
     #######
@@ -258,6 +260,8 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
              )
     
     assert result |> length() == 1
+    
+    :timer.sleep(100)
     
     #######
     # add 3
@@ -280,6 +284,8 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
     
     assert result |> length() == 1
     
+    :timer.sleep(100)
+    
     #######
     # add 4
     #######
@@ -300,6 +306,8 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
              )
     
     assert result |> length() == 1
+    
+    :timer.sleep(100)
     
     #########
     # removed
@@ -343,6 +351,8 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
              )
     
     assert result |> length() == 1
+    
+    :timer.sleep(100)
     
     #########
     # removed

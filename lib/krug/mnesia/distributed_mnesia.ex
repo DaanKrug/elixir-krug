@@ -11,6 +11,10 @@ defmodule Krug.DistributedMnesia do
   
   
   @metadata_table :distributed_mnesia_metadata_table
+  @nodes_metadata_table :distributed_mnesia_nodes_metadata_table
+  @connected_nodes_key "distributed_mnesia_nodes_metadata_nodes_key"
+  @connected_nodes_mode "distributed_mnesia_nodes_metadata_nodes_mode"
+  @connected_nodes_runtime_tables "distributed_mnesia_nodes_metadata_nodes_runtime_tables"
   
   
   
@@ -361,6 +365,38 @@ defmodule Krug.DistributedMnesia do
   
   
   
+  @doc """
+  Add a new table in runtime execution to mnesia schema
+  and replicate to other nodes. Return true or false.
+  
+  If table already was created in runtime, keep the actual table and return true.
+  If table has same name from a table created in initialization, the operation will fail
+  and will return false.
+  You should keep control about the already created tables.
+  
+  Should be in a same format as when define tables for initialization:
+  ```elixir
+  %{
+    table_name: :my_table_name, 
+    table_attributes: [:attr_1, :attr_2, ...  :attr_N] 
+  }
+  ```
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.26"
+  def add_runtime_table(table) do
+    cond do
+      (!MnesiaUtil.mnesia_started())
+        -> false
+      true
+        -> table
+             |> add_runtime_table2()
+    end
+  end
+  
+  
+  
   #####################################
   #  Private functions
   #####################################
@@ -369,22 +405,24 @@ defmodule Krug.DistributedMnesia do
     :mnesia.start()
     :extra_db_nodes 
       |> :mnesia.change_config(connected_nodes)
-    configured_tables = cond do
+    mode = cond do
       (disc_copies)
-        -> tables
-             |> add_metadata_table()
-             |> config_tables(:disc_copies)
+        -> :disc_copies
       true
-        -> tables
-             |> add_metadata_table()
-             |> config_tables(:ram_copies)
+        -> :ram_copies
     end 
+    configured_tables = tables
+                          |> add_metadata_table()
+                          |> add_nodes_metadata_table()
+                          |> config_tables(mode)
     cond do
       (!configured_tables)
         -> false
+      (!(tables |> replicate_tables(connected_nodes)))
+        -> false
       true
-        -> tables
-             |> replicate_tables(connected_nodes)
+        -> connected_nodes
+             |> store_connected_nodes(mode)
     end
   end
   
@@ -530,6 +568,141 @@ defmodule Krug.DistributedMnesia do
       |> :mnesia.add_table_copy(connected_nodes |> hd(),:ram_copies)
     table_name
       |> replicate_table_on_nodes(connected_nodes |> tl())
+  end
+  
+  
+  
+  ########################################
+  # Node metadata functions
+  ########################################
+  def add_runtime_table2(table) do
+    connected_nodes = @connected_nodes_key
+                        |> load_connected_nodes_metadata()
+    cond do
+      (nil == connected_nodes
+        or Enum.empty?(connected_nodes))
+          -> false
+      (table |> runtime_table_already_exists())
+        -> true
+      true
+        -> table
+             |> add_runtime_table2(connected_nodes)
+    end
+  end
+  
+  
+  
+  defp add_nodes_metadata_table(tables) do
+    [
+      %{
+         table_name: @nodes_metadata_table, 
+         table_attributes: [:id,:content] 
+      }
+      | tables  
+    ]
+  end
+  
+  
+  
+  defp store_connected_nodes(connected_nodes,mode) do
+    @nodes_metadata_table
+      |> MnesiaUtil.delete(@connected_nodes_key)
+    @nodes_metadata_table
+      |> MnesiaUtil.delete(@connected_nodes_mode)
+    @nodes_metadata_table
+      |> MnesiaUtil.delete(@connected_nodes_runtime_tables)
+    ok1 = @nodes_metadata_table
+            |> MnesiaUtil.put_cache(@connected_nodes_key,connected_nodes)
+    ok2 = @nodes_metadata_table
+            |> MnesiaUtil.put_cache(@connected_nodes_mode,mode)
+    ok3 = @nodes_metadata_table
+            |> MnesiaUtil.put_cache(@connected_nodes_runtime_tables,[])
+    ok1 and ok2 and ok3
+  end
+  
+  
+  
+  defp store_new_table_added(table) do
+    tables_array = @connected_nodes_runtime_tables
+                     |> load_connected_nodes_metadata()
+                     |> hd()
+    @nodes_metadata_table
+            |> MnesiaUtil.put_cache(@connected_nodes_runtime_tables,[table | tables_array])
+    true
+  end
+  
+  
+  
+  defp runtime_table_already_exists(table_name) do
+    tables_array = @connected_nodes_runtime_tables
+                     |> load_connected_nodes_metadata()
+    cond do
+      (nil == tables_array
+        or Enum.empty?(tables_array))
+          -> false
+      true
+        -> tables_array
+             |> hd() 
+             |> runtime_table_already_exists2(table_name)
+    end
+  end
+  
+  
+  
+  defp runtime_table_already_exists2(tables_array,table_name) do
+    cond do
+      (Enum.empty?(tables_array))
+        -> false
+      true
+        -> tables_array
+             |> runtime_table_already_exists3(table_name)
+    end
+  end
+  
+  
+  
+  defp runtime_table_already_exists3(tables_array,table_name) do
+    cond do
+      (table_name == tables_array |> hd() |> MapUtil.get(:table_name))
+        -> true
+      true
+        -> tables_array
+             |> tl()
+             |> runtime_table_already_exists2(table_name)
+    end
+  end
+  
+  
+  
+  defp add_runtime_table2(table,connected_nodes) do
+    mode = @connected_nodes_mode
+             |> load_connected_nodes_metadata()
+    tables = [table]
+    cond do
+      (!(tables |> config_tables4(mode)))
+        -> false
+      (!(tables |> replicate_tables(connected_nodes)))
+        -> false
+      true
+        -> table
+             |> store_new_table_added()
+    end
+  end
+  
+  
+  
+  defp load_connected_nodes_metadata(attr_key) do
+    array_params = [
+      {
+        {@nodes_metadata_table,:"$1",:"$2"},
+        [
+          {:"==",:"$1",attr_key}
+        ],
+        [:"$2"] 
+      }
+    ]
+    @nodes_metadata_table 
+      |> select(array_params)
   end
   
   

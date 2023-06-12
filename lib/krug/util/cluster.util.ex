@@ -93,7 +93,7 @@ defmodule Krug.ClusterUtil do
     cond do
       (Process.alive?(pid))
         -> connected_nodes
-             |> verify_connected_nodes(task_nodes |> tl())
+             |> shutdown_connection_task(task_nodes,task,node)
       (Task.await(task))
         -> [node | connected_nodes]
              |> verify_connected_nodes(task_nodes |> tl())
@@ -101,6 +101,34 @@ defmodule Krug.ClusterUtil do
         -> connected_nodes
              |> verify_connected_nodes(task_nodes |> tl())
     end
+  end
+
+
+  
+  defp shutdown_connection_task(connected_nodes,task_nodes,task,node) do
+    connected_on_aborting = task
+                              |> Task.shutdown(0)
+                              |> shutdown_connection_task_result()
+    cond do
+      (connected_on_aborting)
+        -> [node | connected_nodes]
+             |> verify_connected_nodes(task_nodes |> tl())
+      true
+        -> connected_nodes
+             |> verify_connected_nodes(task_nodes |> tl())
+    end
+  end
+
+
+
+  defp shutdown_connection_task_result({:ok, reply}) do
+    reply == true
+  end
+
+
+  
+  defp shutdown_connection_task_result(_) do
+    false
   end
 
 
