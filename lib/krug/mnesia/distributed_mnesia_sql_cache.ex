@@ -189,6 +189,29 @@ defmodule Krug.DistributedMnesiaSqlCache do
 
 
 
+  @doc """
+  Add a new table in runtime execution to mnesia schema
+  and replicate to other nodes. Return true or false.
+  
+  If table already was created in runtime, keep the actual table and return true.
+  If table has same name from a table created in initialization, the operation will fail
+  and will return false.
+  You should keep control about the already created tables.
+  
+  "table_name" should be an atom.
+  
+  Requires mnesia already be started. 
+  """
+  @doc since: "1.1.26"
+  def add_runtime_table(table_name) do           
+    [table_name]
+       |> prepare_tables()
+       |> hd()
+       |> DistributedMnesia.add_runtime_table()
+  end
+  
+  
+  
   #####################################
   #  Private functions
   #####################################
