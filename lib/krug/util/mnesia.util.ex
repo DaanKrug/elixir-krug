@@ -337,6 +337,12 @@ defmodule Krug.MnesiaUtil do
     []
   end
   
+  
+  
+  defp select_result({:aborted, {:no_exists, _}}) do
+    []
+  end
+  
 
   
 end

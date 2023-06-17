@@ -401,16 +401,16 @@ defmodule Krug.DistributedMnesia do
   #  Private functions
   #####################################
   defp start_mnesia(disc_copies,tables,connected_nodes) do
-    System.cmd("epmd", ["-daemon"])
-    :mnesia.start()
-    :extra_db_nodes 
-      |> :mnesia.change_config(connected_nodes)
     mode = cond do
       (disc_copies)
         -> :disc_copies
       true
         -> :ram_copies
     end 
+    System.cmd("epmd", ["-daemon"])
+    :mnesia.start()
+    #:extra_db_nodes 
+    #  |> :mnesia.change_config(connected_nodes)
     configured_tables = tables
                           |> add_metadata_table()
                           |> add_nodes_metadata_table()
@@ -418,7 +418,7 @@ defmodule Krug.DistributedMnesia do
     cond do
       (!configured_tables)
         -> false
-      (!(tables |> replicate_tables(connected_nodes)))
+      (!(tables |> replicate_tables(connected_nodes,mode)))
         -> false
       true
         -> connected_nodes
@@ -506,30 +506,40 @@ defmodule Krug.DistributedMnesia do
       |> :mnesia.add_table_index(table_index)
     table_name
       |> :mnesia.add_table_copy(node(),mode)
-      |> config_tables7()
+      |> config_tables7(table_name,mode)
   end
   
   
   
-  defp config_tables7({:atomic,:ok}) do
+  defp config_tables7({:atomic,:ok},table_name,mode) do
+    table_name 
+      |> :mnesia.change_table_copy_type(node(),mode)
     true
   end
   
   
   
-  defp config_tables7({:aborted,{:already_exists,_,_}}) do
+  defp config_tables7({:aborted,{:already_exists,_reason1,_reason2}},_,_) do
     true
   end
   
   
   
-  defp config_tables7({:aborted,_}) do
+  defp config_tables7({:aborted,_reason},_,_) do
+    #reason |> IO.inspect()
     false
   end
 
 
   
-  defp replicate_tables(tables,connected_nodes) do
+  defp replicate_tables(tables,connected_nodes,mode) do
+    self = :erlang.node()
+    connected_nodes = connected_nodes
+			        |> Enum.filter(
+			             fn(node) ->
+			               node != self
+			             end
+			           )	           
     table_names = tables
 			        |> Enum.map(
 			             fn(table) ->
@@ -543,7 +553,7 @@ defmodule Krug.DistributedMnesia do
       |> Enum.map(
            fn(table_name) ->
              table_name
-               |> replicate_table_on_nodes(connected_nodes)
+               |> replicate_table_on_nodes(connected_nodes,mode)
            end
          )
     true
@@ -551,23 +561,28 @@ defmodule Krug.DistributedMnesia do
   
   
   
-  defp replicate_table_on_nodes(table_name,connected_nodes) do
+  defp replicate_table_on_nodes(table_name,connected_nodes,mode) do
     cond do
       (Enum.empty?(connected_nodes))
         -> :ok
       true
         -> table_name 
-             |> replicate_table_on_nodes2(connected_nodes)
+             |> replicate_table_on_nodes2(connected_nodes,mode)
     end
   end
   
   
   
-  defp replicate_table_on_nodes2(table_name,connected_nodes) do
+  defp replicate_table_on_nodes2(table_name,connected_nodes,mode) do
+    #ok = 
     table_name
-      |> :mnesia.add_table_copy(connected_nodes |> hd(),:ram_copies)
+      |> :mnesia.add_table_copy(connected_nodes |> hd(),mode)
+    #ok2 = 
+    table_name 
+      |> :mnesia.change_table_copy_type(connected_nodes |> hd(),mode)
+    #["replicate_table_on_nodes2 => ",table_name,ok,ok2] |> IO.inspect()
     table_name
-      |> replicate_table_on_nodes(connected_nodes |> tl())
+      |> replicate_table_on_nodes(connected_nodes |> tl(),mode)
   end
   
   
@@ -586,7 +601,7 @@ defmodule Krug.DistributedMnesia do
         -> true
       true
         -> table
-             |> add_runtime_table2(connected_nodes)
+             |> add_runtime_table3(connected_nodes |> hd())
     end
   end
   
@@ -674,14 +689,15 @@ defmodule Krug.DistributedMnesia do
   
   
   
-  defp add_runtime_table2(table,connected_nodes) do
+  defp add_runtime_table3(table,connected_nodes) do
     mode = @connected_nodes_mode
              |> load_connected_nodes_metadata()
+             |> hd()
     tables = [table]
     cond do
       (!(tables |> config_tables4(mode)))
         -> false
-      (!(tables |> replicate_tables(connected_nodes)))
+      (!(tables |> replicate_tables(connected_nodes,mode)))
         -> false
       true
         -> table

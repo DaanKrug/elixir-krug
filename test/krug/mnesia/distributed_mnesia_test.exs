@@ -725,6 +725,9 @@ defmodule Krug.DistributedMnesiaTest do
 		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+		             
+	:mnesia.system_info()
+	  |> IO.inspect()
       
   end
   
