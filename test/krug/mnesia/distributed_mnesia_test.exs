@@ -728,6 +728,7 @@ defmodule Krug.DistributedMnesiaTest do
 		             
 	:mnesia.system_info()
 	  |> IO.inspect()
+	  
       
   end
   

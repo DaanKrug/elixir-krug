@@ -161,6 +161,26 @@ defmodule Krug.StructUtil do
   
   
   @doc """
+  Compare 2 lists and return if all elements from first are present on second
+  - (if are equals). Return true or false
+  """
+  @doc since: "1.1.31"
+  def contains_all(list_1,list_2) do
+    cond do
+      (nil == list_1 or nil == list_2)
+        -> false
+      (Enum.empty?(list_1) or Enum.empty?(list_2))
+        -> false
+      (length(list_1) != length(list_2))
+        -> false
+      true
+        -> contains_all2(list_1,list_2)
+    end
+  end
+  	  
+  	  
+  
+  @doc """
   Return a key par value from a list of key_par strings in format ["key=value","key=value"].
   
   If the key or the list is nil/empty return nil.
@@ -268,4 +288,21 @@ defmodule Krug.StructUtil do
   
   
   
+  defp contains_all2(list_1,list_2) do
+    cond do
+      (Enum.empty?(list_1))
+        -> true
+      (!(list_contains(list_2,list_1 |> hd()))) 
+        -> false
+      true 
+        -> list_1
+             |> tl()
+             |> contains_all2(list_2)
+    end
+  end
+  
+  
+  
 end
+
+

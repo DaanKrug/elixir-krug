@@ -9,7 +9,7 @@ defmodule Krug.DistributedMnesia do
   @moduledoc since: "1.1.17"
   
   
-  
+  @master_nodes_correction_timeout 30000
   @metadata_table :distributed_mnesia_metadata_table
   @nodes_metadata_table :distributed_mnesia_nodes_metadata_table
   @connected_nodes_key "distributed_mnesia_nodes_metadata_nodes_key"
@@ -134,7 +134,9 @@ defmodule Krug.DistributedMnesia do
         -> disc_copies
              |> start_mnesia(
                   tables,
-                  connected_nodes
+                  connected_nodes,
+                  nil,
+                  nil
                 )
     end
   end
@@ -164,7 +166,9 @@ defmodule Krug.DistributedMnesia do
         -> disc_copies
              |> start_mnesia(
                   tables,
-                  connected_nodes
+                  connected_nodes,
+                  cluster_ips,
+                  cluster_name
                 )
     end
   end
@@ -401,7 +405,7 @@ defmodule Krug.DistributedMnesia do
   #####################################
   #  Private functions
   #####################################
-  defp start_mnesia(disc_copies,tables,connected_nodes) do
+  defp start_mnesia(disc_copies,tables,connected_nodes,cluster_ips,cluster_name) do
     mode = cond do
       (disc_copies)
         -> :disc_copies
@@ -424,27 +428,9 @@ defmodule Krug.DistributedMnesia do
       (!(connected_nodes |> store_connected_nodes(mode)))
         -> false
       true
-        -> correct_master_nodes()
+        -> cluster_name 
+             |> correct_master_nodes_task_start(cluster_ips)
     end
-  end
-  
-  
-  
-  defp correct_master_nodes() do
-    master_nodes = :schema
-                     |> :mnesia.table_info(:master_nodes)
-    running_db_nodes = :running_db_nodes
-                         |> :mnesia.system_info()
-    cond do
-      (nil == master_nodes 
-        or Enum.empty?(master_nodes)
-          or !(StructUtil.list_contains_one_of(master_nodes,running_db_nodes)))
-            -> running_db_nodes
-      		     |> :mnesia.set_master_nodes()
-      true
-        -> :ok
-    end
-    true
   end
   
   
@@ -867,6 +853,73 @@ defmodule Krug.DistributedMnesia do
 
 
   
+  #################################
+  # Master nodes auto definition
+  #################################
+  defp correct_master_nodes_task_start(cluster_name,cluster_ips) do
+    correct_master_nodes()
+    cond do
+      (nil == cluster_ips)
+        -> :ok
+      true
+        -> cluster_name 
+             |> correct_master_nodes_task_start2(cluster_ips)
+    end
+    true
+  end
+  
+  
+  
+  defp correct_master_nodes_task_start2(cluster_name,cluster_ips) do
+    Task.async(
+      fn ->
+        modes = @connected_nodes_mode
+                  |> load_connected_nodes_metadata()
+        cond do
+          (nil == modes or Enum.empty?(modes))
+            -> :ok
+          true
+            -> [] 
+                 |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,nil) 
+                 |> correct_master_nodes_task_start3(cluster_name,cluster_ips,modes |> hd())
+        end
+      end
+    )
+  end
+  
+  
+  
+  defp correct_master_nodes_task_start3(connected_nodes,cluster_name,cluster_ips,mode) do
+    connected_nodes 
+      |> store_connected_nodes(mode)
+    correct_master_nodes()
+    @master_nodes_correction_timeout
+      |> :timer.sleep()
+    cluster_name
+      |> correct_master_nodes_task_start2(cluster_ips)
+  end
+  
+  
+  
+  defp correct_master_nodes() do
+    master_nodes = :schema
+                     |> :mnesia.table_info(:master_nodes)
+    connected_nodes = @connected_nodes_key
+                        |> load_connected_nodes_metadata()
+                        |> hd()
+    cond do
+      (nil == master_nodes 
+        or Enum.empty?(master_nodes)
+          or !(StructUtil.contains_all(master_nodes,connected_nodes)))
+            -> connected_nodes
+      		     |> :mnesia.set_master_nodes()
+      true
+        -> :ok
+    end
+  end
+
+
+    
 end
 
 

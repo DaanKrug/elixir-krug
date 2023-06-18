@@ -65,4 +65,24 @@ defmodule Krug.StructUtilTest do
     assert StructUtil.get_key_par_value_from_list("email",list3) == "johannes@has.not.email"
   end
   
+  test "[contains_all(list_1,list_2)]" do
+    list_1 = [1,%{a: 1, b: 2},"",nil,[1,2,3],5]
+    list_2 = [1,%{a: 1, b: 2},"",nil,[1,2,3],5]
+    list_3 = [1,%{a: 1, b: 2},"",nil,[1,2,3],A]
+    list_4 = [1,%{a: 1, b: 2},"",nil,[1,2,3],nil]
+    list_5 = [1,%{a: 1, b: 2},"",nil,[1,2,3]]
+    assert StructUtil.contains_all(nil,nil) == false
+    assert StructUtil.contains_all(nil,[]) == false
+    assert StructUtil.contains_all([],nil) == false
+    assert StructUtil.contains_all([],[]) == false
+    assert StructUtil.contains_all(list_1,list_2) == true
+    assert StructUtil.contains_all(list_2,list_1) == true
+    assert StructUtil.contains_all(list_1,list_3) == false
+    assert StructUtil.contains_all(list_1,list_4) == false
+    assert StructUtil.contains_all(list_1,list_5) == false
+    assert StructUtil.contains_all(list_2,list_3) == false
+    assert StructUtil.contains_all(list_2,list_4) == false
+    assert StructUtil.contains_all(list_2,list_5) == false
+  end
+  
 end
