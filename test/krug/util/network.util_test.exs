@@ -22,4 +22,92 @@ defmodule Krug.NetworkUtilTest do
     assert ip_list |> length() == (256 * 21)
   end
   
+  test "[get_minor_node(node_list)]" do
+    node_list = [
+      :"app@192.168.10.20",
+      :"app@192.168.10.20",
+      :"app@192.168.10.20"
+    ]
+    assert node_list |> NetworkUtil.get_minor_node() == :"app@192.168.10.20"
+    
+    node_list = [
+      :"app@192.168.10.22",
+      :"app@192.168.10.21",
+      :"app@192.168.10.20",
+      :"app@192.168.10.23"
+    ]
+    assert node_list |> NetworkUtil.get_minor_node() == :"app@192.168.10.20"
+    
+    node_list = [
+      :"app@192.168.10.20",
+      :"app@192.168.9.20",
+      :"app@192.168.8.20",
+      :"app@192.168.11.20"
+    ]
+    assert node_list |> NetworkUtil.get_minor_node() == :"app@192.168.8.20"
+    
+    node_list = [
+      :"app@192.168.10.20",
+      :"app@192.166.10.20",
+      :"app@192.167.10.20",
+      :"app@192.164.10.20",
+      :"app@192.169.10.20"
+    ]
+    assert node_list |> NetworkUtil.get_minor_node() == :"app@192.164.10.20"
+    
+    node_list = [
+      :"app@193.168.10.20",
+      :"app@192.168.10.20",
+      :"app@191.168.10.20",
+      :"app@190.168.10.20",
+      :"app@195.168.10.20"
+    ]
+    assert node_list |> NetworkUtil.get_minor_node() == :"app@190.168.10.20"
+    
+  end
+  
+  test "[get_major_node(node_list)]" do
+    node_list = [
+      :"app@192.168.10.20",
+      :"app@192.168.10.20",
+      :"app@192.168.10.20"
+    ]
+    assert node_list |> NetworkUtil.get_major_node() == :"app@192.168.10.20"
+    
+    node_list = [
+      :"app@192.168.10.22",
+      :"app@192.168.10.21",
+      :"app@192.168.10.20",
+      :"app@192.168.10.23"
+    ]
+    assert node_list |> NetworkUtil.get_major_node() == :"app@192.168.10.23"
+    
+    node_list = [
+      :"app@192.168.10.20",
+      :"app@192.168.9.20",
+      :"app@192.168.8.20",
+      :"app@192.168.11.20"
+    ]
+    assert node_list |> NetworkUtil.get_major_node() == :"app@192.168.11.20"
+    
+    node_list = [
+      :"app@192.168.10.20",
+      :"app@192.166.10.20",
+      :"app@192.167.10.20",
+      :"app@192.164.10.20",
+      :"app@192.169.10.20"
+    ]
+    assert node_list |> NetworkUtil.get_major_node() == :"app@192.169.10.20"
+    
+    node_list = [
+      :"app@193.168.10.20",
+      :"app@192.168.10.20",
+      :"app@191.168.10.20",
+      :"app@190.168.10.20",
+      :"app@195.168.10.20"
+    ]
+    assert node_list |> NetworkUtil.get_major_node() == :"app@195.168.10.20"
+      
+  end
+  
 end

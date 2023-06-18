@@ -729,7 +729,7 @@ defmodule Krug.DistributedMnesiaTest do
 	:mnesia.system_info()
 	  |> IO.inspect()
 	  
-      
+    #:timer.sleep(60000)
   end
   
   

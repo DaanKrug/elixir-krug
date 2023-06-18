@@ -14,7 +14,9 @@ defmodule Krug.NetworkUtil do
   
   
   @ip_regexp ~r/^\d+\.\d+\.\d+\.\d+$/
-  
+  @exponent_a 256 * 256 * 256
+  @exponent_b 256 * 256
+  @exponent_c 256
   
   
   @doc """
@@ -111,6 +113,28 @@ defmodule Krug.NetworkUtil do
              |> Enum.reverse()
              |> generate_ipv4_netmask_24_ip_list()
     end
+  end
+  
+  
+  
+  @doc """
+  Filter the nodes list (atom list on format :"my_cookie@ipv4") according IP address
+  and get the minor address.
+  """
+  def get_minor_node(node_list) do
+    node_list
+      |> get_minor_node2()
+  end
+  
+  
+  
+  @doc """
+  Filter the nodes list (atom list on format :"my_cookie@ipv4") according IP address
+  and get the major address.
+  """
+  def get_major_node(node_list) do
+    node_list
+      |> get_major_node2()
   end
   
   
@@ -249,7 +273,101 @@ defmodule Krug.NetworkUtil do
   
   
   
+  defp get_minor_node2(node_list,minor \\ nil) do
+    cond do
+      (Enum.empty?(node_list))
+        -> minor
+      (nil == minor)
+        -> node_list
+             |> tl()
+             |> get_minor_node2(node_list |> hd())
+      true
+        -> node_list
+             |> tl()
+             |> get_minor_node2(
+                  get_minor_node_by_value(minor,node_list |> hd())
+                )
+    end
+  end
+  
+  
+  
+  defp get_major_node2(node_list,major \\ nil) do
+    cond do
+      (Enum.empty?(node_list))
+        -> major
+      (nil == major)
+        -> node_list
+             |> tl()
+             |> get_major_node2(node_list |> hd())
+      true
+        -> node_list
+             |> tl()
+             |> get_major_node2(
+                  get_major_node_by_value(major,node_list |> hd())
+                )
+    end
+  end
+  
+  
+  
+  defp get_minor_node_by_value(current,candidate) do
+    [current_value,candidate_value] = current
+                                        |> extract_nodes_value(candidate)
+    cond do
+      (current_value <= candidate_value)
+        -> current
+      true
+        -> candidate
+    end
+  end
+  
+  
+  
+  defp get_major_node_by_value(current,candidate) do
+    [current_value,candidate_value] = current
+                                        |> extract_nodes_value(candidate)
+    cond do
+      (current_value >= candidate_value)
+        -> current
+      true
+        -> candidate
+    end
+  end
+  
+  
+  
+  defp extract_nodes_value(current,candidate) do
+    [
+      current
+        |> extract_node_ip_comparison_value(),
+      candidate
+        |> extract_node_ip_comparison_value()
+    ]
+  end
+  
+  
+  
+  defp extract_node_ip_comparison_value(node) do
+    [a,b,c,d] = node
+                  |> Atom.to_string()
+                  |> StringUtil.split("@")
+                  |> tl()
+                  |> hd()
+                  |> StringUtil.split(".")
+    a = a
+          |> NumberUtil.to_integer()
+    b = b
+          |> NumberUtil.to_integer()
+    c = c
+          |> NumberUtil.to_integer()
+    d = d
+          |> NumberUtil.to_integer()
+    (a * @exponent_a) + (b * @exponent_b) + (c * @exponent_c) + d       
+  end
+  
+  
+  
 end
-
 
 

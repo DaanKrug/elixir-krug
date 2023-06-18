@@ -9,12 +9,13 @@ defmodule Krug.DistributedMnesia do
   @moduledoc since: "1.1.17"
   
   
-  @master_nodes_correction_timeout 30000
+  @master_nodes_correction_timeout 1000
   @metadata_table :distributed_mnesia_metadata_table
   @nodes_metadata_table :distributed_mnesia_nodes_metadata_table
   @connected_nodes_key "distributed_mnesia_nodes_metadata_nodes_key"
   @connected_nodes_mode "distributed_mnesia_nodes_metadata_nodes_mode"
   @connected_nodes_runtime_tables "distributed_mnesia_nodes_metadata_nodes_runtime_tables"
+  @master_node_control_table :master_node_control_table
   
   
   
@@ -23,7 +24,6 @@ defmodule Krug.DistributedMnesia do
   alias Krug.MnesiaUtil
   alias Krug.ClusterUtil
   alias Krug.DateUtil
-  alias Krug.StructUtil
   
   
   
@@ -418,6 +418,7 @@ defmodule Krug.DistributedMnesia do
       |> :mnesia.change_config(connected_nodes)
     configured_tables = tables
                           |> add_metadata_table()
+                          |> add_master_node_control_table()
                           |> add_nodes_metadata_table()
                           |> config_tables(mode)
     cond do
@@ -856,6 +857,59 @@ defmodule Krug.DistributedMnesia do
   #################################
   # Master nodes auto definition
   #################################
+  defp add_master_node_control_table(tables) do
+    [
+      %{
+         table_name: @master_node_control_table, 
+         table_attributes: [:id,:updated_at] 
+      }
+      | tables  
+    ]
+  end
+  
+  
+  
+  defp master_node_is_active(node) do
+    ### ["master_node_is_active",node] |> IO.inspect()
+    array_params = [
+      {
+        {@master_node_control_table,:"$1",:"$2"},
+        [
+          {:"==",:"$1",node}
+        ],
+        [:"$2"] 
+      }
+    ]
+    logs = @master_node_control_table 
+             |> select(array_params)
+    cond do
+      (nil == logs or Enum.empty?(logs))
+        -> false
+      true
+        -> logs
+             |> hd()
+             |> master_node_is_active2()
+    end
+  end
+  
+  
+  
+  defp master_node_is_active2(time_logs) do
+    ### ["master_node_is_active2",time_logs] |> IO.inspect()
+    limit = DateUtil.get_date_time_now_millis() - (3 * @master_nodes_correction_timeout)
+    cond do
+      (nil == time_logs
+        or Enum.empty?(time_logs))
+          -> false
+      (time_logs |> hd() > limit)
+        -> true
+      true
+        -> (time_logs |> Enum.reverse() |> hd()) > limit
+    end
+  end
+  
+  
+  
   defp correct_master_nodes_task_start(cluster_name,cluster_ips) do
     correct_master_nodes()
     cond do
@@ -902,23 +956,99 @@ defmodule Krug.DistributedMnesia do
   
   
   defp correct_master_nodes() do
-    master_nodes = :schema
-                     |> :mnesia.table_info(:master_nodes)
     connected_nodes = @connected_nodes_key
                         |> load_connected_nodes_metadata()
-                        |> hd()
+    cond do
+      (nil == connected_nodes
+        or Enum.empty?(connected_nodes))
+          -> :ok
+      true
+        -> connected_nodes
+             |> hd()
+             |> correct_master_nodes2()
+    end      
+  end
+  
+  
+  
+  defp correct_master_nodes2(connected_nodes) do
+    cond do
+      (Enum.empty?(connected_nodes))
+        -> :ok
+      true
+        -> connected_nodes
+            |> correct_master_nodes3()
+    end
+  end
+  
+  
+  
+  defp correct_master_nodes3(connected_nodes) do
+    master_nodes = :schema
+                     |> :mnesia.table_info(:master_nodes)
     cond do
       (nil == master_nodes 
-        or Enum.empty?(master_nodes)
-          or !(StructUtil.contains_all(master_nodes,connected_nodes)))
-            -> connected_nodes
-      		     |> :mnesia.set_master_nodes()
+        or Enum.empty?(master_nodes))
+          -> connected_nodes
+               |> NetworkUtil.get_minor_node()
+      		   |> set_master_node()
+      true
+        -> connected_nodes
+             |> correct_master_nodes4(master_nodes |> hd())
+    end
+  end
+  
+  
+  
+  defp correct_master_nodes4(connected_nodes,master_node) do
+    ### ["correct_master_nodes4 => ",master_node] |> IO.inspect()
+    cond do
+      (master_node == node())
+        -> :ok
+      (!(Enum.member?(connected_nodes,master_node)))
+        -> connected_nodes
+             |> NetworkUtil.get_minor_node()
+      		 |> set_master_node()
+      (master_node |> master_node_is_active())
+        -> master_node
+             |> log_master_node()
+      true
+        -> connected_nodes
+             |> Enum.filter(
+                  fn(node) ->
+                    node != master_node
+                  end
+                )
+             |> NetworkUtil.get_minor_node()
+      		 |> set_master_node()
+    end
+  end
+
+
+
+  defp set_master_node(connected_node) do
+    ### ["set_master_node => ",connected_node] |> IO.inspect()
+    cond do
+      (nil != connected_node)
+        -> [connected_node] 
+             |> :mnesia.set_master_nodes()
       true
         -> :ok
     end
   end
 
 
+  
+  defp log_master_node(master_node) do
+    ### ["log_master_node",master_node] |> IO.inspect()
+    now = DateUtil.get_date_time_now_millis()
+    @master_node_control_table
+      |> MnesiaUtil.put_cache(master_node,now)
+    @master_node_control_table
+      |> keep_only_last_used(3)
+  end
+   
+  
     
 end
 
