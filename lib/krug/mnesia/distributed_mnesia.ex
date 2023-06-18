@@ -23,6 +23,7 @@ defmodule Krug.DistributedMnesia do
   alias Krug.MnesiaUtil
   alias Krug.ClusterUtil
   alias Krug.DateUtil
+  alias Krug.StructUtil
   
   
   
@@ -409,8 +410,8 @@ defmodule Krug.DistributedMnesia do
     end 
     System.cmd("epmd", ["-daemon"])
     :mnesia.start()
-    #:extra_db_nodes 
-    #  |> :mnesia.change_config(connected_nodes)
+    :extra_db_nodes 
+      |> :mnesia.change_config(connected_nodes)
     configured_tables = tables
                           |> add_metadata_table()
                           |> add_nodes_metadata_table()
@@ -420,10 +421,30 @@ defmodule Krug.DistributedMnesia do
         -> false
       (!(tables |> replicate_tables(connected_nodes,mode)))
         -> false
+      (!(connected_nodes |> store_connected_nodes(mode)))
+        -> false
       true
-        -> connected_nodes
-             |> store_connected_nodes(mode)
+        -> correct_master_nodes()
     end
+  end
+  
+  
+  
+  defp correct_master_nodes() do
+    master_nodes = :schema
+                     |> :mnesia.table_info(:master_nodes)
+    running_db_nodes = :running_db_nodes
+                         |> :mnesia.system_info()
+    cond do
+      (nil == master_nodes 
+        or Enum.empty?(master_nodes)
+          or !(StructUtil.list_contains_one_of(master_nodes,running_db_nodes)))
+            -> running_db_nodes
+      		     |> :mnesia.set_master_nodes()
+      true
+        -> :ok
+    end
+    true
   end
   
   
@@ -526,7 +547,6 @@ defmodule Krug.DistributedMnesia do
   
   
   defp config_tables7({:aborted,_reason},_,_) do
-    #reason |> IO.inspect()
     false
   end
 
@@ -574,13 +594,10 @@ defmodule Krug.DistributedMnesia do
   
   
   defp replicate_table_on_nodes2(table_name,connected_nodes,mode) do
-    #ok = 
     table_name
       |> :mnesia.add_table_copy(connected_nodes |> hd(),mode)
-    #ok2 = 
     table_name 
       |> :mnesia.change_table_copy_type(connected_nodes |> hd(),mode)
-    #["replicate_table_on_nodes2 => ",table_name,ok,ok2] |> IO.inspect()
     table_name
       |> replicate_table_on_nodes(connected_nodes |> tl(),mode)
   end
