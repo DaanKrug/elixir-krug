@@ -121,6 +121,7 @@ defmodule Krug.DistributedMnesia do
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
                    ips_separator \\ "|",disc_copies \\ false,tables \\ [],connection_timeout \\ nil) do
+    System.cmd("epmd", ["-daemon"])
     local_node = cluster_name
                    |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
     cluster_ips = cluster_ips
@@ -151,6 +152,7 @@ defmodule Krug.DistributedMnesia do
   """
   def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,tables \\ [], 
                         connection_timeout \\ nil) do
+    System.cmd("epmd", ["-daemon"])
     cluster_name
       |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
     cluster_ips = NetworkUtil.get_local_wlan_ip_v4()
@@ -310,13 +312,9 @@ defmodule Krug.DistributedMnesia do
   """
   @doc since: "1.1.25"
   def delete(table_name,id_row) do
-    total = table_name
-              |> MnesiaUtil.count()
-    table_name
-      |> MnesiaUtil.delete(id_row)
-    total_after_delete = table_name
-                           |> MnesiaUtil.count()
-    deleted = total_after_delete < total
+    deleted = table_name
+                |> MnesiaUtil.delete(id_row)
+    deleted = deleted == {:atomic,:ok}
     cond do
       (deleted)
         -> table_name
@@ -412,7 +410,6 @@ defmodule Krug.DistributedMnesia do
       true
         -> :ram_copies
     end 
-    System.cmd("epmd", ["-daemon"])
     :mnesia.start()
     :extra_db_nodes 
       |> :mnesia.change_config(connected_nodes)
@@ -644,50 +641,58 @@ defmodule Krug.DistributedMnesia do
   defp store_new_table_added(table) do
     tables_array = @connected_nodes_runtime_tables
                      |> load_connected_nodes_metadata()
-                     |> hd()
-    @nodes_metadata_table
-            |> MnesiaUtil.put_cache(@connected_nodes_runtime_tables,[table | tables_array])
+    cond do
+      (nil == tables_array 
+        or Enum.empty?(tables_array))
+          -> @nodes_metadata_table
+               |> MnesiaUtil.put_cache(@connected_nodes_runtime_tables,[table])
+      true
+        -> @nodes_metadata_table
+             |> MnesiaUtil.put_cache(@connected_nodes_runtime_tables,[table | tables_array |> hd()])
+    end          
     true
   end
   
   
   
-  defp runtime_table_already_exists(table_name) do
+  defp runtime_table_already_exists(table) do
     tables_array = @connected_nodes_runtime_tables
                      |> load_connected_nodes_metadata()
     cond do
       (nil == tables_array
-        or Enum.empty?(tables_array))
-          -> false
+        or Enum.empty?(tables_array)
+          or Enum.empty?(tables_array |> hd()))
+            -> false
       true
         -> tables_array
              |> hd() 
-             |> runtime_table_already_exists2(table_name)
+             |> runtime_table_already_exists2(table)
     end
   end
   
   
   
-  defp runtime_table_already_exists2(tables_array,table_name) do
+  defp runtime_table_already_exists2(tables_array,table) do
     cond do
       (Enum.empty?(tables_array))
         -> false
       true
         -> tables_array
-             |> runtime_table_already_exists3(table_name)
+             |> runtime_table_already_exists3(table)
     end
   end
   
   
   
-  defp runtime_table_already_exists3(tables_array,table_name) do
+  defp runtime_table_already_exists3(tables_array,table) do
     cond do
-      (table_name == tables_array |> hd() |> MapUtil.get(:table_name))
-        -> true
+      (table |> MapUtil.get(:table_name) 
+        == tables_array |> hd() |> MapUtil.get(:table_name))
+          -> true
       true
         -> tables_array
              |> tl()
-             |> runtime_table_already_exists2(table_name)
+             |> runtime_table_already_exists2(table)
     end
   end
   
@@ -789,22 +794,6 @@ defmodule Krug.DistributedMnesia do
 
 
   defp keep_only_last_used2(table_name,amount_to_keep) do
-    total = table_name
-              |> count()
-    cond do
-      (nil == total)
-        -> true
-      (total <= amount_to_keep)
-        -> true
-      true
-        -> table_name
-             |> keep_only_last_used3(amount_to_keep,total)
-    end     
-  end
-  
-  
-  
-  defp keep_only_last_used3(table_name,amount_to_keep,total) do
     array_params = [
       {
         {@metadata_table,:"$1",:"$2",:"$3",:"$4"},
@@ -816,6 +805,23 @@ defmodule Krug.DistributedMnesia do
     ]
     all_rows = @metadata_table 
                  |> select(array_params)
+    cond do
+      (nil == all_rows
+        or Enum.empty?(all_rows))
+          -> :ok
+      (all_rows |> length() <= amount_to_keep)
+        -> :ok
+      true
+        -> table_name
+             |> keep_only_last_used3(amount_to_keep,all_rows)
+    end         
+  end
+  
+  
+  
+  defp keep_only_last_used3(table_name,amount_to_keep,all_rows) do
+    total = all_rows 
+              |> length()
     ordered_rows = :lists.sort(
                      fn(metadata_list_a,metadata_list_b) ->
                        (metadata_list_a |> Enum.at(3)) <= (metadata_list_b |> Enum.at(3))

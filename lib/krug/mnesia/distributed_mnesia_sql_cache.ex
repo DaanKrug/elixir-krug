@@ -145,6 +145,13 @@ defmodule Krug.DistributedMnesiaSqlCache do
   def put_cache(table_name,normalized_sql,params,resultset,amount_to_keep \\ 200) do
     result = table_name
                |> MnesiaUtil.put_cache([normalized_sql,params],resultset)
+    cond do
+      (result)
+        -> table_name
+             |> DistributedMnesia.set_updated_at([normalized_sql,params])
+      true
+        -> :ok
+    end
     table_name
       |> DistributedMnesia.keep_only_last_used(amount_to_keep)         
     result
