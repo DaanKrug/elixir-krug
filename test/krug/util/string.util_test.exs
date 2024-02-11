@@ -5,6 +5,25 @@ defmodule Krug.StringUtilTest do
   
   alias Krug.StringUtil
   
+  test "[index_of(string,substring,skip_verification \\ false)]" do
+    assert StringUtil.index_of("","") == 0
+    assert StringUtil.index_of(" ","") == 0
+    assert StringUtil.index_of(""," ") == -1
+    assert StringUtil.index_of("Today","morning") == -1
+    assert StringUtil.index_of("today morning","today") == 0
+    assert StringUtil.index_of("today morning","morning") == 6
+    assert StringUtil.index_of("today morning",nil) == -1
+    assert StringUtil.index_of(nil,"morning") == -1
+    assert StringUtil.index_of(nil,nil) == -1
+    skip_validation = true
+    assert StringUtil.index_of("","",skip_validation) == 0
+    assert StringUtil.index_of(" ","",skip_validation) == 0
+    assert StringUtil.index_of(""," ",skip_validation) == -1
+    assert StringUtil.index_of("Today","morning",skip_validation) == -1
+    assert StringUtil.index_of("today morning","today",skip_validation) == 0
+    assert StringUtil.index_of("today morning","morning",skip_validation) == 6
+  end
+  
   test "[raw_binary_to_string(raw_string)]" do
     raw0 = <<65,241,111,32,100,101,32,70,97,99,116>>
     assert StringUtil.raw_binary_to_string(raw0) == "Año de Fact"

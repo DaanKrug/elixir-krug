@@ -8,6 +8,70 @@ defmodule Krug.StringUtil do
   alias Krug.NumberUtil
 
 
+  @doc """
+  Searches the position of first occurency of a substring on a string.
+  Returns -1 for no result found, or if one of parameters is null value.
+  
+  You could use "skip_verification" parameter as true, if you are sure that
+  values already were verified, this will improve performance.
+  
+  ## Examples
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text","today",true)
+  -1
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of(nil,"today",true)
+  throw exception
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text",nil,true)
+  throw exception
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of(nil,"today")
+  -1
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text",nil)
+  -1
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text","today")
+  -1
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text","my")
+  0
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text","my full")
+  0
+  ```
+  ```elixir 
+  iex > Krug.StringUtil.index_of("my full string text","full")
+  3
+  ```
+  """
+  @doc since: "1.1.38"
+  def index_of(string,substring,skip_verification \\ false) do
+    cond do
+      (!skip_verification 
+        and (nil == string or nil == substring))
+          -> -1
+      (!(string |> String.contains?(substring)))
+        -> -1
+      (string |> String.starts_with?(substring))
+        -> 0
+      true
+        -> string 
+             |> split(substring)
+             |> hd()
+             |> String.length()
+    end
+  end
+
+
   
   @doc """
   Convert a string value in raw binary format <<xxx,xx,xx>> to string
