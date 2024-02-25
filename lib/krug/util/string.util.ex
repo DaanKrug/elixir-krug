@@ -792,6 +792,9 @@ defmodule Krug.StringUtil do
   @doc """
   Convert a value to string, returning the value without left and right spaces.
   
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  in binary format and not null/empty. This will improve some performance.
+  
   ## Examples
 
   ```elixir 
@@ -819,8 +822,16 @@ defmodule Krug.StringUtil do
   "10.5"
   ```
   """
-  def trim(string) do
-    empty_if_nil(string) |> String.trim()
+  def trim(string,unsafe \\ false) do
+    cond do
+      (unsafe)
+        -> string
+             |> String.trim()
+      true
+        -> string
+             |> empty_if_nil() 
+             |> String.trim() 
+    end
   end
   
   

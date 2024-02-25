@@ -7,7 +7,7 @@ defmodule Krug.BaseEctoDAOUtil do
   
   def normalize_sql(sql) do
     sql 
-	  |> StringUtil.trim() 
+	  |> StringUtil.trim(true) 
 	  |> StringUtil.replace("\r\n"," ",true)
 	  |> StringUtil.replace("\n"," ",true)
 	  |> StringUtil.replace("  "," ",true)
