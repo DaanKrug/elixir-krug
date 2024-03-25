@@ -27,6 +27,18 @@ defmodule Krug.MapUtilTest do
     assert MapUtil.get(nil,nil) == nil
   end
   
+  test "[test get_by_atom_key(map,key)]" do
+    map = %{a: 1, b: 3}
+    assert MapUtil.get_by_atom_key(map,:a) == 1
+    assert MapUtil.get_by_atom_key(map,:b) == 3
+  end
+  
+  test "[test get_by_string_key(map,key)]" do
+    map = %{"a" => 1, "b" => 3}
+    assert MapUtil.get_by_string_key(map,"a") == 1
+    assert MapUtil.get_by_string_key(map,"b") == 3
+  end
+  
   test "[test delete(map,key)]" do
   	map = %{a: 1, b: 3}
   	map2 = %{a: 1}
@@ -73,7 +85,7 @@ defmodule Krug.MapUtilTest do
   	assert MapUtil.delete_all(nil,[:a,:b,nil]) == nil
   end
   
-  test "[test replace(map,key,newValue)]" do
+  test "[test replace(map,key,new_value)]" do
     map = %{a: 1, b: 3}
     map2 = %{a: 1, b: 1}
     map3 = %{a: 3, b: 3}
@@ -87,6 +99,21 @@ defmodule Krug.MapUtilTest do
     assert MapUtil.replace(map,:c,101) == map5
   end
   
+  test "[test replace_by_atom_key(map,key,new_value)]" do
+    map = %{a: 1, b: 3}
+    map2 = %{a: 1, b: 1}
+    map3 = %{a: 3, b: 3}
+    assert MapUtil.replace_by_atom_key(map,:b,1) == map2
+    assert MapUtil.replace_by_atom_key(map,:a,3) == map3
+  end
+  
+  test "[test replace_by_string_key(map,key,new_value)]" do
+    map = %{"a" => 1, "b" => 3}
+    map2 = %{"a" => 1, "b" => 1}
+    map3 = %{"a" => 3, "b" => 3}
+    assert MapUtil.replace_by_string_key(map,"b",1) == map2
+    assert MapUtil.replace_by_string_key(map,"a",3) == map3
+  end
   
 end
 
