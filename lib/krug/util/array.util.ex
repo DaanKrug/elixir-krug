@@ -9,6 +9,9 @@ defmodule Krug.ArrayUtil do
   A initial array [1,2,3,4] turn in [2,3,4,1] if rotate ```positions``` equal 
   to 1.
   
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  not null/empty. This will improve some performance.
+  
   ## Examples
   
   ```elixir
@@ -37,11 +40,20 @@ defmodule Krug.ArrayUtil do
   ```
   """
   @doc since: "0.4.3"
-  def rotate_right(array,positions) do
+  def rotate_right(array,positions,unsafe \\ false) do
     cond do
-      (nil == array or Enum.empty?(array)) -> array
-      (nil == positions or !(positions > 0)) -> array
-      true -> rotate_right2(array,positions)
+      (unsafe)
+        -> array
+             |> rotate_right2(positions)
+      (nil == array 
+        or Enum.empty?(array)) 
+          -> array
+      (nil == positions 
+        or !(positions > 0)) 
+          -> array
+      true 
+        -> array
+             |> rotate_right2(positions)
     end
   end
   
@@ -51,6 +63,9 @@ defmodule Krug.ArrayUtil do
   Rotates an ```array``` X ```positions``` in direction from right to left.
   A initial array [1,2,3,4] turn in [4,1,2,3] if rotate ```positions``` equal 
   to 1.
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that all parameters are
+  not null/empty. This will improve some performance.
   
   ## Examples
   
@@ -76,11 +91,20 @@ defmodule Krug.ArrayUtil do
   ```
   """
   @doc since: "0.4.3"
-  def rotate_left(array,positions) do
+  def rotate_left(array,positions,unsafe \\ false) do
     cond do
-      (nil == array or Enum.empty?(array)) -> array
-      (nil == positions or !(positions > 0)) -> array
-      true -> rotate_left2(array,positions)
+      (unsafe)
+        -> array
+             |> rotate_left2(positions)
+      (nil == array 
+        or Enum.empty?(array)) 
+          -> array
+      (nil == positions 
+        or !(positions > 0)) 
+          -> array
+      true 
+        -> array
+             |> rotate_left2(positions)
     end
   end
   
@@ -90,8 +114,12 @@ defmodule Krug.ArrayUtil do
     size = length(array)
     remainder = rem(positions,size)
     cond do
-      (remainder == 0 or size < 2) -> array
-      true -> rotate_right_positions(array,remainder,0)
+      (remainder == 0 
+        or size < 2) 
+          -> array
+      true 
+        -> array 
+             |> rotate_right_positions(remainder,0)
     end
   end
   
@@ -101,8 +129,12 @@ defmodule Krug.ArrayUtil do
     size = length(array)
     remainder = rem(positions,size)
     cond do
-      (remainder == 0 or size < 2) -> array
-      true -> rotate_left_positions(array,remainder,0)
+      (remainder == 0 
+        or size < 2) 
+          -> array
+      true 
+        -> array
+             |> rotate_left_positions(remainder,0)
     end
   end
   
@@ -110,23 +142,35 @@ defmodule Krug.ArrayUtil do
   
   defp rotate_right_positions(array,positions,count) do
     cond do
-      (count >= positions) -> array
-      true -> rotate_right_one_position(array) |> rotate_right_positions(positions,count + 1)
+      (count >= positions) 
+        -> array
+      true 
+        -> array
+             |> rotate_right_one_position() 
+             |> rotate_right_positions(positions,count + 1)
     end
   end
   
   
   
   defp rotate_right_one_position(array) do
-    [(array |> hd()) | (array |> tl() |> Enum.reverse())] |> Enum.reverse()
+    [
+      (array |> hd()) 
+        | (array |> tl() |> Enum.reverse())
+    ] 
+      |> Enum.reverse()
   end
   
   
   
   defp rotate_left_positions(array,positions,count) do
     cond do
-      (count >= positions) -> array
-      true -> rotate_left_one_position(array) |> rotate_left_positions(positions,count + 1)
+      (count >= positions) 
+        -> array
+      true 
+        -> array
+             |> rotate_left_one_position() 
+             |> rotate_left_positions(positions,count + 1)
     end
   end
   
@@ -134,7 +178,10 @@ defmodule Krug.ArrayUtil do
   
   defp rotate_left_one_position(array) do
     array = array |> Enum.reverse()
-    [(array |> hd()) | (array |> tl() |> Enum.reverse())]
+    [
+      (array |> hd()) 
+        | (array |> tl() |> Enum.reverse())
+    ]
   end
   
   

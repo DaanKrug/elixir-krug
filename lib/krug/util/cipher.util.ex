@@ -82,6 +82,8 @@ defmodule Krug.CipherUtil do
     <<char_code::utf8>> = grapheme
     (char_code * factor) + unique_number
   end
+
+
 	
 end
 

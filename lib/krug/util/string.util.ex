@@ -135,9 +135,17 @@ defmodule Krug.StringUtil do
     string_a = empty_if_nil(string_a)
     string_b = empty_if_nil(string_b)
     cond do
-      (string_a == "") -> string_b
-      (string_b == "") -> string_a
-      true -> [string_a,empty_if_nil(join_string),string_b] |> IO.iodata_to_binary()
+      (string_a == "") 
+        -> string_b
+      (string_b == "") 
+        -> string_a
+      true 
+        -> [
+             string_a,
+             empty_if_nil(join_string),
+             string_b
+           ] 
+             |> IO.iodata_to_binary()
     end
   end
 
@@ -178,7 +186,8 @@ defmodule Krug.StringUtil do
   ```
   """
   def empty_if_nil(target) do
-    target |> to_string_if_not_binary()
+    target 
+      |> to_string_if_not_binary()
   end
   
   
@@ -271,11 +280,18 @@ defmodule Krug.StringUtil do
   """
   def split(target,searched,unsafe \\ false) do 
     cond do
-      (unsafe) -> split3(target,searched)
-      (nil == target) -> []
-      (target == "") -> [""]
-      (nil == searched or searched == "") -> [target]
-      true -> split2(target,searched)
+      (unsafe) 
+        -> split3(target,searched)
+      (nil == target) 
+        -> []
+      (target == "") 
+        -> [""]
+      (nil == searched 
+        or searched == "") 
+          -> [target]
+      true 
+        -> target
+             |> split2(searched)
     end
   end
   
@@ -353,12 +369,20 @@ defmodule Krug.StringUtil do
   """
   def replace(target,searched,replace_to,unsafe \\ false) do 
     cond do
-      (unsafe) -> replace3(target,searched,replace_to)
-      (nil == target) -> nil
-      (target == "") -> ""
-      (nil == searched or searched == "") -> target
-      (nil == replace_to) -> target
-      true -> replace2(target,searched,replace_to)
+      (unsafe) 
+        -> replace3(target,searched,replace_to)
+      (nil == target) 
+        -> nil
+      (target == "") 
+        -> ""
+      (nil == searched 
+        or searched == "") 
+          -> target
+      (nil == replace_to) 
+        -> target
+      true 
+        -> target
+             |> replace2(searched,replace_to)
     end
   end
   
@@ -399,9 +423,14 @@ defmodule Krug.StringUtil do
   """
   def replace_all(target,searched_array,replace_to) do 
     cond do
-      (nil == target) -> nil
-      (target == "" or nil == searched_array) -> target
-      true -> replace_all2(target,searched_array,empty_if_nil(replace_to))
+      (nil == target) 
+        -> nil
+      (target == "" 
+        or nil == searched_array) 
+          -> target
+      true 
+        -> target
+             |> replace_all2(searched_array,empty_if_nil(replace_to))
     end
   end
   
@@ -458,10 +487,18 @@ defmodule Krug.StringUtil do
   """
   def get_decoded_value_param(array_params,param,separator) do
     cond do
-      (nil == array_params or Enum.empty?(array_params)) -> ""
+      (nil == array_params 
+        or Enum.empty?(array_params)) 
+          -> ""
       (String.contains?(hd(array_params),"#{param}#{separator}")) 
-        -> decode_uri(replace(hd(array_params),param <> separator,""))
-      true -> get_decoded_value_param(tl(array_params),param,separator)
+        -> array_params
+             |> hd()
+             |> replace(param <> separator,"")
+             |> decode_uri()
+      true 
+        -> array_params
+             |> tl()
+             |> get_decoded_value_param(param,separator)
     end
   end
   
@@ -895,9 +932,16 @@ defmodule Krug.StringUtil do
   """
   def contains_one_element_of_array(target,array,unsafe \\ false) do
     cond do
-      (nil == target or nil == array) -> false
-      (unsafe) -> target |> contains_one_element_of_array2(array,true)
-      true -> target |> to_string_if_not_binary() |> contains_one_element_of_array2(array,false)
+      (nil == target 
+        or nil == array) 
+          -> false
+      (unsafe) 
+        -> target 
+             |> contains_one_element_of_array2(array,true)
+      true 
+        -> target 
+             |> to_string_if_not_binary() 
+             |> contains_one_element_of_array2(array,false)
     end
   end
   
@@ -952,9 +996,12 @@ defmodule Krug.StringUtil do
   """
   def coalesce(value,value_if_empty_or_nil) do
     cond do
-      (nil == value_if_empty_or_nil) -> empty_if_nil(value)
-      (trim(value) == "") -> value_if_empty_or_nil
-      true -> value
+      (nil == value_if_empty_or_nil) 
+        -> empty_if_nil(value)
+      (trim(value) == "") 
+        -> value_if_empty_or_nil
+      true 
+        -> value
     end
   end
   
@@ -1005,8 +1052,10 @@ defmodule Krug.StringUtil do
   def to_char(char_code_string) do
     number = NumberUtil.to_integer(char_code_string)
     cond do
-      (!(number > 0)) -> ""
-      true -> List.to_string([number])
+      (!(number > 0)) 
+        -> ""
+      true 
+        -> List.to_string([number])
     end
   end
   
@@ -1073,17 +1122,24 @@ defmodule Krug.StringUtil do
   """
   def to_char_code(array,position) do
     cond do
-      (nil == array or Enum.empty?(array)) -> nil
-      true -> to_char_code2(array,position)
+      (nil == array 
+        or Enum.empty?(array)) 
+          -> nil
+      true 
+        -> array
+             |> to_char_code2(position)
     end
   end
   
   
   
   defp replace2(target,searched,replace_to) do 
-    target = target |> to_string_if_not_binary()
-    searched = searched |> to_string_if_not_binary()
-    replace_to = replace_to |> to_string_if_not_binary()
+    target = target 
+               |> to_string_if_not_binary()
+    searched = searched 
+                 |> to_string_if_not_binary()
+    replace_to = replace_to 
+                   |> to_string_if_not_binary()
     replace3(target,searched,replace_to)
   end
   
@@ -1091,20 +1147,35 @@ defmodule Krug.StringUtil do
   
   defp replace3(target,searched,replace_to) do 
     cond do
-      (!(String.contains?(target,searched))) -> target
       (String.contains?(replace_to,searched)) 
-        -> String.replace(target,searched,replace_to)
+        -> target
+             |> String.replace(searched,replace_to)
       true 
-        -> String.replace(target,searched,replace_to) 
-             |> replace3(searched,replace_to)
+        -> target
+             |> replace4(searched,replace_to)
+    end
+  end
+  
+  
+  
+  defp replace4(target,searched,replace_to) do 
+    cond do
+      (!(String.contains?(target,searched))) 
+        -> target
+      true 
+        -> target
+             |> String.replace(searched,replace_to) 
+             |> replace4(searched,replace_to)
     end
   end
   
   
  
   defp split2(target,searched) do 
-    target = target |> to_string_if_not_binary()
-    searched = searched |> to_string_if_not_binary()
+    target = target 
+               |> to_string_if_not_binary()
+    searched = searched 
+                 |> to_string_if_not_binary()
     split3(target,searched)
   end
   
@@ -1112,8 +1183,10 @@ defmodule Krug.StringUtil do
   
   defp split3(target,searched) do 
     cond do
-      (String.contains?(target,searched)) -> String.split(target,searched)
-      true -> [target]
+      (String.contains?(target,searched)) 
+        -> String.split(target,searched)
+      true 
+        -> [target]
     end
   end
   
@@ -1121,8 +1194,10 @@ defmodule Krug.StringUtil do
   
   defp to_string_if_not_binary(value) do
     cond do
-      (is_binary(value)) -> value
-      true -> "#{value}"
+      (is_binary(value)) 
+        -> value
+      true 
+        -> "#{value}"
     end
   end
   
@@ -1131,11 +1206,13 @@ defmodule Krug.StringUtil do
   defp to_char_code2(array,position) do
     string_char = array |> Enum.at(position)
     cond do
-      (Enum.member?(["",nil],string_char)) -> nil
-      true -> string_char 
-                |> to_string_if_not_binary()
-                |> String.to_charlist() 
-                |> hd()
+      (Enum.member?(["",nil],string_char)) 
+        -> nil
+      true 
+        -> string_char 
+             |> to_string_if_not_binary()
+             |> String.to_charlist() 
+             |> hd()
     end
   end
   
@@ -1143,9 +1220,12 @@ defmodule Krug.StringUtil do
   
   defp replace_all2(target,searched_array,replace_to) do 
     cond do
-      (Enum.empty?(searched_array)) -> target
-      true -> replace(target,hd(searched_array),replace_to,true) 
-                |> replace_all2(tl(searched_array),replace_to)
+      (Enum.empty?(searched_array)) 
+        -> target
+      true 
+        -> target
+             |> replace(hd(searched_array),replace_to,true) 
+             |> replace_all2(tl(searched_array),replace_to)
     end
   end
    
@@ -1154,7 +1234,8 @@ defmodule Krug.StringUtil do
   defp left_zeros2(string,size) do
     cond do
       (String.length(string) >= size) 
-        -> string |> slice(0,size - 1)
+        -> string 
+             |> slice(0,size - 1)
       true 
         -> ["0",string] 
              |> IO.iodata_to_binary() 
@@ -1166,8 +1247,13 @@ defmodule Krug.StringUtil do
   
   defp right_zeros2(string,size) do
     cond do
-      (String.length(string) >= size) -> string |> slice(0,size - 1)
-      true -> [string,"0"] |> IO.iodata_to_binary() |> right_zeros2(size)
+      (String.length(string) >= size) 
+        -> string 
+             |> slice(0,size - 1)
+      true 
+        -> [string,"0"] 
+             |> IO.iodata_to_binary() 
+             |> right_zeros2(size)
     end
   end
    
