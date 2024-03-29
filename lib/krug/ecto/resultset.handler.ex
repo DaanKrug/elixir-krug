@@ -57,6 +57,9 @@ defmodule Krug.ResultSetHandler do
   
   Return a empty string if value is nil.
   
+  You could use "skip_verification" parameter as true, if you are sure that
+  values already were verified, this will improve performance.
+  
   - Supose that was load a result as follow:
   ```elixir
   %MyXQL.Result{
@@ -86,23 +89,37 @@ defmodule Krug.ResultSetHandler do
   }
   ```  
   """
-  def get_column_value(resultset,row,col \\ 0) do
-    array_data = get_row_as_array(resultset,row)
+  def get_column_value(resultset,row,col \\ 0,skip_verification \\ false) do
+    array_data = get_row_as_array(resultset,row,skip_verification)
     cond do
-      (Enum.empty?(array_data)) -> "" 
-      (!(col >= 0)) -> "" 
-      true -> "#{array_data |> Enum.at(col)}"
+      (Enum.empty?(array_data)) 
+        -> "" 
+      (!(col >= 0)) 
+        -> "" 
+      true 
+        -> "#{array_data |> Enum.at(col)}"
     end
   end
   
   
   
-  defp get_row_as_array(resultset,row) do
+  defp get_row_as_array(resultset,row,skip_verification \\ false) do
   	cond do
-  	  (nil == resultset or nil == resultset.rows or resultset.rows == 0) -> []
-  	  (nil == row or !(row >= 0)) -> [] 
-  	  (nil == resultset.rows or Enum.empty?(resultset.rows)) -> []
-  	  true -> resultset.rows |> Enum.at(row,[])
+  	  (skip_verification)
+  	    -> resultset.rows 
+  	         |> Enum.at(row,[])
+  	  (nil == resultset 
+  	    or nil == resultset.rows 
+  	      or resultset.rows == 0
+  	        or nil == row 
+  	          or !(row >= 0)) 
+  	            -> []
+  	  (nil == resultset.rows 
+  	    or Enum.empty?(resultset.rows)) 
+  	      -> []
+  	  true 
+  	    -> resultset.rows 
+  	         |> Enum.at(row,[])
   	end
   end
   
@@ -126,9 +143,10 @@ defmodule Krug.ResultSetHandler do
       (nil == value) 
         -> string 
              |> get_column_values_concat(resultset,row + 1,col)
-      true -> string 
-                |> StringUtil.concat(value,",") 
-                |> get_column_values_concat(resultset,row + 1,col)
+      true 
+        -> string 
+             |> StringUtil.concat(value,",") 
+             |> get_column_values_concat(resultset,row + 1,col)
     end
   end
   
@@ -137,9 +155,13 @@ defmodule Krug.ResultSetHandler do
   defp get_column_value_use_nil(resultset,row,col) do
     array_data = get_row_as_array(resultset,row)
     cond do
-      (Enum.empty?(array_data)) -> nil
-      (!(col >= 0)) -> nil
-      true -> array_data |> Enum.at(col)
+      (Enum.empty?(array_data)) 
+        -> nil
+      (!(col >= 0)) 
+        -> nil
+      true 
+        -> array_data 
+             |> Enum.at(col)
     end
   end
   
