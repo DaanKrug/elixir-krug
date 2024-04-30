@@ -246,7 +246,6 @@ defmodule Krug.SanitizerUtilTest do
   test "[sanitize_sql(input)]" do
     assert SanitizerUtil.sanitize_sql("echo -- echo") == nil
     assert SanitizerUtil.sanitize_sql("echo insert echo") == nil
-    assert SanitizerUtil.sanitize_sql("echo select echo") == nil
     assert SanitizerUtil.sanitize_sql("echo delete echo") == nil
     assert SanitizerUtil.sanitize_sql("echo drop echo") == nil
     assert SanitizerUtil.sanitize_sql("echo truncate echo") == nil

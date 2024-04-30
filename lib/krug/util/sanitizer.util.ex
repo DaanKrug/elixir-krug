@@ -12,7 +12,7 @@ defmodule Krug.SanitizerUtil do
   
   
   @forbidden_sql [
-    "--","insert ","select ","delete ","drop ","truncate ","alter ",
+    "--","insert ","delete ","drop ","truncate ","alter ",
     "update ","cascade ","order by ","group by ","union ",
     "having ","join ","limit ",
     "min(","min (",
