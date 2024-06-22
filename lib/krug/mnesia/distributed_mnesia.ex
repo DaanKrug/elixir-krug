@@ -24,6 +24,7 @@ defmodule Krug.DistributedMnesia do
   alias Krug.MnesiaUtil
   alias Krug.ClusterUtil
   alias Krug.DateUtil
+  alias Krug.DistributedMnesiaSync
   
   
   
@@ -127,7 +128,7 @@ defmodule Krug.DistributedMnesia do
     cluster_ips = cluster_ips
                     |> NetworkUtil.extract_valid_ip_v4_addresses(ips_separator)
     connected_nodes = [local_node] 
-                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,connection_timeout)                 
+                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,connection_timeout)
     cond do
       (Enum.empty?(connected_nodes))
         -> false
@@ -137,7 +138,8 @@ defmodule Krug.DistributedMnesia do
                   tables,
                   connected_nodes,
                   nil,
-                  nil
+                  nil,
+                  connection_timeout
                 )
     end
   end
@@ -156,11 +158,11 @@ defmodule Krug.DistributedMnesia do
     cluster_name
       |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
     cluster_ips = NetworkUtil.get_local_wlan_ip_v4()
-                    |> NetworkUtil.generate_ipv4_netmask_16_24_ip_list(
-                         NetworkUtil.get_local_wlan_ip_v4_netmask()
-                       )
+		            |> NetworkUtil.generate_ipv4_netmask_16_24_ip_list(
+		                 NetworkUtil.get_local_wlan_ip_v4_netmask()
+		               )
     connected_nodes = [] 
-                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,connection_timeout)                 
+                        |> ClusterUtil.connect_nodes(cluster_name,cluster_ips,connection_timeout)                  
     cond do
       (Enum.empty?(connected_nodes))
         -> false
@@ -170,7 +172,8 @@ defmodule Krug.DistributedMnesia do
                   tables,
                   connected_nodes,
                   cluster_ips,
-                  cluster_name
+                  cluster_name,
+                  connection_timeout
                 )
     end
   end
@@ -403,32 +406,57 @@ defmodule Krug.DistributedMnesia do
   #####################################
   #  Private functions
   #####################################
-  defp start_mnesia(disc_copies,tables,connected_nodes,cluster_ips,cluster_name) do
-    mode = cond do
+  defp start_mnesia(disc_copies,tables,connected_nodes,cluster_ips,cluster_name,connection_timeout) do
+    storage_mode = cond do
       (disc_copies)
         -> :disc_copies
       true
         -> :ram_copies
-    end 
+    end
     :mnesia.start()
     :extra_db_nodes 
       |> :mnesia.change_config(connected_nodes)
-    configured_tables = tables
-                          |> add_metadata_table()
-                          |> add_master_node_control_table()
-                          |> add_nodes_metadata_table()
-                          |> config_tables(mode)
+    tables = tables
+               |> add_metadata_table()
+               |> add_master_node_control_table()
+               |> add_nodes_metadata_table()
+               #|> config_tables(storage_mode)
+    configured_tables = connected_nodes
+                          |> sync_tables(tables,storage_mode,connection_timeout)
     cond do
       (!configured_tables)
         -> false
-      (!(tables |> replicate_tables(connected_nodes,mode)))
-        -> false
-      (!(connected_nodes |> store_connected_nodes(mode)))
+      #(!(tables |> replicate_tables(connected_nodes,storage_mode)))
+      #  -> false
+      (!(connected_nodes |> store_connected_nodes(storage_mode)))
         -> false
       true
         -> cluster_name 
              |> correct_master_nodes_task_start(cluster_ips)
     end
+  end
+  
+  
+  
+  defp sync_tables(nodes,tables,storage_mode,connection_timeout) do
+    cond do
+      (Enum.empty?(nodes))
+        -> true
+      true
+        -> nodes
+             |> sync_tables2(tables,storage_mode,connection_timeout)
+    end
+  end
+  
+  
+  
+  defp sync_tables2(nodes,tables,storage_mode,connection_timeout) do
+    nodes 
+      |> hd()
+      |> DistributedMnesiaSync.sync_tables(tables,storage_mode,connection_timeout)
+    nodes
+      |> tl()
+      |> sync_tables(tables,storage_mode,connection_timeout)
   end
   
   
@@ -466,7 +494,7 @@ defmodule Krug.DistributedMnesia do
   end
   
   
-  
+    
   defp config_tables4(tables,mode) do
     table = tables
               |> hd()
