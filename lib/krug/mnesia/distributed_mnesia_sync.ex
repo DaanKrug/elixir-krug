@@ -13,23 +13,24 @@ defmodule Krug.DistributedMnesiaSync do
       tables,
       storage_mode,
       cluster_node,
+      connection_timeout,
       get_table_cookies(node(),connection_timeout),
       cluster_node
         |> get_table_cookies(connection_timeout)
     )
   end
   
-  defp sync_tables(tables,storage_mode,_cluster_node,{:ok, local_cookies},{:ok, remote_cookies}) do
+  defp sync_tables(tables,storage_mode,_cluster_node,connection_timeout,{:ok, local_cookies},{:ok, remote_cookies}) do
     Enum.each(
       tables, 
       fn(table) 
         -> table
-             |> sync_table(storage_mode,local_cookies,remote_cookies)
+             |> sync_table(storage_mode,connection_timeout,local_cookies,remote_cookies)
       end
     )    
   end
   
-  defp sync_tables(_tables,_storage_mode,cluster_node,{:error, reason},{:ok, _remote_cookies}) do
+  defp sync_tables(_tables,_storage_mode,cluster_node,_connection_timeout,{:error, reason},{:ok, _remote_cookies}) do
     Logger.info(
       """
       [Krug.DistributedMnesiaSync] => 
@@ -38,7 +39,7 @@ defmodule Krug.DistributedMnesiaSync do
     )
   end
   
-  defp sync_tables(_tables,_storage_mode,cluster_node,{:ok, _local_cookies},{:error, reason}) do
+  defp sync_tables(_tables,_storage_mode,cluster_node,_connection_timeout,{:ok, _local_cookies},{:error, reason}) do
     Logger.info(
       """
       [Krug.DistributedMnesiaSync] => 
@@ -47,7 +48,7 @@ defmodule Krug.DistributedMnesiaSync do
     )
   end
   
-  defp sync_tables(_tables,_storage_mode,cluster_node,{:error, local_reason},{:error, remote_reason}) do
+  defp sync_tables(_tables,_storage_mode,cluster_node,_connection_timeout,{:error, local_reason},{:error, remote_reason}) do
     Logger.info(
       """
       [Krug.DistributedMnesiaSync] => Multiple errors:
@@ -57,7 +58,7 @@ defmodule Krug.DistributedMnesiaSync do
     )
   end
   
-  defp sync_table(table,storage_mode,local_cookies,remote_cookies) do
+  defp sync_table(table,storage_mode,connection_timeout,local_cookies,remote_cookies) do
     tablename = table
                   |> MapUtil.get(:table_name)
     table
@@ -65,6 +66,8 @@ defmodule Krug.DistributedMnesiaSync do
            storage_mode,
            {local_cookies[tablename],remote_cookies[tablename]}
          )
+    [tablename]
+      |> :mnesia.wait_for_tables(connection_timeout)
   end
   
   defp sync_table(table,storage_mode,{nil,nil}) do

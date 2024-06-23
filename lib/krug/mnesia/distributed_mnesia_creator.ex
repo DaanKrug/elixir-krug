@@ -35,8 +35,13 @@ defmodule Krug.DistributedMnesiaCreator do
     )
   end
 
-  defp add_table_index({:aborted, {:already_exists,_}},_storage_mode,_table_name,_table_index) do
-    :ok
+  defp add_table_index({:aborted, {:already_exists,_}},storage_mode,table_name,table_index) do
+    table_name
+      |> :mnesia.add_table_index(table_index)
+    table_name 
+      |> :mnesia.change_table_copy_type(node(),storage_mode)
+    table_name
+      |> :mnesia.add_table_copy(node(),storage_mode)
   end
 
   defp add_table_index({:atomic,:ok},storage_mode,table_name,table_index) do
