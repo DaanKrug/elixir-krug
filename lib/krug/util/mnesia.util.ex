@@ -85,7 +85,7 @@ defmodule Krug.MnesiaUtil do
   
   Requires mnesia already be started. 
   """
-  def load_from_cache(table_name,id_row) do
+  def load_from_cache(table_name,id_row,test_table_exists \\ false) do
     read_data = fn ->
       cond do
         (!mnesia_started())
@@ -96,7 +96,7 @@ defmodule Krug.MnesiaUtil do
     end
     read_data
       |> :mnesia.transaction()
-      |> load_from_cache_result()
+      |> load_from_cache_result(test_table_exists)
   end
   
   
@@ -272,7 +272,7 @@ defmodule Krug.MnesiaUtil do
   ########################################## 
   ### load functions
   ########################################## 
-  defp load_from_cache_result({:atomic,key_entry_array}) do
+  defp load_from_cache_result({:atomic,key_entry_array},_test_table_exists) do
     cond do
       (nil == key_entry_array
         or Enum.empty?(key_entry_array))
@@ -285,8 +285,13 @@ defmodule Krug.MnesiaUtil do
   
   
   
-  defp load_from_cache_result(_) do
-    nil
+  defp load_from_cache_result(error,test_table_exists) do
+    cond do
+      (test_table_exists)
+        -> error
+      true
+        -> nil
+    end
   end
   
   

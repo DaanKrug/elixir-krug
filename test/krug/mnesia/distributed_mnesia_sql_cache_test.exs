@@ -376,6 +376,9 @@ defmodule Krug.DistributedMnesiaSqlCacheTest do
              
     assert result == [%{id: 2,name: "Johannes Cool",email: "johann@es.not_cool.pt"}]
     
+    
+    # :timer.sleep(5000)
+    
   end
   
   

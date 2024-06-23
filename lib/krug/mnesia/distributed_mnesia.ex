@@ -7,7 +7,10 @@ defmodule Krug.DistributedMnesia do
   to improve horizontal scalability when we need.
   """
   @moduledoc since: "1.1.17"
+
   
+  
+  require Logger  
   
   @metadata_table :distributed_mnesia_metadata_table
   @nodes_metadata_table :distributed_mnesia_nodes_metadata_table
@@ -116,10 +119,14 @@ defmodule Krug.DistributedMnesia do
   ```
   .
   
-  connected_nodes: list (of atom) nodes already connected in a erlang cluster.
+  connection_timeout: connection timeout (milliseconds) for connect to other nodes.
+  
+  correct_master_node_interval: interval (milliseconds) to verification task make auto adjust the master node.
+  By default is 2 seconds to preserve machine resources
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
-                   ips_separator \\ "|",disc_copies \\ false,tables \\ [],connection_timeout \\ 100) do
+                   ips_separator \\ "|",disc_copies \\ false,tables \\ [],
+                   connection_timeout \\ 100, correct_master_node_interval \\ 2000) do
     System.cmd("epmd", ["-daemon"])
     local_node = cluster_name
                    |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
@@ -140,7 +147,8 @@ defmodule Krug.DistributedMnesia do
              |> start_mnesia(
                   tables,
                   connected_nodes,
-                  connection_timeout
+                  connection_timeout,
+                  correct_master_node_interval
                 )
     end
   end
@@ -154,7 +162,7 @@ defmodule Krug.DistributedMnesia do
   according the network mask range (/16 or /24).
   """
   def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,tables \\ [], 
-                        connection_timeout \\ 100) do
+                        connection_timeout \\ 100, correct_master_node_interval \\ 2000) do
     System.cmd("epmd", ["-daemon"])
     cluster_name
       |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
@@ -177,7 +185,8 @@ defmodule Krug.DistributedMnesia do
              |> start_mnesia(
                   tables,
                   connected_nodes,
-                  connection_timeout
+                  connection_timeout,
+                  correct_master_node_interval
                 )
     end
   end
@@ -410,7 +419,7 @@ defmodule Krug.DistributedMnesia do
   #####################################
   #  Private functions
   #####################################
-  defp start_mnesia(disc_copies,tables,connected_nodes,connection_timeout) do
+  defp start_mnesia(disc_copies,tables,connected_nodes,connection_timeout,correct_master_node_interval) do
     @nodes_metadata_table
       |> MnesiaUtil.delete(@runtime_tables)
     @nodes_metadata_table
@@ -434,10 +443,50 @@ defmodule Krug.DistributedMnesia do
     cond do
       (!configured_tables)
         -> false
+      (!(tables |> verify_tables_ok()))
+        -> re_start_mnesia(disc_copies,tables,connected_nodes,connection_timeout,correct_master_node_interval)
       true
         -> @metadata_table
-             |> DistributedMnesiaMasterControl.start_master_running_control()
+             |> DistributedMnesiaMasterControl.start_master_running_control(
+                  correct_master_node_interval
+                )
     end
+  end
+  
+  
+  
+  defp re_start_mnesia(disc_copies,tables,connected_nodes,connection_timeout,correct_master_node_interval) do
+    Logger.info("start mnesia failed ... correct master node and wait for 1 second")
+    DistributedMnesiaMasterControl.verify_and_correct_master_node()
+    :timer.sleep(1000)
+    :mnesia.stop()
+    disc_copies
+      |> start_mnesia(tables,connected_nodes,connection_timeout,correct_master_node_interval)
+  end
+  
+  
+  
+  defp verify_tables_ok(tables) do
+    cond do
+      (Enum.empty?(tables))
+        -> true
+      (!(tables |> hd() |> verify_table_config_ok()))
+        -> false
+      true
+        -> tables
+             |> tl()
+             |> verify_tables_ok()
+    end
+  end
+  
+  
+  
+  defp verify_table_config_ok(table) do
+    table_name = table
+                   |> MapUtil.get(:table_name)
+    result = table_name
+               |> MnesiaUtil.load_from_cache(1,true)
+    result != {:aborted,{:no_exists,table_name}}
   end
   
   
