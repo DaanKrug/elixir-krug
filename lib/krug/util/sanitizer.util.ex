@@ -24,7 +24,7 @@ defmodule Krug.SanitizerUtil do
     "concat(","concat (",
     "group_concat(","group_concat (",
     "grant ","revoke ","commit ","rollback ",
-    "../"
+    "../",".. /"
   ]
   
   @forbidden [
@@ -32,7 +32,8 @@ defmodule Krug.SanitizerUtil do
     "</script","< /script","</ script", "< / script",
     "<body","< body",
     "< ?","<?","? >","?>",
-    "../","<%","< %","%>","% >",
+    "../",".. /",
+    "<%","< %","%>","% >",
     "onerror=","onerror =",
     "onclick=","onclick =",
     "onload=","onload =",
@@ -642,12 +643,19 @@ defmodule Krug.SanitizerUtil do
   """
   @doc since: "0.4.15"
   def sanitize_sql(input) do
-    forbidden = input 
-                  |> String.downcase() 
-                  |> StringUtil.replace("  "," ",true)
-                  |> StringUtil.contains_one_element_of_array(@forbidden_sql,true)
+    input2 = input 
+              |> StringUtil.replace("\n"," ",true)
+              |> StringUtil.replace("\t"," ",true)
+              |> StringUtil.replace("\""," ",true)
+              |> StringUtil.replace("'"," ",true)
+              |> StringUtil.replace("  "," ",true)
+              |> StringUtil.trim()
+    input3 = input2
+               |> sanitize_all(false,true,0,"url")
     cond do
-      (forbidden) 
+      (input2 != input3) 
+        -> nil
+      (input |> StringUtil.contains_one_element_of_array(@forbidden_sql,true))
         -> nil
       true 
         -> input

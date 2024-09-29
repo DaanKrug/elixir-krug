@@ -244,6 +244,64 @@ defmodule Krug.SanitizerUtilTest do
   end
   
   test "[sanitize_sql(input)]" do
+    valid_condition = """
+                      and xpto = 1
+                      and xpto2 in (2,5,7,70)
+                      0x{specialCondition}1000x{/specialCondition}
+                      and xyz = 'abc'
+                      and abc in ("1234","cbds","78bgd â ã é è  [ ]")
+                      and cdb like '%abc%'
+                      """
+    danger_condition_0 = """
+                         ´
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    danger_condition_1 = """
+                         `
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    danger_condition_2 = """
+                         ^
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    danger_condition_3 = """
+                         ~
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    danger_condition_4 = """
+                         –
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    danger_condition_5 = """
+                         #
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    danger_condition_6 = """
+                         |
+                         and xpto = 1
+                         and xpto2 in (2,5,7,70)
+                         0x{specialCondition}1000x{/specialCondition}
+                         """
+    assert SanitizerUtil.sanitize_sql(valid_condition) == valid_condition
+    assert SanitizerUtil.sanitize_sql(danger_condition_0) == nil
+    assert SanitizerUtil.sanitize_sql(danger_condition_1) == nil
+    assert SanitizerUtil.sanitize_sql(danger_condition_2) == nil
+    assert SanitizerUtil.sanitize_sql(danger_condition_3) == nil
+    assert SanitizerUtil.sanitize_sql(danger_condition_4) == nil
+    assert SanitizerUtil.sanitize_sql(danger_condition_5) == nil
+    assert SanitizerUtil.sanitize_sql(danger_condition_6) == nil
     assert SanitizerUtil.sanitize_sql("echo -- echo") == nil
     assert SanitizerUtil.sanitize_sql("echo insert echo") == nil
     assert SanitizerUtil.sanitize_sql("echo delete echo") == nil
