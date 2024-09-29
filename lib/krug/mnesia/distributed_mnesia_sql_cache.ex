@@ -91,7 +91,7 @@ defmodule Krug.DistributedMnesiaSqlCache do
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
                    ips_separator \\ "|",disc_copies \\ false,table_names \\ [],
-                   connection_timeout \\ nil) do
+                   connection_timeout \\ 100) do
     tables = table_names 
                |> prepare_tables()
     cluster_name
