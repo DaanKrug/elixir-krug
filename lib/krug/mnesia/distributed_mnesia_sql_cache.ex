@@ -81,9 +81,12 @@ defmodule Krug.DistributedMnesiaSqlCache do
         :log,
         :other_table
       ]  
-    
+      
+      cloud_provider = "AWS"
+   
       cluster_name
-        |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,true,table_names)
+        |> DistributedMnesiaSqlCache.init_cluster(cluster_cookie,cluster_ips,ips_separator,
+                                                  true,table_names,100,cloud_provider)
     end
   
   end
@@ -91,7 +94,8 @@ defmodule Krug.DistributedMnesiaSqlCache do
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
                    ips_separator \\ "|",disc_copies \\ false,table_names \\ [],
-                   connection_timeout \\ 100) do
+                   connection_timeout \\ 100,
+                   cloud_provider \\ "") do
     tables = table_names 
                |> prepare_tables()
     cluster_name
@@ -101,7 +105,9 @@ defmodule Krug.DistributedMnesiaSqlCache do
            ips_separator,
            disc_copies,
            tables,
-           connection_timeout
+           connection_timeout,
+           2000,
+           cloud_provider
          ) 
   end
   
@@ -114,7 +120,8 @@ defmodule Krug.DistributedMnesiaSqlCache do
   according the network mask range (/16 or /24).
   """
   def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,
-                        table_names \\ [],connection_timeout \\ nil) do
+                        table_names \\ [],connection_timeout \\ nil,
+                        cloud_provider \\ "") do
     tables = table_names 
                |> prepare_tables()
     cluster_name
@@ -122,7 +129,9 @@ defmodule Krug.DistributedMnesiaSqlCache do
            cluster_cookie,
            disc_copies,
            tables,
-           connection_timeout
+           connection_timeout,
+           2000,
+           cloud_provider
          ) 
   end
   

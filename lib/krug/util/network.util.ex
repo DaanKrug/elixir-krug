@@ -17,14 +17,16 @@ defmodule Krug.NetworkUtil do
   @exponent_a 256 * 256 * 256
   @exponent_b 256 * 256
   @exponent_c 256
+  @network_prefix_array ["wl","en","ib","br","ve","bo"]
   
   
   @doc """
   Start the local node from a cluster of nodes
   """
-  def start_local_node_to_cluster_ip_v4(cluster_name,cluster_cookie) do
-    local_node = "#{cluster_name}@#{get_local_wlan_ip_v4()}" 
-                   |> String.to_atom()
+  def start_local_node_to_cluster_ip_v4(cluster_name,cluster_cookie,cloud_provider) do
+    host = get_local_wlan_ip_v4()
+             |> prepare_host_name(cloud_provider)
+    local_node = :"#{cluster_name}@#{host}"
     [
       local_node,
       :longnames
@@ -32,7 +34,7 @@ defmodule Krug.NetworkUtil do
       |> :net_kernel.start()
     cluster_cookie
       |> String.to_atom()
-      |> :erlang.set_cookie() 
+      |> :erlang.set_cookie()
     local_node
   end
   
@@ -142,6 +144,17 @@ defmodule Krug.NetworkUtil do
   ###########################################
   # Private functions
   ###########################################
+  defp prepare_host_name(ip,cloud_provider) do
+    cond do
+      (cloud_provider == "AWS")
+        -> "ip-#{ip |> StringUtil.replace(".","-")}"
+      true
+        -> ip
+    end
+  end
+  
+  
+  
   defp netmask_16_calculate_start_range(ip_third_position) do
     ip_third_position = ip_third_position
                          |> NumberUtil.to_integer()
@@ -155,29 +168,69 @@ defmodule Krug.NetworkUtil do
   
   
   
-  defp filter_local_wlan_ip(ips_list,netmask \\ false,local_ip \\ nil) do
+  defp filter_local_wlan_ip(ips_list,netmask \\ false) do
+    [wl,en,ib,br,ve,bo] = @network_prefix_array
+    wl_ip = ips_list 
+              |> filter_local_wlan_ip2(wl,netmask)
+    en_ip = ips_list 
+              |> filter_local_wlan_ip2(en,netmask)
+    ib_ip = ips_list 
+              |> filter_local_wlan_ip2(ib,netmask)
+    br_ip = ips_list 
+              |> filter_local_wlan_ip2(br,netmask)
+    ve_ip = ips_list 
+              |> filter_local_wlan_ip2(ve,netmask)
+    bo_ip = ips_list 
+              |> filter_local_wlan_ip2(bo,netmask)
+    cond do
+      (nil != wl_ip 
+        and wl_ip != "")
+          -> wl_ip
+      (nil != en_ip 
+        and en_ip != "")
+          -> en_ip
+      (nil != ib_ip 
+        and ib_ip != "")
+          -> ib_ip
+      (nil != br_ip 
+        and br_ip != "")
+          -> br_ip
+      (nil != ve_ip 
+        and ve_ip != "")
+          -> ve_ip
+      (nil != bo_ip 
+        and bo_ip != "")
+          -> bo_ip
+      true
+        -> nil
+    end
+  end
+  
+  
+  
+  defp filter_local_wlan_ip2(ips_list,network_prefix,netmask,local_ip \\ nil) do
     cond do
       (Enum.empty?(ips_list))
         -> local_ip
       true
         -> ips_list
-             |> filter_local_wlan_ip2(netmask)
+             |> filter_local_wlan_ip3(network_prefix,netmask)
     end
   end
 
 
   
-  defp filter_local_wlan_ip2(ips_list,netmask) do
+  defp filter_local_wlan_ip3(ips_list,network_prefix,netmask) do
     list = ips_list 
              |> hd()
              |> Tuple.to_list()
     cond do
-      (String.starts_with?("#{list |> hd()}","wl"))
-        -> filter_local_wlan_ip([],netmask,list |> extract_local_ip(netmask))
+      (String.starts_with?("#{list |> hd()}",network_prefix))
+        -> filter_local_wlan_ip2([],nil,netmask,list |> extract_local_ip(netmask))
       true
         -> ips_list 
              |> tl() 
-             |> filter_local_wlan_ip(netmask)
+             |> filter_local_wlan_ip2(network_prefix,netmask)
     end
   end
   

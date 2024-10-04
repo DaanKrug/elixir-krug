@@ -121,15 +121,21 @@ defmodule Krug.DistributedMnesia do
   
   connection_timeout: connection timeout (milliseconds) for connect to other nodes.
   
+  cloud_provider: "localhost", AWS, GCP, Azure - or empty to use node@1.1.1.1 host format (localhost or normal network)
+  only AWS supported for now.
+  
   correct_master_node_interval: interval (milliseconds) to verification task make auto adjust the master node.
   By default is 2 seconds to preserve machine resources
   """
   def init_cluster(cluster_name,cluster_cookie,cluster_ips,
                    ips_separator \\ "|",disc_copies \\ false,tables \\ [],
-                   connection_timeout \\ 100, correct_master_node_interval \\ 2000) do
+                   connection_timeout \\ 100, 
+                   correct_master_node_interval \\ 2000,
+                   cloud_provider \\ "") do
     System.cmd("epmd", ["-daemon"])
+    :mnesia.start()
     local_node = cluster_name
-                   |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
+                   |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie,cloud_provider)
     cluster_ips = cluster_ips
                     |> NetworkUtil.extract_valid_ip_v4_addresses(ips_separator)
     cluster_cookie 
@@ -162,10 +168,12 @@ defmodule Krug.DistributedMnesia do
   according the network mask range (/16 or /24).
   """
   def init_auto_cluster(cluster_name,cluster_cookie,disc_copies \\ false,tables \\ [], 
-                        connection_timeout \\ 100, correct_master_node_interval \\ 2000) do
+                        connection_timeout \\ 100, 
+                        correct_master_node_interval \\ 2000,
+                        cloud_provider \\ "") do
     System.cmd("epmd", ["-daemon"])
     cluster_name
-      |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie)
+      |> NetworkUtil.start_local_node_to_cluster_ip_v4(cluster_cookie,cloud_provider)
     cluster_ips = NetworkUtil.get_local_wlan_ip_v4()
                     |> NetworkUtil.generate_ipv4_netmask_16_24_ip_list(
 		                 NetworkUtil.get_local_wlan_ip_v4_netmask()
