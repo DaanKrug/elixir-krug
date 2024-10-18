@@ -28,6 +28,28 @@ defmodule Krug.MathUtil do
       true -> pow_even(base,expoent)
     end
   end
+  
+
+  
+  @doc """
+  Calculates the round of a number "number", considering "precision" decimal positions.
+  
+  ## Examples
+
+  ```elixir 
+  iex > Krug.MathUtil.round_precision(3.123,2)
+  3.12
+  ```
+  ```elixir 
+  iex > Krug.MathUtil.round_precision(5.123890347544,4)
+  5.1238
+  ```
+  @doc since: "2.0.26"
+  """
+  def round_precision(number,precision) do
+    power = pow(10,precision)
+    round(number * power) / power
+  end
 
 
   
