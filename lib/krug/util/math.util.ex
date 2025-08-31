@@ -23,9 +23,13 @@ defmodule Krug.MathUtil do
   """
   def pow(base,expoent) do
     cond do
-      (expoent == 0) -> 1
-      (rem(expoent,2) == 1) -> base * pow(base,expoent - 1)
-      true -> pow_even(base,expoent)
+      (expoent == 0
+        or base == 1) 
+          -> 1
+      (rem(expoent,2) == 1) 
+        -> base * pow(base,expoent - 1)
+      true 
+        -> pow_even(base,expoent)
     end
   end
   

@@ -13,6 +13,8 @@ defmodule Krug.FileUtilTest do
     insertion_point_tag = "//insertionPoint -->"
     assert FileUtil.create_dir(path) == true
     assert FileUtil.create_dir(path2) == true
+    assert FileUtil.write(file1,"AA") == true
+    assert FileUtil.write(file2,"") == true
     assert FileUtil.copy_file(file1,file2) == true
     assert FileUtil.read_file(file2) == "AA"
     assert FileUtil.replace_in_file(file2,"A","BB")
@@ -49,6 +51,8 @@ defmodule Krug.FileUtilTest do
     file1 = "./echo.txt"
     file2 = "#{path}/echo.txt"
     assert FileUtil.create_dir(path) == true
+    assert FileUtil.write(file1,"AA") == true
+    assert FileUtil.write(file2,"") == true
     assert FileUtil.copy_file(file1,file2) == true
     assert FileUtil.zip_dir(path) == true
     assert FileUtil.zip_dir(path) == false

@@ -95,6 +95,8 @@ defmodule Krug.EtsUtil do
   
   Equivalent to ```:ets.delete(ets_key)```.
   
+  The parameter ```unsafe``` can be set to true when you have total sure that ETS table already exists.
+  
   ## Examples
   
   ```elixir
@@ -110,10 +112,16 @@ defmodule Krug.EtsUtil do
   true
   ```
   """
-  def delete(ets_key) do
+  def delete(ets_key,unsafe \\ false) do
     cond do
-      (!ets_table_exists(ets_key)) -> true
-      true -> :ets.delete(ets_key)
+      (unsafe) 
+        -> ets_key
+             |> :ets.delete()
+      (!(ets_key |> ets_table_exists())) 
+        -> true
+      true 
+        -> ets_key
+             |> :ets.delete()
     end
   end
   
@@ -126,6 +134,8 @@ defmodule Krug.EtsUtil do
   If a old value exists and couldn't be replaced, return false.
   
   Equivalent to ```:ets.insert(ets_key,{key,value})```.
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that ETS table already exists.
   
   ## Examples
   
@@ -145,11 +155,16 @@ defmodule Krug.EtsUtil do
   true
   ```
   """
-  def store_in_cache(ets_key,key,value) do
+  def store_in_cache(ets_key,key,value,unsafe \\ false) do
     cond do
-      (!ets_table_exists(ets_key)) 
+      (unsafe) 
+        -> ets_key
+             |> :ets.insert({key,value})
+      (!(ets_key |> ets_table_exists())) 
         -> false
-      true -> :ets.insert(ets_key,{key,value})
+      true 
+        -> ets_key
+             |> :ets.insert({key,value})
     end
   end
   
@@ -162,6 +177,8 @@ defmodule Krug.EtsUtil do
   If the key don't exists, return nil.
   
   Equivalent to ```:ets.lookup(ets_key,key) |> Tuple.to_list() |> Enum.at(1)```
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that ETS table already exists.
   
   ## Examples
   
@@ -188,11 +205,18 @@ defmodule Krug.EtsUtil do
   "foo"
   ```
   """
-  def read_from_cache(ets_key,key) do
+  def read_from_cache(ets_key,key,unsafe \\ false) do
     cond do
-      (!ets_table_exists(ets_key)) -> nil
-      true -> :ets.lookup(ets_key,key) 
-                |> read_from_cache2()
+      (unsafe) 
+        -> ets_key
+             |> :ets.lookup(key) 
+             |> read_from_cache2()
+      (!(ets_key |> ets_table_exists())) 
+        -> nil
+      true 
+        -> ets_key
+             |> :ets.lookup(key) 
+             |> read_from_cache2()
     end
   end
   
@@ -205,6 +229,8 @@ defmodule Krug.EtsUtil do
   If the ```key``` don't exists in ets table or its value is nil, return true.
   
   Equivalent to ```:ets.delete(ets_key,key)```
+  
+  The parameter ```unsafe``` can be set to true when you have total sure that ETS table already exists.
   
   ## Examples
   
@@ -224,10 +250,16 @@ defmodule Krug.EtsUtil do
   true
   ```
   """
-  def remove_from_cache(ets_key,key) do
+  def remove_from_cache(ets_key,key,unsafe \\ false) do
     cond do
-      (!ets_table_exists(ets_key)) -> true
-      true -> :ets.delete(ets_key,key)
+      (unsafe) 
+        -> ets_key
+             |> :ets.delete(key)
+      (!(ets_key |> ets_table_exists())) 
+        -> true
+      true 
+        -> ets_key
+             |> :ets.delete(key)
     end
   end
 

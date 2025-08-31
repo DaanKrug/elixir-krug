@@ -119,8 +119,15 @@ defmodule Krug.ArrayUtil do
           -> array
       true 
         -> array 
-             |> rotate_right_positions(remainder,0)
+             |> rotate_right3(remainder) ## |> rotate_right_positions(remainder,0)
     end
+  end
+  
+  
+  
+  defp rotate_right3(array,positions) do
+    {left, right} = Enum.split(array, positions)
+    right ++ left
   end
   
   
@@ -134,55 +141,62 @@ defmodule Krug.ArrayUtil do
           -> array
       true 
         -> array
-             |> rotate_left_positions(remainder,0)
+             |> rotate_left3(size,remainder) ## |> rotate_left_positions(remainder,0)
     end
   end
   
   
   
-  defp rotate_right_positions(array,positions,count) do
-    cond do
-      (count >= positions) 
-        -> array
-      true 
-        -> array
-             |> rotate_right_one_position() 
-             |> rotate_right_positions(positions,count + 1)
-    end
+  defp rotate_left3(array,size,positions) do
+    {left, right} = Enum.split(array, size - positions)
+    right ++ left
   end
   
   
   
-  defp rotate_right_one_position(array) do
-    [
-      (array |> hd()) 
-        | (array |> tl() |> Enum.reverse())
-    ] 
-      |> Enum.reverse()
-  end
+  #defp rotate_right_positions(array,positions,count) do
+  #  cond do
+  #    (count >= positions) 
+  #      -> array
+  #    true 
+  #      -> array
+  #           |> rotate_right_one_position() 
+  #           |> rotate_right_positions(positions,count + 1)
+  #  end
+  #end
   
   
   
-  defp rotate_left_positions(array,positions,count) do
-    cond do
-      (count >= positions) 
-        -> array
-      true 
-        -> array
-             |> rotate_left_one_position() 
-             |> rotate_left_positions(positions,count + 1)
-    end
-  end
+  #defp rotate_right_one_position(array) do
+  #  [
+  #    (array |> hd()) 
+  #      | (array |> tl() |> Enum.reverse())
+  #  ] 
+  #    |> Enum.reverse()
+  #end
   
   
   
-  defp rotate_left_one_position(array) do
-    array = array |> Enum.reverse()
-    [
-      (array |> hd()) 
-        | (array |> tl() |> Enum.reverse())
-    ]
-  end
+  #defp rotate_left_positions(array,positions,count) do
+  #  cond do
+  #    (count >= positions) 
+  #      -> array
+  #    true 
+  #      -> array
+  #           |> rotate_left_one_position() 
+  #           |> rotate_left_positions(positions,count + 1)
+  #  end
+  #end
+  
+  
+  
+  #defp rotate_left_one_position(array) do
+  #  array = array |> Enum.reverse()
+  #  [
+  #    (array |> hd()) 
+  #      | (array |> tl() |> Enum.reverse())
+  #  ]
+  #end
   
   
   
