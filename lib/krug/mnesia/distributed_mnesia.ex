@@ -428,7 +428,7 @@ defmodule Krug.DistributedMnesia do
   #  Private functions
   #####################################
   defp start_mnesia(disc_copies,tables,connected_nodes,connection_timeout,correct_master_node_interval) do
-   @nodes_metadata_table
+    @nodes_metadata_table
       |> MnesiaUtil.delete(@runtime_tables)
     @nodes_metadata_table
       |> MnesiaUtil.put_cache(@runtime_tables,[])
@@ -438,18 +438,11 @@ defmodule Krug.DistributedMnesia do
       true
         -> :ram_copies
     end
+    :mnesia.stop()
     :mnesia.start()
-    local = node()
-    not_local_nodes = connected_nodes
-	                    |> Enum.uniq()
-	                    |> Enum.reject(&(&1 == local))
-	cond do
-	  (not_local_nodes |> Enum.empty?())
-	    -> :ok
-	  true
-	    -> not_local_nodes
-	         |> then(& :mnesia.change_config(:extra_db_nodes, &1))
-	end
+    connected_nodes
+	  |> Enum.uniq()
+	  |> then(& :mnesia.change_config(:extra_db_nodes, &1))
     tables = tables
                |> add_metadata_table()
                |> add_nodes_metadata_table()
