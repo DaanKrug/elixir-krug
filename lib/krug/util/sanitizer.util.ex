@@ -649,6 +649,11 @@ defmodule Krug.SanitizerUtil do
               |> StringUtil.replace("\""," ",true)
               |> StringUtil.replace("'"," ",true)
               |> StringUtil.replace("  "," ",true)
+              |> StringUtil.replace(" > "," ",true)
+              |> StringUtil.replace(" < "," ",true)
+              |> StringUtil.replace(" >= "," ",true)
+              |> StringUtil.replace(" <= "," ",true)
+              |> StringUtil.replace(" <> "," ",true)
               |> StringUtil.trim()
     input3 = input2
                |> sanitize_all(false,true,0,"url")
