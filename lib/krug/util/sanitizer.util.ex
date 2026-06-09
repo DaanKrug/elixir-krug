@@ -38,7 +38,7 @@ defmodule Krug.SanitizerUtil do
     "onclick=","onclick =",
     "onload=","onload =",
     "alert(","alert (",
-    "prompt(","prompt (",
+    "prompt('","prompt ('","prompt(\"","prompt (\"",
     "eval(","eval (",
     "settimeout(","settimeout (",
     "setinterval(","setinterval (",
@@ -510,6 +510,9 @@ defmodule Krug.SanitizerUtil do
   Convert received value to a string, make some validations of forbidden content.
   Verify some HTML injection words contained in a restriction list above.
   
+  For return_invalid_seq == true, will return an array 
+  [invalid_seq, true] or [original_input, false], respective to [result, error]
+  
   - Restriction list:
   ```elixir
     [
@@ -565,7 +568,7 @@ defmodule Krug.SanitizerUtil do
   "echo script echo"
   ```
   """
-  def sanitize(input) do
+  def sanitize(input,return_invalid_seq \\ false) do
     input = StringUtil.replace(input,"quirbula",",",true) 
               |> StringUtil.replace("xcrept ","select ",true)
               |> StringUtil.replace("xoo ","and ",true)
@@ -575,11 +578,24 @@ defmodule Krug.SanitizerUtil do
               |> StringUtil.replace("xstrike ","like ",true)
               |> StringUtil.replace("quaspa","'",true)
               |> StringUtil.replace("  "," ",true)
-    forbidden = input
-                  |> String.downcase()
-                  |> StringUtil.contains_one_element_of_array(@forbidden,true)
+    forbidden = cond do
+      (return_invalid_seq)
+        -> input
+             |> String.downcase()
+             |> StringUtil.first_one_element_of_array(@forbidden,true)
+      true
+        -> input
+             |> String.downcase()
+             |> StringUtil.contains_one_element_of_array(@forbidden,true)
+    end
     cond do
-      (forbidden) 
+      (nil == forbidden
+        and return_invalid_seq) 
+          -> [input, false]
+      (nil != forbidden
+        and return_invalid_seq) 
+          -> [forbidden,true]
+      (forbidden)
         -> nil
       true 
         -> input

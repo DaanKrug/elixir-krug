@@ -213,8 +213,12 @@ defmodule Krug.SanitizerUtilTest do
     assert SanitizerUtil.sanitize("echo onload = echo") == nil
     assert SanitizerUtil.sanitize("echo alert( echo") == nil
     assert SanitizerUtil.sanitize("echo alert ( echo") == nil
-    assert SanitizerUtil.sanitize("echo prompt( echo") == nil
-    assert SanitizerUtil.sanitize("echo prompt ( echo") == nil
+    assert SanitizerUtil.sanitize("echo prompt( echo") != nil
+    assert SanitizerUtil.sanitize("echo prompt ( echo") != nil
+    assert SanitizerUtil.sanitize("echo prompt(' echo") == nil
+    assert SanitizerUtil.sanitize("echo prompt (' echo") == nil
+    assert SanitizerUtil.sanitize("echo prompt(\" echo") == nil
+    assert SanitizerUtil.sanitize("echo prompt (\" echo") == nil
     assert SanitizerUtil.sanitize("echo eval( echo") == nil
     assert SanitizerUtil.sanitize("echo eval ( echo") == nil
     assert SanitizerUtil.sanitize("echo settimeout( echo") == nil

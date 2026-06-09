@@ -948,6 +948,29 @@ defmodule Krug.StringUtil do
   
   
   @doc """
+  Almost same as contains_one_element_of_array, changes the return to 
+  show the sequence found when found or nil if not found none of expected seuences, 
+  instead of return a boolean.
+  """
+  @doc since: "2.0.36"
+  def first_one_element_of_array(target,array,unsafe \\ false) do
+    cond do
+      (nil == target 
+        or nil == array) 
+          -> false
+      (unsafe) 
+        -> target 
+             |> first_one_element_of_array2(array,true)
+      true 
+        -> target 
+             |> to_string_if_not_binary() 
+             |> first_one_element_of_array2(array,false)
+    end
+  end
+  
+  
+  
+  @doc """
   Convert a received value to a string. If this string is not empty return these value.
   Otherwise return the ```value_if_empty_or_nil``` parameter value.
   
@@ -1306,6 +1329,29 @@ defmodule Krug.StringUtil do
       (value == "" or !(String.contains?(target,value))) 
         -> contains_one_element_of_array2(target,tl(array),unsafe)
       true -> true
+    end
+  end 
+  
+  
+  
+  def first_one_element_of_array2(target,array,unsafe) do
+    cond do
+      (Enum.empty?(array)) -> nil
+      true -> first_one_element_of_array3(target,array,unsafe)
+    end
+  end
+  
+  
+  
+  def first_one_element_of_array3(target,array,unsafe) do
+    value = cond do
+      (unsafe) -> array |> hd()
+      true -> array |> hd() |> to_string_if_not_binary()
+    end
+    cond do
+      (value == "" or !(String.contains?(target,value))) 
+        -> first_one_element_of_array2(target,tl(array),unsafe)
+      true -> value
     end
   end 
    
