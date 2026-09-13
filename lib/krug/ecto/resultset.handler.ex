@@ -110,13 +110,10 @@ defmodule Krug.ResultSetHandler do
   	         |> Enum.at(row,[])
   	  (nil == resultset 
   	    or nil == resultset.rows 
-  	      or resultset.rows == 0
+  	      or Enum.empty?(resultset.rows)
   	        or nil == row 
   	          or !(row >= 0)) 
   	            -> []
-  	  (nil == resultset.rows 
-  	    or Enum.empty?(resultset.rows)) 
-  	      -> []
   	  true 
   	    -> resultset.rows 
   	         |> Enum.at(row,[])

@@ -6,8 +6,8 @@ defmodule Krug.MixProject do
   def project do
     [
       app: :krug,
-      version: "2.0.36",
-      elixir: "~> 1.13",
+      version: "3.0.0",
+      elixir: "~> 1.20",
       source_url: @project_url,
       homepage_url: @project_url,
       name: "Krug",
@@ -17,31 +17,34 @@ defmodule Krug.MixProject do
       package: package(),
       docs: [main: "readme", extras: ["README.md"]],
       deps: deps(),
-      xref: [exclude: [:mnesia]]
+      elixirc_options: [
+        no_warn_undefined: [
+          :mnesia
+        ]
+      ]
     ]
   end
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger,:mnesia]
     ]
   end
 
-
   defp deps do
     [
-      {:earmark, "~> 1.4.13", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.1", only: :dev, runtime: false},
-      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
-      {:bcrypt_elixir, "~> 2.2.0"},
-      {:poison, "~> 4.0.1"},
-      {:httpoison, "~> 1.7"},
-      {:ex_aws, "~> 2.1.6"},
-	  {:ex_aws_s3, "~> 2.0"},
-	  {:bamboo, "~> 1.6.0"},
-      {:bamboo_smtp, "~> 3.0.0"},
-      {:bamboo_config_adapter, "~> 1.0.0"}
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
+      {:sobelow, "~> 0.15", only: [:dev, :test], runtime: false},
+      {:bcrypt_elixir, "~> 3.3"},
+      {:poison, "~> 6.0"},
+      {:httpoison, "~> 3.0"},
+      {:ex_aws, "~> 2.7"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:bamboo, "~> 2.2"},
+      {:bamboo_smtp, "~> 4.2"},
+      #  {:bamboo_config_adapter, "~> 1.1"},
+      {:gen_smtp, "~> 1.3", override: true}
     ]
   end
   

@@ -22,8 +22,12 @@ defmodule Krug.HashUtil do
   """
   def hash_password(password) do
     cond do
-      (nil == password or password == "") -> ""
-      true -> Bcrypt.Base.hash_password(password,Bcrypt.gen_salt(15,false)) #12 .. 31
+      (nil == password 
+        or password == "") 
+          -> ""
+      true 
+        -> password
+             |> Bcrypt.hash_pwd_salt()
     end
   end
 
@@ -46,18 +50,16 @@ defmodule Krug.HashUtil do
   """  
   def password_match(hashed_password,password) do
     cond do
-      (nil == hashed_password or hashed_password == "" or nil == password or password == "") -> false
-      true -> handle_verify(Bcrypt.Base.checkpass_nif(:binary.bin_to_list(password),
-                                                     :binary.bin_to_list(hashed_password)))
+      (nil == hashed_password 
+        or hashed_password == "" 
+          or nil == password 
+            or password == "") 
+              -> false
+      true 
+        -> password
+             |> Bcrypt.verify_pass(hashed_password)
     end
   end
   
-  
-  
-  defp handle_verify(value) do
-    (value == 0)
-  end
-  
-  
-  
+
 end

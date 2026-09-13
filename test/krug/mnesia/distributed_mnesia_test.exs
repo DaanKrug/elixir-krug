@@ -175,11 +175,13 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
                        [200, "Johannes Cool", "johann@es.not_cool.pt"], 
                        [400, "Johannes Cool", "johann@es.cool.de"]
                      ]
+                       |> Enum.sort()
                      
     array_params = [
       {
@@ -193,11 +195,13 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
                        [300, "Johannes Not Cool", "johann@es.cool.de"], 
                        [400, "Johannes Cool", "johann@es.cool.de"]
                      ]
+                       |> Enum.sort()
                      
     total = :user_x |> DistributedMnesia.count()
     
@@ -368,11 +372,13 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
                        [200, "Johannes Cool", "johann@es.not_cool.pt"], 
                        [400, "Johannes Cool", "johann@es.cool.de"]
                      ]
+                       |> Enum.sort()
                      
     array_params = [
       {
@@ -386,11 +392,13 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
                        [300, "Johannes Not Cool", "johann@es.cool.de"], 
                        [400, "Johannes Cool", "johann@es.cool.de"]
                      ]
+                       |> Enum.sort()
                      
     array_params2 = [
       {
@@ -404,12 +412,14 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :distributed_mnesia_metadata_table 
                |> DistributedMnesia.select(array_params2)
+               |> Enum.sort()
     
     assert result == [
                        ["user_x_400", :user_x, 400], 
                        ["user_x_200", :user_x, 200], 
                        ["user_x_300", :user_x, 300]
                      ]
+                       |> Enum.sort()
                      
     total = :user_x |> DistributedMnesia.count()
     
@@ -536,6 +546,7 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
 			            [5, "Johannes Cool", "johann@es.not_cool.pt"],
@@ -547,6 +558,7 @@ defmodule Krug.DistributedMnesiaTest do
 			            [7, "Johannes Cool", "johann@es.not_cool.pt"],
 			            [3, "Johannes Cool", "johann@es.not_cool.pt"]
 			         ]
+                 |> Enum.sort()
     
     
     #######################################
@@ -561,6 +573,7 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
 		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
@@ -568,6 +581,7 @@ defmodule Krug.DistributedMnesiaTest do
 		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [7, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+                   |> Enum.sort()
     
     #######################################
     ## recreate data
@@ -602,6 +616,7 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
 		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
@@ -613,6 +628,7 @@ defmodule Krug.DistributedMnesiaTest do
 		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+                   |> Enum.sort()
     
     #######################################
     ## update usage time of some entries
@@ -631,6 +647,7 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
 		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
@@ -642,6 +659,7 @@ defmodule Krug.DistributedMnesiaTest do
 		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+                   |> Enum.sort()
     
     #######################################
     ## now should be keep entries with
@@ -656,6 +674,7 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x 
                |> DistributedMnesia.select(array_params)
+               |> Enum.sort()
     
     assert result == [
 		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
@@ -663,6 +682,7 @@ defmodule Krug.DistributedMnesiaTest do
 		               [8, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+                   |> Enum.sort()
 		             
 	##########################
 	# run time table tests
@@ -714,6 +734,7 @@ defmodule Krug.DistributedMnesiaTest do
     
     result = :user_x_runtime 
                |> DistributedMnesia.select(array_params2)
+               |> Enum.sort()
     
     assert result == [
 		               [5, "Johannes Cool", "johann@es.not_cool.pt"],
@@ -725,6 +746,7 @@ defmodule Krug.DistributedMnesiaTest do
 		               [7, "Johannes Cool", "johann@es.not_cool.pt"],
 		               [3, "Johannes Cool", "johann@es.not_cool.pt"]
 		             ]
+                   |> Enum.sort()
 		             
 	#:mnesia.system_info()
 	#  |> IO.inspect()
